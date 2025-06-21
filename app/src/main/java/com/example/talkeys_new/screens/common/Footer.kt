@@ -1,4 +1,4 @@
-package com.example.talkeys_new.screens.home
+package com.example.talkeys_new.screens.common
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -100,7 +100,7 @@ fun Footer(modifier: Modifier = Modifier,navController: NavController) {
                 FooterTextButton("Privacy Policy") { navController.navigate("privacy_policy")  }
                 Spacer(modifier = Modifier.height(18.dp))
 
-                FooterTextButton("Terms of Service") { navController.navigate("terms_conditions") }
+                FooterTextButton("Terms of Service") { navController.navigate("tas") }
 
             }
         }

@@ -1,4 +1,4 @@
-package com.example.talkeys_new.screens.home
+package com.example.talkeys_new.screens.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

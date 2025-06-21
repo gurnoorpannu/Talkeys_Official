@@ -1,4 +1,4 @@
-package com.example.talkeys_new.screens.home
+package com.example.talkeys_new.screens.common
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
