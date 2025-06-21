@@ -32,11 +32,11 @@ import androidx.navigation.NavController
 import com.example.talkeys_new.screens.events.EventViewModel
 import com.example.talkeys_new.screens.events.provideEventApiService
 import com.example.talkeys_new.screens.events.EventsRepository
-import com.example.talkeys_new.screens.home.HomeTopBar
+import com.example.talkeys_new.screens.common.HomeTopBar
 import com.example.talkeys_new.R
 import com.example.talkeys_new.dataModels.EventResponse
-import com.example.talkeys_new.screens.home.BottomBar
-import com.example.talkeys_new.screens.home.Footer
+import com.example.talkeys_new.screens.common.BottomBar
+import com.example.talkeys_new.screens.common.Footer
 
 @Composable
 fun ExploreEventsScreen(navController: NavController) {
