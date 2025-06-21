@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 // Creates a DataStore instance tied to the application Context, named "user_prefs".
@@ -42,4 +43,10 @@ class TokenManager(private val context: Context) {
             preferences.remove(TOKEN_KEY) // Deletes the token from preferences.
         }
     }
+
+    // Use this if you want to directly get the current token (not as a Flow)
+    suspend fun getToken(): String? {
+        return token.first()
+    }
+
 }

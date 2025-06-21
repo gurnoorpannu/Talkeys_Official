@@ -9,15 +9,17 @@ import com.example.talkeys_new.screens.LandingPage
 import com.example.talkeys_new.screens.authentication.loginScreen.LoginScreen
 import com.example.talkeys_new.screens.authentication.signupScreen.SignUpScreen
 import com.example.talkeys_new.screens.home.HomeScreen
+import com.example.talkeys_new.screens.events.exploreEvents.ExploreEventsScreen
 
 @Composable
 fun AppNavigation(modifier: Modifier) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "landingpage") {
+    NavHost(navController = navController, startDestination = "explore_events") {
         composable("landingpage") { LandingPage(navController) }
         composable("signup") { SignUpScreen(navController) }
         composable("login") { LoginScreen(navController) }
         composable("home") { HomeScreen(navController) }
+        composable("explore_events") { ExploreEventsScreen(navController) }
     }
 }
