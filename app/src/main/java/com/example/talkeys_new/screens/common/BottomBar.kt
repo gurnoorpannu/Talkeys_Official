@@ -74,7 +74,7 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
         ) {
             val navigationItems = listOf(
                 NavigationItem(
-                    route = "communities",
+                    route = "screen_not_found",
                     normalIcon = R.drawable.ic_community_icon,
                     selectedIcon = R.drawable.ic_globe_selected,
                     contentDescription = "Communities"
@@ -92,7 +92,7 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
                     contentDescription = "Home"
                 ),
                 NavigationItem(
-                    route = "explore",
+                    route = "screen_not_found",
                     normalIcon = R.drawable.ic_search_icon,
                     selectedIcon = R.drawable.ic_search_selected,
                     contentDescription = "Explore"

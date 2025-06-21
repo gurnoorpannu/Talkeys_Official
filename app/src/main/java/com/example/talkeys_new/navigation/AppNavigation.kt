@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.talkeys_new.screens.LandingPage
 import com.example.talkeys_new.screens.authentication.loginScreen.LoginScreen
 import com.example.talkeys_new.screens.authentication.signupScreen.SignUpScreen
+import com.example.talkeys_new.screens.common.ScreenNotFound
 import com.example.talkeys_new.screens.home.HomeScreen
 import com.example.talkeys_new.screens.events.exploreEvents.ExploreEventsScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
@@ -29,5 +30,6 @@ fun AppNavigation(modifier: Modifier) {
         composable("about_us") { AboutUsScreen(navController) }
         composable("privacy_policy") { privacyPolicy(navController) }
         composable("tas") { TermsAndConditionsScreen(navController) }
+        composable("screen_not_found"){ScreenNotFound(navController)}
     }
 }
