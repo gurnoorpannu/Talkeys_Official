@@ -95,13 +95,6 @@ fun ExploreEventsScreen(navController: NavController) {
                     .padding(paddingValues)
             ) {
                 when {
-                    isLoading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Color.White
-                        )
-                    }
-
                     errorMessage != null -> {
                         Column(
                             modifier = Modifier.align(Alignment.Center),
@@ -196,7 +189,13 @@ fun ExploreEventsScreen(navController: NavController) {
                                 }
                             }
 
-                            if (groupedEvents.isEmpty()) {
+                            // Show loading shimmer categories or actual content
+                            if (isLoading) {
+                                // Show loading shimmer categories
+                                items(3) { index ->
+                                    LoadingCategorySection()
+                                }
+                            } else if (groupedEvents.isEmpty()) {
                                 item {
                                     Text(
                                         text = if (showLiveEvents) "No live events available" else "No past events available",
@@ -223,6 +222,7 @@ fun ExploreEventsScreen(navController: NavController) {
                                     }
                                 }
                             }
+
                             item { Spacer(modifier = Modifier.height(5.dp)) }
                             item { Footer(navController = navController) }
                         }
@@ -264,7 +264,7 @@ fun CategorySection(
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Horizontal scrollable list of events with scaling animation
+        // Horizontal scrollable list of events with enhanced animations
         val lazyListState = rememberLazyListState()
 
         // Snap behavior to center cards
@@ -273,7 +273,6 @@ fun CategorySection(
                 val layoutInfo = lazyListState.layoutInfo
                 val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f
 
-                // Find the item closest to center
                 val closestItem = layoutInfo.visibleItemsInfo.minByOrNull { itemInfo ->
                     val itemCenter = itemInfo.offset + itemInfo.size / 2f
                     kotlin.math.abs(viewportCenter - itemCenter)
@@ -283,8 +282,7 @@ fun CategorySection(
                     val itemCenter = item.offset + item.size / 2f
                     val offset = itemCenter - viewportCenter
 
-                    // Smooth scroll to center the closest item
-                    if (kotlin.math.abs(offset) > 10) { // Only snap if not already centered
+                    if (kotlin.math.abs(offset) > 10) {
                         lazyListState.animateScrollBy(offset)
                     }
                 }
@@ -293,8 +291,8 @@ fun CategorySection(
 
         LazyRow(
             state = lazyListState,
-            horizontalArrangement = Arrangement.spacedBy(8.dp), // Reduced from 16.dp to 8.dp
-            contentPadding = PaddingValues(start = 16.dp, end = 80.dp), // Reduced start padding from 32.dp to 16.dp
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 80.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             itemsIndexed(events) { index, event ->
@@ -302,35 +300,77 @@ fun CategorySection(
                 val visibleItemsInfo = layoutInfo.visibleItemsInfo
                 val itemInfo = visibleItemsInfo.find { it.index == index }
 
-                // Calculate scale and alpha based on position
-                val (scale, alpha) = if (itemInfo != null) {
+                // Calculate scale, alpha, and center position (removed blur calculation)
+                val (scale, alpha, isCenter) = if (itemInfo != null) {
                     val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f
                     val itemCenter = itemInfo.offset + itemInfo.size / 2f
                     val distance = kotlin.math.abs(viewportCenter - itemCenter)
 
-                    // Adjust max distance to make transition smoother
                     val maxDistance = itemInfo.size * 0.8f
                     val normalizedDistance = (distance / maxDistance).coerceIn(0f, 1f)
 
-                    // Scale from 0.75f (small) to 1.0f (full size) for better visibility
                     val calculatedScale = lerp(1f, 0.75f, normalizedDistance)
                     val calculatedAlpha = lerp(1f, 0.7f, normalizedDistance)
 
-                    calculatedScale to calculatedAlpha
+                    // Determine if this is the center card (within 50px of center)
+                    val isCenterCard = distance < 50f
+
+                    Triple(calculatedScale, calculatedAlpha, isCenterCard)
                 } else {
-                    0.75f to 0.7f // Default for items not visible
+                    Triple(0.75f, 0.7f, false)
                 }
 
                 EventCard(
                     event = event,
                     onClick = { onEventClick(event) },
+                    isCenter = isCenter,
                     modifier = Modifier
-                        .width(220.dp) // Much smaller width
+                        .width(220.dp)
                         .graphicsLayer {
                             scaleX = scale
                             scaleY = scale
                             this.alpha = alpha
                         }
+                )
+            }
+        }
+    }
+}
+
+// Helper data class for multiple return values
+data class Triple<A, B, C>(val first: A, val second: B, val third: C)
+
+// Loading state shimmer categories
+@Composable
+fun LoadingCategorySection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        // Loading category title
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .height(18.dp)
+                .background(
+                    Color(0xFF404040).copy(alpha = 0.6f),
+                    RoundedCornerShape(4.dp)
+                )
+                .padding(bottom = 12.dp)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Loading cards row
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 80.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(3) {
+                ShimmerEventCard(
+                    modifier = Modifier.width(220.dp)
                 )
             }
         }

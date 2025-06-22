@@ -1,6 +1,6 @@
 package com.example.talkeys_new.screens.common
 
-import android.content.Context
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
