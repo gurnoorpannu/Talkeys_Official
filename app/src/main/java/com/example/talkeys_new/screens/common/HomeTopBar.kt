@@ -1,5 +1,6 @@
 package com.example.talkeys_new.screens.common
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -26,12 +28,23 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import com.example.talkeys_new.R
-
+import com.example.talkeys_new.screens.authentication.GoogleAuthClient
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopBar(navController: NavController) {
     var showProfileDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Initialize GoogleAuthClient
+    val googleAuthClient = remember {
+        GoogleAuthClient(
+            context = context,
+            clientId = "563385258779-75kq583ov98fk7h3dqp5em0639769a61.apps.googleusercontent.com"
+        )
+    }
 
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
@@ -130,13 +143,38 @@ fun HomeTopBar(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // Logout Option
+                        // Logout Option with proper implementation
                         MenuOption(
                             icon = R.drawable.dropdown_logout_icon,
                             text = "Logout",
                             onClick = {
-                                showProfileDialog = false  // Close the dialog
-                                navController.navigate("landingpage")  // Navigate to landing page
+                                scope.launch {
+                                    try {
+                                        // Sign out from Google
+                                        googleAuthClient.signOut().addOnCompleteListener {
+                                            // Clear any stored user data (SharedPreferences, etc.)
+                                            clearUserSession(context)
+
+                                            // Close the dialog
+                                            showProfileDialog = false
+
+                                            // Navigate to landing page and clear backstack
+                                            navController.navigate("landingpage") {
+                                                popUpTo(0) { inclusive = true }
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                        // Even if Google sign out fails, still navigate to landing page
+                                        clearUserSession(context)
+                                        showProfileDialog = false
+                                        navController.navigate("landingpage") {
+                                            popUpTo(0) { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }
                             }
                         )
                     }
@@ -144,6 +182,17 @@ fun HomeTopBar(navController: NavController) {
             }
         }
     }
+}
+
+// Helper function to clear user session data
+private fun clearUserSession(context: android.content.Context) {
+    // Clear SharedPreferences if you're storing user data there
+    val sharedPreferences = context.getSharedPreferences("user_session", android.content.Context.MODE_PRIVATE)
+    sharedPreferences.edit().clear().apply()
+
+    // Clear any other user-related data you might have stored
+    // For example, if you're using Room database, clear user tables
+    // If you're using any other storage mechanism, clear it here
 }
 
 @Composable
@@ -180,5 +229,3 @@ fun MenuOption(
         )
     }
 }
-
-

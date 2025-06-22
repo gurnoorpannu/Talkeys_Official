@@ -36,8 +36,7 @@ fun EventCard(
 ) {
     Card(
         modifier = modifier
-            .width(280.dp)
-            .height(450.dp) // Increased height to accommodate all content
+            .height(380.dp) // Increased from 320.dp to 380.dp
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -59,11 +58,11 @@ fun EventCard(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Image Section
+                // Image Section - Made more square
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(200.dp) // Increased from 160.dp to 200.dp to make more square
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                 ) {
                     AsyncImage(
@@ -81,27 +80,29 @@ fun EventCard(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp)
+                        .padding(12.dp) // Reduced padding
                 ) {
-                    // Title Section with fixed height
+                    // Title Section with proper height for multi-line text
                     Box(
-                        modifier = Modifier.height(75.dp) // Fixed height for title area
+                        modifier = Modifier.height(48.dp), // Reduced height
+                        contentAlignment = Alignment.TopStart
                     ) {
                         Text(
                             text = event.name,
                             style = TextStyle(
-                                fontSize = 29.47.sp,
+                                fontSize = 18.sp, // Reduced font size
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                                 fontWeight = FontWeight(600),
                                 color = Color(0xFFFCFCFC),
+                                lineHeight = 20.sp // Adjusted line height
                             ),
                             color = Color.White,
-                            maxLines = 3, // Allow up to 3 lines
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
 
-                   // Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     // Location Row
                     Row(
@@ -112,12 +113,12 @@ fun EventCard(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = "Location",
                             tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(14.dp) // Reduced icon size
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = event.location ?: "Location not available",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall, // Smaller text
                             color = Color.White,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -125,7 +126,7 @@ fun EventCard(
                         )
                     }
 
-                   Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     // Date Row
                     Row(
@@ -136,42 +137,42 @@ fun EventCard(
                             imageVector = Icons.Default.CalendarToday,
                             contentDescription = "Date",
                             tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(14.dp) // Reduced icon size
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "${formatDate(event.startDate)} | ${event.startTime}",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall, // Smaller text
                             color = Color.White
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Bottom Tags Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         // Free/Price Tag
                         Box(
                             modifier = Modifier
                                 .background(
                                     color = Color.Transparent,
-                                    shape = RoundedCornerShape(20.dp)
+                                    shape = RoundedCornerShape(16.dp)
                                 )
                                 .border(
                                     width = 1.dp,
                                     color = Color(0xFFDCB6FF),
-                                    shape = RoundedCornerShape(20.dp)
+                                    shape = RoundedCornerShape(16.dp)
                                 )
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp) // Reduced padding
                         ) {
                             Text(
                                 text = if (event.ticketPrice == null || event.ticketPrice == 0.0) "Free" else "₹${event.ticketPrice}",
                                 color = Color.White,
                                 style = MaterialTheme.typography.bodySmall,
-                                fontSize = 12.sp
+                                fontSize = 10.sp // Reduced font size
                             )
                         }
 
@@ -180,20 +181,20 @@ fun EventCard(
                             modifier = Modifier
                                 .background(
                                     color = Color.Transparent,
-                                    shape = RoundedCornerShape(20.dp)
+                                    shape = RoundedCornerShape(16.dp)
                                 )
                                 .border(
                                     width = 1.dp,
                                     color = Color(0xFFDCB6FF),
-                                    shape = RoundedCornerShape(20.dp)
+                                    shape = RoundedCornerShape(16.dp)
                                 )
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp) // Reduced padding
                         ) {
                             Text(
                                 text = event.category ?: "Event",
                                 color = Color.White,
                                 style = MaterialTheme.typography.bodySmall,
-                                fontSize = 12.sp
+                                fontSize = 10.sp // Reduced font size
                             )
                         }
                     }
@@ -202,7 +203,6 @@ fun EventCard(
         }
     }
 }
-
 // Helper function to format date
 private fun formatDate(dateString: String): String {
     return try {

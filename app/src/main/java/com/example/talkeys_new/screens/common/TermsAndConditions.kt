@@ -35,7 +35,6 @@ import com.example.talkeys_new.screens.common.HomeTopBar
 import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.common.Footer
 
-
 @Composable
 fun TermsAndConditionsScreen(navController: NavController) {
     val scrollState = rememberScrollState()

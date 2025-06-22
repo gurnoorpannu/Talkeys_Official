@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -37,6 +38,11 @@ import com.example.talkeys_new.R
 import com.example.talkeys_new.dataModels.EventResponse
 import com.example.talkeys_new.screens.common.BottomBar
 import com.example.talkeys_new.screens.common.Footer
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.util.lerp
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun ExploreEventsScreen(navController: NavController) {
@@ -258,16 +264,73 @@ fun CategorySection(
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Horizontal scrollable list of events
+        // Horizontal scrollable list of events with scaling animation
+        val lazyListState = rememberLazyListState()
+
+        // Snap behavior to center cards
+        LaunchedEffect(lazyListState.isScrollInProgress) {
+            if (!lazyListState.isScrollInProgress) {
+                val layoutInfo = lazyListState.layoutInfo
+                val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f
+
+                // Find the item closest to center
+                val closestItem = layoutInfo.visibleItemsInfo.minByOrNull { itemInfo ->
+                    val itemCenter = itemInfo.offset + itemInfo.size / 2f
+                    kotlin.math.abs(viewportCenter - itemCenter)
+                }
+
+                closestItem?.let { item ->
+                    val itemCenter = item.offset + item.size / 2f
+                    val offset = itemCenter - viewportCenter
+
+                    // Smooth scroll to center the closest item
+                    if (kotlin.math.abs(offset) > 10) { // Only snap if not already centered
+                        lazyListState.animateScrollBy(offset)
+                    }
+                }
+            }
+        }
+
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(end = 16.dp)
+            state = lazyListState,
+            horizontalArrangement = Arrangement.spacedBy(8.dp), // Reduced from 16.dp to 8.dp
+            contentPadding = PaddingValues(start = 16.dp, end = 80.dp), // Reduced start padding from 32.dp to 16.dp
+            modifier = Modifier.fillMaxWidth()
         ) {
-            items(events) { event ->
+            itemsIndexed(events) { index, event ->
+                val layoutInfo = lazyListState.layoutInfo
+                val visibleItemsInfo = layoutInfo.visibleItemsInfo
+                val itemInfo = visibleItemsInfo.find { it.index == index }
+
+                // Calculate scale and alpha based on position
+                val (scale, alpha) = if (itemInfo != null) {
+                    val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f
+                    val itemCenter = itemInfo.offset + itemInfo.size / 2f
+                    val distance = kotlin.math.abs(viewportCenter - itemCenter)
+
+                    // Adjust max distance to make transition smoother
+                    val maxDistance = itemInfo.size * 0.8f
+                    val normalizedDistance = (distance / maxDistance).coerceIn(0f, 1f)
+
+                    // Scale from 0.75f (small) to 1.0f (full size) for better visibility
+                    val calculatedScale = lerp(1f, 0.75f, normalizedDistance)
+                    val calculatedAlpha = lerp(1f, 0.7f, normalizedDistance)
+
+                    calculatedScale to calculatedAlpha
+                } else {
+                    0.75f to 0.7f // Default for items not visible
+                }
+
                 EventCard(
                     event = event,
                     onClick = { onEventClick(event) },
-                    modifier = Modifier.width(280.dp) // Fixed width for horizontal scrolling
+                    modifier = Modifier
+                        .width(220.dp) // Much smaller width
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            this.alpha = alpha
+                        }
                 )
             }
         }
