@@ -214,9 +214,9 @@ fun ExploreEventsScreen(navController: NavController) {
                                             category = category,
                                             events = events,
                                             onEventClick = { event ->
-                                                Log.d("ExploreEventsScreen", "Event clicked: ${event.name}")
-                                                // TODO: Navigate to detail screen
-                                                // navController.navigate("eventDetail/${event._id}")
+                                                Log.d("ExploreEventsScreen", "Event clicked: ${event.name}, ID: ${event._id}")
+                                                // Navigate to event detail screen
+                                                navController.navigate("eventDetail/${event._id}")
                                             }
                                         )
                                     }
@@ -376,3 +376,4 @@ fun LoadingCategorySection() {
         }
     }
 }
+

@@ -451,26 +451,68 @@ fun ShimmerEventCard(
 // Helper function to format date (unchanged)
 private fun formatDate(dateString: String): String {
     return try {
+        // Handle ISO date format (2025-02-12T18:00:00.000Z)
+        val datePart = if (dateString.contains("T")) {
+            dateString.split("T")[0] // Extract just the date part before 'T'
+        } else {
+            dateString
+        }
+
+        val parts = datePart.split("-")
+        if (parts.size >= 3) {
+            val year = parts[0]
+            val month = when (parts[1]) {
+                "01" -> "Jan"
+                "02" -> "Feb"
+                "03" -> "Mar"
+                "04" -> "Apr"
+                "05" -> "May"
+                "06" -> "Jun"
+                "07" -> "Jul"
+                "08" -> "Aug"
+                "09" -> "Sep"
+                "10" -> "Oct"
+                "11" -> "Nov"
+                "12" -> "Dec"
+                else -> "Month"
+            }
+            // Extract day and remove leading zeros
+            val day = parts[2].toIntOrNull()?.toString() ?: parts[2]
+
+            "$day $month $year"
+        } else {
+            dateString
+        }
+    } catch (e: Exception) {
+        dateString
+    }
+}
+
+// Alternative simpler version (if you prefer without ordinal suffixes)
+private fun formatDateSimple(dateString: String): String {
+    return try {
         val parts = dateString.split("-")
         if (parts.size >= 3) {
             val year = parts[0]
             val month = when (parts[1]) {
-                "01" -> "January"
-                "02" -> "February"
-                "03" -> "March"
-                "04" -> "April"
+                "01" -> "Jan"
+                "02" -> "Feb"
+                "03" -> "Mar"
+                "04" -> "Apr"
                 "05" -> "May"
-                "06" -> "June"
-                "07" -> "July"
-                "08" -> "August"
-                "09" -> "September"
-                "10" -> "October"
-                "11" -> "November"
-                "12" -> "December"
+                "06" -> "Jun"
+                "07" -> "Jul"
+                "08" -> "Aug"
+                "09" -> "Sep"
+                "10" -> "Oct"
+                "11" -> "Nov"
+                "12" -> "Dec"
                 else -> "Month"
             }
+            // Simply convert to int to remove leading zero, then back to string
             val day = parts[2].toIntOrNull()?.toString() ?: parts[2]
-            "$month $day, $year"
+
+            "$day $month $year"  // Changed order: day first, then month, then year
         } else {
             dateString
         }
