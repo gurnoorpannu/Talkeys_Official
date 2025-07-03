@@ -56,3 +56,38 @@ data class Pagination(
     val pages: Int,
     val limit: Int
 )
+data class EventDetailResponse(
+    val status: String,
+    val data: EventDetail
+)
+
+data class EventDetail(
+    val _id: String,
+    val name: String,
+    val category: String,
+    val mode: String,
+    val location: String,
+    val duration: String,
+    val ticketPrice: String,
+    val totalSeats: Int,
+    val slots: Int,
+    val visibility: String,
+    val prizes: String,
+    val photographs: List<String>?,
+    val startDate: String,
+    val startTime: String,
+    val endDate: String,
+    val endTime: String,
+    val endRegistrationDate: String,
+    val eventDescription: String?,
+    val isLive: Boolean,
+    val isPaid: Boolean,
+    val isTeamEvent: Boolean,
+    val organizerContact: String,
+    val organizerEmail: String,
+    val organizerName: String,
+    val registrationCount: Int,
+    val sponserImages: List<String>,
+    val registrationLink: String,
+    val availableSeats: Int
+)

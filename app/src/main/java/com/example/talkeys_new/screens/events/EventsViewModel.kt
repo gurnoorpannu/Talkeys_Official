@@ -12,6 +12,16 @@ import retrofit2.Response
 
 class EventViewModel(private val repository: EventsRepository) : ViewModel() {
 
+    private val _selectedEvent = MutableStateFlow<EventResponse?>(null)
+    val selectedEvent: StateFlow<EventResponse?> = _selectedEvent
+
+    private val _eventLoading = MutableStateFlow(false)
+    val eventLoading: StateFlow<Boolean> = _eventLoading
+
+    private val _eventError = MutableStateFlow<String?>(null)
+    val eventError: StateFlow<String?> = _eventError
+
+
     private val _allEvents = MutableStateFlow<List<EventResponse>>(emptyList())
 
     private val _eventList = MutableStateFlow<List<EventResponse>>(emptyList())
@@ -77,4 +87,29 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
         Log.d("EventViewModel", "Filtering events - Show live: ${_showLiveEvents.value}, Filtered count: ${filtered.size}")
         _eventList.value = filtered
     }
+
+    fun fetchEventById(eventId: String) {
+        viewModelScope.launch {
+            _eventLoading.value = true
+            _eventError.value = null
+
+            try {
+                val response = repository.getEventById(eventId)
+                if (response.isSuccessful) {
+                    _selectedEvent.value = response.body()
+                    Log.d("EventViewModel", "Fetched event: ${response.body()?.name}")
+                } else {
+                    _eventError.value = "Failed to load event: ${response.message()}"
+                    Log.e("EventViewModel", "Error: ${response.code()} ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _eventError.value = "Error: ${e.message}"
+                Log.e("EventViewModel", "Exception: ${e.message}", e)
+            } finally {
+                _eventLoading.value = false
+            }
+        }
+    }
+
+
 }

@@ -153,7 +153,9 @@ fun ExploreEventsScreen(navController: NavController) {
                                                 .weight(1f)
                                                 .height(40.dp)
                                                 .background(
-                                                    color = if (showLiveEvents) Color(0xFF8A44CB) else Color(0x40FFFFFF),
+                                                    color = if (showLiveEvents) Color(0xFF8A44CB) else Color(
+                                                        0x40FFFFFF
+                                                    ),
                                                     shape = RoundedCornerShape(20.dp)
                                                 )
                                                 .clickable { viewModel.toggleEventFilter() },
@@ -172,7 +174,9 @@ fun ExploreEventsScreen(navController: NavController) {
                                                 .weight(1f)
                                                 .height(40.dp)
                                                 .background(
-                                                    color = if (!showLiveEvents) Color(0xFF8A44CB) else Color(0x40FFFFFF),
+                                                    color = if (!showLiveEvents) Color(0xFF8A44CB) else Color(
+                                                        0x40FFFFFF
+                                                    ),
                                                     shape = RoundedCornerShape(20.dp)
                                                 )
                                                 .clickable { viewModel.toggleEventFilter() },
@@ -215,8 +219,13 @@ fun ExploreEventsScreen(navController: NavController) {
                                             events = events,
                                             onEventClick = { event ->
                                                 Log.d("ExploreEventsScreen", "Event clicked: ${event.name}, ID: ${event._id}")
+                                                Log.d("ExploreEventsScreen", "Navigating to: eventDetail/${event._id}")
                                                 // Navigate to event detail screen
                                                 navController.navigate("eventDetail/${event._id}")
+                                                Log.d(
+                                                    "ExploreEventsScreen",
+                                                    "Navigation called successfully"
+                                                )
                                             }
                                         )
                                     }

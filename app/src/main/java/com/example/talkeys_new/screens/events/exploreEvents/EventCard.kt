@@ -33,6 +33,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.talkeys_new.dataModels.EventResponse
 import com.example.talkeys_new.R
+import android.util.Log
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 
 @Composable
 fun EventCard(
@@ -41,8 +44,10 @@ fun EventCard(
     modifier: Modifier = Modifier,
     isCenter: Boolean = false
 ) {
-    // 1. TAP ANIMATION
-    var isPressed by remember { mutableStateOf(false) }
+    // 1. TAP ANIMATION using interaction source
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
     val animatedScale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(
@@ -103,16 +108,15 @@ fun EventCard(
                 translationY = slideOffset
                 alpha = entranceAlpha
             }
-            .clickable { onClick() }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        isPressed = true
-                        tryAwaitRelease()
-                        isPressed = false
-                    }
-                )
-            },
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    Log.d("EventCard", "Card clicked for event: ${event.name}")
+                    onClick()
+                    Log.d("EventCard", "onClick called")
+                }
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

@@ -2,13 +2,16 @@ package com.example.talkeys_new.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.talkeys_new.screens.LandingPage
 import com.example.talkeys_new.screens.authentication.loginScreen.LoginScreen
 import com.example.talkeys_new.screens.authentication.signupScreen.SignUpScreen
 import com.example.talkeys_new.screens.common.ScreenNotFound
+import com.example.talkeys_new.screens.events.eventDetailScreen.EventDetailScreen
 import com.example.talkeys_new.screens.home.HomeScreen
 import com.example.talkeys_new.screens.events.exploreEvents.ExploreEventsScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
@@ -31,5 +34,33 @@ fun AppNavigation(modifier: Modifier) {
         composable("privacy_policy") { privacyPolicy(navController) }
         composable("tas") { TermsAndConditionsScreen(navController) }
         composable("screen_not_found"){ScreenNotFound(navController)}
+
+        // Event Detail Screen with eventId parameter
+        composable(
+            route = "eventDetail/{eventId}",
+            arguments = listOf(
+                navArgument("eventId") {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            EventDetailScreen(
+                eventId = eventId,
+                navController = navController
+            )
+        }
+
+        composable("exploreEvents") {
+            ExploreEventsScreen(navController = navController)
+        }
+
+        // Event Registration Screen (placeholder - you'll need to create this)
+        composable("event_registration") {
+            // EventRegistrationScreen(navController = navController)
+            // For now, you can just show a placeholder or navigate back
+        }
+
     }
 }
