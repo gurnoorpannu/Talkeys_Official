@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -42,8 +41,15 @@ fun EventCard(
     event: EventResponse,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isCenter: Boolean = false
+    isCenter: Boolean = false,
+    isFocused: Boolean = true
 ) {
+    // Calculate dimensions based on focus state
+    val cardWidth = if (isFocused) 165.dp else 130.dp
+    val cardHeight = if (isFocused) 286.dp else 247.dp
+    val imageHeight =
+        if (isFocused) 165.dp else 130.dp // Use same width as height for square aspect ratio
+
     // 1. TAP ANIMATION using interaction source
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -93,7 +99,8 @@ fun EventCard(
 
     Card(
         modifier = modifier
-            .height(380.dp)
+            .width(cardWidth)
+            .height(cardHeight)
             .graphicsLayer {
                 // Tap animation
                 scaleX = animatedScale
@@ -117,7 +124,7 @@ fun EventCard(
                     Log.d("EventCard", "onClick called")
                 }
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(15.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -125,13 +132,14 @@ fun EventCard(
             modifier = Modifier
                 .fillMaxSize()
                 .border(
-                    width = 1.dp,
-                    color = Color(0xFFDCB6FF),
-                    shape = RoundedCornerShape(16.dp)
+                    width = 2.dp,
+                    color = Color(0xFF703CA0),
+                    shape = RoundedCornerShape(15.dp)
                 )
+                .padding(2.dp)
                 .background(
-                    color = Color(0xFF262626).copy(alpha = 0.7f),
-                    shape = RoundedCornerShape(16.dp)
+                    color = Color(0xFF262626),
+                    shape = RoundedCornerShape(15.dp)
                 )
         ) {
             Column(
@@ -141,8 +149,24 @@ fun EventCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                        .height(imageHeight)
+                        .background(
+                            color = Color(0xFFA7A7A7),
+                            shape = RoundedCornerShape(
+                                topStart = 8.18715.dp,
+                                topEnd = 8.18715.dp,
+                                bottomStart = 0.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 8.18715.dp,
+                                topEnd = 8.18715.dp,
+                                bottomStart = 0.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -162,24 +186,18 @@ fun EventCard(
                         .padding(12.dp)
                 ) {
                     // Title Section
-                    Box(
-                        modifier = Modifier.height(48.dp),
-                        contentAlignment = Alignment.TopStart
-                    ) {
-                        Text(
-                            text = event.name,
-                            style = TextStyle(
-                                fontSize = 18.sp,
-                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                fontWeight = FontWeight(600),
-                                color = Color(0xFFFCFCFC),
-                                lineHeight = 20.sp
-                            ),
-                            color = Color.White,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Text(
+                        text = event.name,
+                        style = TextStyle(
+                            fontSize = if (isFocused) 14.sp else 12.sp,
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                            fontWeight = FontWeight(600),
+                            color = Color(0xFFFCFCFC),
+                            lineHeight = if (isFocused) 16.sp else 14.sp
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
                     Spacer(modifier = Modifier.height(6.dp))
 
@@ -192,13 +210,15 @@ fun EventCard(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = "Location",
                             tint = Color.White,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(12.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = event.location ?: "Location not available",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
+                            style = TextStyle(
+                                fontSize = if (isFocused) 10.sp else 9.sp,
+                                color = Color.White
+                            ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
@@ -216,17 +236,19 @@ fun EventCard(
                             imageVector = Icons.Default.CalendarToday,
                             contentDescription = "Date",
                             tint = Color.White,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(12.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${formatDate(event.startDate)} | ${event.startTime}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White
+                            style = TextStyle(
+                                fontSize = if (isFocused) 10.sp else 9.sp,
+                                color = Color.White
+                            )
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     // Bottom Tags Row
                     Row(
@@ -237,7 +259,7 @@ fun EventCard(
                         Box(
                             modifier = Modifier
                                 .background(
-                                    color = Color.Transparent,
+                                    color = Color(0xFF703CA0).copy(alpha = 0.3f),
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .border(
@@ -245,13 +267,15 @@ fun EventCard(
                                     color = Color(0xFFDCB6FF),
                                     shape = RoundedCornerShape(16.dp)
                                 )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .width(63.dp)
+                                .height(24.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = if (event.ticketPrice == null || event.ticketPrice == 0.0) "Free" else "₹${event.ticketPrice}",
                                 color = Color.White,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 10.sp
+                                fontSize = if (isFocused) 9.sp else 8.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
 
@@ -259,7 +283,7 @@ fun EventCard(
                         Box(
                             modifier = Modifier
                                 .background(
-                                    color = Color.Transparent,
+                                    color = Color(0xFF703CA0).copy(alpha = 0.3f),
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .border(
@@ -267,13 +291,15 @@ fun EventCard(
                                     color = Color(0xFFDCB6FF),
                                     shape = RoundedCornerShape(16.dp)
                                 )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .width(63.dp)
+                                .height(24.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = event.category ?: "Event",
                                 color = Color.White,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 10.sp
+                                fontSize = if (isFocused) 9.sp else 8.sp,
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
@@ -325,7 +351,7 @@ fun ShimmerEventCard(
 
     Card(
         modifier = modifier
-            .height(380.dp)
+            .height(281.87.dp)
             .graphicsLayer {
                 translationX = shiver
                 scaleX = pulse
@@ -373,7 +399,7 @@ fun ShimmerEventCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(165.dp)
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                         .background(Color(0xFF404040).copy(alpha = 0.6f))
                 )

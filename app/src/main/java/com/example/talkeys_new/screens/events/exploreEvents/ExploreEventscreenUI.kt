@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -39,7 +41,6 @@ import com.example.talkeys_new.dataModels.EventResponse
 import com.example.talkeys_new.screens.common.BottomBar
 import com.example.talkeys_new.screens.common.Footer
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.util.lerp
 import androidx.compose.runtime.LaunchedEffect
@@ -276,70 +277,19 @@ fun CategorySection(
         // Horizontal scrollable list of events with enhanced animations
         val lazyListState = rememberLazyListState()
 
-        // Snap behavior to center cards
-        LaunchedEffect(lazyListState.isScrollInProgress) {
-            if (!lazyListState.isScrollInProgress) {
-                val layoutInfo = lazyListState.layoutInfo
-                val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f
-
-                val closestItem = layoutInfo.visibleItemsInfo.minByOrNull { itemInfo ->
-                    val itemCenter = itemInfo.offset + itemInfo.size / 2f
-                    kotlin.math.abs(viewportCenter - itemCenter)
-                }
-
-                closestItem?.let { item ->
-                    val itemCenter = item.offset + item.size / 2f
-                    val offset = itemCenter - viewportCenter
-
-                    if (kotlin.math.abs(offset) > 10) {
-                        lazyListState.animateScrollBy(offset)
-                    }
-                }
-            }
-        }
-
         LazyRow(
             state = lazyListState,
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 80.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = 0.dp, end = 80.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             itemsIndexed(events) { index, event ->
-                val layoutInfo = lazyListState.layoutInfo
-                val visibleItemsInfo = layoutInfo.visibleItemsInfo
-                val itemInfo = visibleItemsInfo.find { it.index == index }
-
-                // Calculate scale, alpha, and center position (removed blur calculation)
-                val (scale, alpha, isCenter) = if (itemInfo != null) {
-                    val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2f
-                    val itemCenter = itemInfo.offset + itemInfo.size / 2f
-                    val distance = kotlin.math.abs(viewportCenter - itemCenter)
-
-                    val maxDistance = itemInfo.size * 0.8f
-                    val normalizedDistance = (distance / maxDistance).coerceIn(0f, 1f)
-
-                    val calculatedScale = lerp(1f, 0.75f, normalizedDistance)
-                    val calculatedAlpha = lerp(1f, 0.7f, normalizedDistance)
-
-                    // Determine if this is the center card (within 50px of center)
-                    val isCenterCard = distance < 50f
-
-                    Triple(calculatedScale, calculatedAlpha, isCenterCard)
-                } else {
-                    Triple(0.75f, 0.7f, false)
-                }
-
                 EventCard(
                     event = event,
                     onClick = { onEventClick(event) },
-                    isCenter = isCenter,
-                    modifier = Modifier
-                        .width(220.dp)
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                            this.alpha = alpha
-                        }
+                    isCenter = true, // All cards get center effects
+                    isFocused = true, // All cards are focused (large size)
+                    modifier = Modifier // Remove alpha transparency
                 )
             }
         }
@@ -348,6 +298,7 @@ fun CategorySection(
 
 // Helper data class for multiple return values
 data class Triple<A, B, C>(val first: A, val second: B, val third: C)
+data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
 // Loading state shimmer categories
 @Composable
@@ -373,14 +324,12 @@ fun LoadingCategorySection() {
 
         // Loading cards row
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 80.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = 0.dp, end = 80.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(3) {
-                ShimmerEventCard(
-                    modifier = Modifier.width(220.dp)
-                )
+                ShimmerEventCard()
             }
         }
     }
