@@ -358,28 +358,6 @@ fun EventDetailRow(icon: Int, text: String) {
 
 @Composable
 fun EventCard1(title: String, location: String, imageUrl: String?, modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "shimmer_transition")
-
-    val shimmerTranslateAnim by infiniteTransition.animateFloat(
-        initialValue = -300f,
-        targetValue = 300f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "shimmer"
-    )
-
-    val animatedRotationY by infiniteTransition.animateFloat(
-        initialValue = -1.5f,
-        targetValue = 1.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "rotation_y"
-    )
-
     Box(
         modifier = modifier
             .shadow(
@@ -389,9 +367,6 @@ fun EventCard1(title: String, location: String, imageUrl: String?, modifier: Mod
             )
             .width(150.dp)
             .height(266.66501.dp)
-            .graphicsLayer {
-                rotationY = animatedRotationY
-            }
     ) {
         if (imageUrl != null) {
             AsyncImage(
@@ -399,26 +374,6 @@ fun EventCard1(title: String, location: String, imageUrl: String?, modifier: Mod
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
-            )
-
-            // Shimmer overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .drawWithCache {
-                        val brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.White.copy(alpha = 0.6f),
-                                Color.Transparent
-                            ),
-                            start = Offset(shimmerTranslateAnim, 0f),
-                            end = Offset(shimmerTranslateAnim + 150f, size.height)
-                        )
-                        onDrawBehind {
-                            drawRect(brush = brush)
-                        }
-                    }
             )
         } else {
             Box(
@@ -432,26 +387,6 @@ fun EventCard1(title: String, location: String, imageUrl: String?, modifier: Mod
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                     alpha = 0.5f
-                )
-
-                // Shimmer overlay for placeholder
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .drawWithCache {
-                            val brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.White.copy(alpha = 0.4f),
-                                    Color.Transparent
-                                ),
-                                start = Offset(shimmerTranslateAnim, 0f),
-                                end = Offset(shimmerTranslateAnim + 150f, size.height)
-                            )
-                            onDrawBehind {
-                                drawRect(brush = brush)
-                            }
-                        }
                 )
             }
         }
