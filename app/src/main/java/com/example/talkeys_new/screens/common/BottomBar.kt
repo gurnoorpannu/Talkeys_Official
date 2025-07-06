@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -28,18 +29,18 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
     val backgroundColor by animateColorAsState(
         targetValue = when (currentRoute) {
             "home" -> when {
-                scrollState.value > 100 -> Color(0xFF1A1A1A).copy(alpha = 0.65f)
-                else -> Color(0xFF0A0A0A).copy(alpha = 0.5f)
+                scrollState.value > 100 -> Color(0xFF000000).copy(alpha = 0.95f)
+                else -> Color(0xFF000000).copy(alpha = 0.92f)
             }
             "events", "communities" -> when {
-                scrollState.value > 100 -> Color(0xFF151515).copy(alpha = 0.65f)
-                else -> Color(0xFF0D0D0D).copy(alpha = 0.5f)
+                scrollState.value > 100 -> Color(0xFF000000).copy(alpha = 0.95f)
+                else -> Color(0xFF000000).copy(alpha = 0.92f)
             }
             "explore" -> when {
-                scrollState.value > 100 -> Color(0xFF131313).copy(alpha = 0.6f)
-                else -> Color(0xFF080808).copy(alpha = 0.45f)
+                scrollState.value > 100 -> Color(0xFF000000).copy(alpha = 0.94f)
+                else -> Color(0xFF000000).copy(alpha = 0.90f)
             }
-            else -> Color(0xFF000000).copy(alpha = 0.4f)
+            else -> Color(0xFF000000).copy(alpha = 0.92f)
         },
         animationSpec = tween(
             durationMillis = 300,
@@ -48,29 +49,41 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
     )
     Box(
         modifier = modifier
-            .height(70.dp)
-            .offset(y = (-20).dp)
-            .padding(bottom = 16.dp)
-            .shadow(
-                elevation = 20.dp,
-                spotColor = Color.Black.copy(alpha = 0.15f),
-                ambientColor = Color.Black.copy(alpha = 0.1f)
-            )
-            .background(color = backgroundColor, shape = RoundedCornerShape(30.dp))
-            .graphicsLayer {
-                shadowElevation = 10f
-                shape = RoundedCornerShape(30.dp)
-                clip = true
-            },
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .height(60.dp)
+            .padding(bottom = 10.dp),
+        contentAlignment = Alignment.BottomCenter
     ) {
+        // Background layer 
+        Box(
+            modifier = Modifier
+                .width(330.dp)
+                .height(45.dp)
+                .shadow(
+                    elevation = 20.dp,
+                    spotColor = Color.Black.copy(alpha = 0.15f),
+                    ambientColor = Color.Black.copy(alpha = 0.1f)
+                )
+                .graphicsLayer {
+                    shadowElevation = 10f
+                    shape = RoundedCornerShape(25.dp)
+                    clip = true
+                }
+                .background(
+                    color = backgroundColor.copy(alpha = 0.75f),
+                    shape = RoundedCornerShape(25.dp)
+                )
+                .blur(radius = 45.dp)
+        )
+
+        // Content layer with icons (no blur applied)
         Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .width(370.dp)
+                .width(340.dp)
                 .height(40.dp)
-                .padding(horizontal = 25.dp)
+                .padding(horizontal = 28.dp)
         ) {
             val navigationItems = listOf(
                 NavigationItem(

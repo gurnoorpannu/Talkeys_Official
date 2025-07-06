@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,178 +78,183 @@ fun ExploreEventsScreen(navController: NavController) {
         viewModel.fetchAllEvents()
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.background),
-            contentDescription = "Background",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+    Scaffold(
+        topBar = { HomeTopBar(navController = navController) },
+        containerColor = Color.Transparent,
+        contentColor = Color.White,
+        modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets.navigationBars,
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.background),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
 
-        Scaffold(
-            topBar = { HomeTopBar(navController = navController) },
-            containerColor = Color.Transparent,
-            contentColor = Color.White,
-            modifier = Modifier.fillMaxSize()
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                when {
-                    errorMessage != null -> {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
+            when {
+                errorMessage != null -> {
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Error loading events",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = errorMessage ?: "Unknown error",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        Button(
+                            onClick = { viewModel.fetchAllEvents() },
+                            modifier = Modifier.padding(top = 16.dp)
                         ) {
-                            Text(
-                                text = "Error loading events",
-                                color = Color.Red,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = errorMessage ?: "Unknown error",
-                                color = Color.Red,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                            Button(
-                                onClick = { viewModel.fetchAllEvents() },
-                                modifier = Modifier.padding(top = 16.dp)
-                            ) {
-                                Text("Retry")
-                            }
+                            Text("Retry")
                         }
                     }
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(bottom = 80.dp)
-                        ) {
-                            item {
-                                Column {
-                                    Text(
-                                        text = "Explore Events",
-                                        style = TextStyle(
-                                            fontSize = 22.sp,
-                                            fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
-                                            color = Color.White,
-                                            textAlign = TextAlign.Center
-                                        ),
-                                        modifier = Modifier.padding(top = 12.dp, start = 19.dp)
-                                    )
+                }
 
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    // Toggle buttons for Live/Past events
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        // Live Events Button
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(40.dp)
-                                                .background(
-                                                    color = if (showLiveEvents) Color(0xFF8A44CB) else Color(
-                                                        0x40FFFFFF
-                                                    ),
-                                                    shape = RoundedCornerShape(20.dp)
-                                                )
-                                                .clickable { viewModel.toggleEventFilter() },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = "Live Events",
-                                                color = Color.White,
-                                                fontWeight = if (showLiveEvents) FontWeight.Bold else FontWeight.Normal,
-                                                fontSize = 14.sp
-                                            )
-                                        }
-                                        // Past Events Button
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .height(40.dp)
-                                                .background(
-                                                    color = if (!showLiveEvents) Color(0xFF8A44CB) else Color(
-                                                        0x40FFFFFF
-                                                    ),
-                                                    shape = RoundedCornerShape(20.dp)
-                                                )
-                                                .clickable { viewModel.toggleEventFilter() },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = "Past Events",
-                                                color = Color.White,
-                                                fontWeight = if (!showLiveEvents) FontWeight.Bold else FontWeight.Normal,
-                                                fontSize = 14.sp
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Show loading shimmer categories or actual content
-                            if (isLoading) {
-                                // Show loading shimmer categories
-                                items(3) { index ->
-                                    LoadingCategorySection()
-                                }
-                            } else if (groupedEvents.isEmpty()) {
-                                item {
-                                    Text(
-                                        text = if (showLiveEvents) "No live events available" else "No past events available",
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 100.dp)
+                    ) {
+                        item {
+                            Column {
+                                Text(
+                                    text = "Explore Events",
+                                    style = TextStyle(
+                                        fontSize = 22.sp,
+                                        fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
                                         color = Color.White,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(32.dp),
-                                        style = MaterialTheme.typography.titleMedium,
                                         textAlign = TextAlign.Center
-                                    )
-                                }
-                            } else {
-                                groupedEvents.forEach { (category, events) ->
-                                    item {
-                                        CategorySection(
-                                            category = category,
-                                            events = events,
-                                            onEventClick = { event ->
-                                                Log.d("ExploreEventsScreen", "Event clicked: ${event.name}, ID: ${event._id}")
-                                                Log.d("ExploreEventsScreen", "Navigating to: eventDetail/${event._id}")
-                                                // Navigate to event detail screen
-                                                navController.navigate("eventDetail/${event._id}")
-                                                Log.d(
-                                                    "ExploreEventsScreen",
-                                                    "Navigation called successfully"
-                                                )
-                                            }
+                                    ),
+                                    modifier = Modifier.padding(top = 12.dp, start = 19.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Toggle buttons for Live/Past events
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Live Events Button
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(40.dp)
+                                            .background(
+                                                color = if (showLiveEvents) Color(0xFF8A44CB) else Color(
+                                                    0x40FFFFFF
+                                                ),
+                                                shape = RoundedCornerShape(20.dp)
+                                            )
+                                            .clickable { viewModel.toggleEventFilter() },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Live Events",
+                                            color = Color.White,
+                                            fontWeight = if (showLiveEvents) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    // Past Events Button
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(40.dp)
+                                            .background(
+                                                color = if (!showLiveEvents) Color(0xFF8A44CB) else Color(
+                                                    0x40FFFFFF
+                                                ),
+                                                shape = RoundedCornerShape(20.dp)
+                                            )
+                                            .clickable { viewModel.toggleEventFilter() },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Past Events",
+                                            color = Color.White,
+                                            fontWeight = if (!showLiveEvents) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 14.sp
                                         )
                                     }
                                 }
                             }
-
-                            item { Spacer(modifier = Modifier.height(5.dp)) }
-                            item { Footer(navController = navController) }
                         }
+
+                        // Show loading shimmer categories or actual content
+                        if (isLoading) {
+                            // Show loading shimmer categories
+                            items(3) { index ->
+                                LoadingCategorySection()
+                            }
+                        } else if (groupedEvents.isEmpty()) {
+                            item {
+                                Text(
+                                    text = if (showLiveEvents) "No live events available" else "No past events available",
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            groupedEvents.forEach { (category, events) ->
+                                item {
+                                    CategorySection(
+                                        category = category,
+                                        events = events,
+                                        onEventClick = { event ->
+                                            Log.d(
+                                                "ExploreEventsScreen",
+                                                "Event clicked: ${event.name}, ID: ${event._id}"
+                                            )
+                                            Log.d(
+                                                "ExploreEventsScreen",
+                                                "Navigating to: eventDetail/${event._id}"
+                                            )
+                                            // Navigate to event detail screen
+                                            navController.navigate("eventDetail/${event._id}")
+                                            Log.d(
+                                                "ExploreEventsScreen",
+                                                "Navigation called successfully"
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        item { Spacer(modifier = Modifier.height(5.dp)) }
+                        item { Footer(navController = navController) }
                     }
                 }
             }
+            BottomBar(
+                navController,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+                scrollState = rememberScrollState()
+            )
         }
-
-        BottomBar(
-            navController = navController,
-            scrollState = rememberScrollState(),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-        )
     }
 }
 

@@ -278,7 +278,6 @@ fun EventCard(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
-
                         // Category Tag
                         Box(
                             modifier = Modifier
