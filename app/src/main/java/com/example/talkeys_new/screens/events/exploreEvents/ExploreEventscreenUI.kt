@@ -127,7 +127,7 @@ fun ExploreEventsScreen(navController: NavController) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 100.dp)
+                        contentPadding = PaddingValues(bottom = 100.1.dp)
                     ) {
                         item {
                             Column {
