@@ -14,8 +14,6 @@ import com.example.talkeys_new.screens.common.ScreenNotFound
 import com.example.talkeys_new.screens.events.eventDetailScreen.EventDetailScreen
 import com.example.talkeys_new.screens.home.HomeScreen
 import com.example.talkeys_new.screens.events.exploreEvents.ExploreEventsScreen
-import com.example.talkeys_new.screens.payment.PaymentScreen
-import com.example.talkeys_new.screens.payment.EventPaymentScreen
 import com.example.talkeys_new.screens.profile.ProfileScreen
 import com.example.talkeys_new.screens.profile.RegisteredEventsScreen
 import com.example.talkeys_new.screens.profile.LikedEventsScreen
@@ -73,11 +71,11 @@ fun AppNavigation(modifier: Modifier) {
         }
 
         // PhonePe Payment Screen
-        composable("payment") {
+      /*  composable("payment") {
             PaymentScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
-        }
+        }*/
 
         // PhonePe Payment Screen with Event Details
         composable(
@@ -92,12 +90,12 @@ fun AppNavigation(modifier: Modifier) {
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             val eventPrice = backStackEntry.arguments?.getString("eventPrice") ?: "0"
             
-            EventPaymentScreen(
+       /*     EventPaymentScreen(
                 eventId = eventId,
                 eventName = eventName,
                 eventPrice = eventPrice,
                 onNavigateBack = { navController.popBackStack() }
-            )
+            )*/
         }
 
     }
