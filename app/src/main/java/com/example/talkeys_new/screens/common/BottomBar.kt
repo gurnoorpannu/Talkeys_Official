@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.talkeys_new.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: Modifier = Modifier) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route

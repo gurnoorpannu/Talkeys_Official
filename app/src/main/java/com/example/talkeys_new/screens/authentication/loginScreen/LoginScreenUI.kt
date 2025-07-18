@@ -26,9 +26,14 @@ import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.authentication.AuthService.RetrofitClient
 import com.example.talkeys_new.screens.authentication.GoogleAuthClient
 import com.example.talkeys_new.screens.authentication.TokenManager
+import com.example.talkeys_new.screens.authentication.GoogleSignInManager
+import com.example.talkeys_new.screens.authentication.UserProfile
 import com.example.talkeys_new.screens.authentication.signupScreen.CustomOutlinedTextField
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import android.util.Log
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -68,18 +73,65 @@ fun LoginScreen(navController: NavController) {
             clientId = "563385258779-75kq583ov98fk7h3dqp5em0639769a61.apps.googleusercontent.com"
         )
     }
+    
+    val googleSignInManager = remember { GoogleSignInManager(context) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        Log.d("LoginScreen", "Google Sign-In result received")
         val token = googleAuthClient.getIdTokenFromIntent(result.data)
+        Log.d("LoginScreen", "ID Token: ${if (token != null) "Token received" else "Token is null"}")
 
         if (token != null) {
             coroutineScope.launch {
                 try {
+                    // Extract Google user information from the sign-in result
+                    val googleAccount = try {
+                        GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                            .getResult(ApiException::class.java)
+                    } catch (e: ApiException) {
+                        Log.e("LoginScreen", "Failed to get Google account: ${e.message}")
+                        null
+                    }
+                    
+                    // Save Google user profile data
+                    googleAccount?.let { account ->
+                        Log.d("LoginScreen", "Google Account Details:")
+                        Log.d("LoginScreen", "ID: ${account.id}")
+                        Log.d("LoginScreen", "Display Name: ${account.displayName}")
+                        Log.d("LoginScreen", "Email: ${account.email}")
+                        Log.d("LoginScreen", "Photo URL: ${account.photoUrl}")
+                        Log.d("LoginScreen", "Given Name: ${account.givenName}")
+                        Log.d("LoginScreen", "Family Name: ${account.familyName}")
+                        
+                        val userProfile = UserProfile(
+                            id = account.id ?: "",
+                            name = account.displayName ?: "",
+                            email = account.email ?: "",
+                            profileImageUrl = account.photoUrl?.toString(),
+                            givenName = account.givenName ?: "",
+                            familyName = account.familyName ?: ""
+                        )
+                        
+                        Log.d("LoginScreen", "Saving user profile: $userProfile")
+                        googleSignInManager.saveUserProfile(userProfile)
+                        Log.d("LoginScreen", "User profile saved successfully")
+                        
+                        // Verify the saved data
+                        val savedProfile = googleSignInManager.getUserProfile()
+                        Log.d("LoginScreen", "Verified saved profile: $savedProfile")
+                    } ?: run {
+                        Log.e("LoginScreen", "Google account is null")
+                    }
+                    
+                    // Verify token with backend
+                    Log.d("LoginScreen", "Verifying token with backend...")
                     val response = RetrofitClient.instance.verifyToken("Bearer $token")
                     if (response.isSuccessful) {
                         val body = response.body()
+                        Log.d("LoginScreen", "Backend response: ${body?.name}")
                         body?.accessToken?.let {
                             tokenManager.saveToken(it)
+                            Log.d("LoginScreen", "JWT token saved")
                         }
                         Toast.makeText(context, "Welcome ${body?.name}", Toast.LENGTH_SHORT).show()
                         navController.navigate("home") {
@@ -87,13 +139,16 @@ fun LoginScreen(navController: NavController) {
                             launchSingleTop = true
                         }
                     } else {
+                        Log.e("LoginScreen", "Backend verification failed: ${response.code()}")
                         Toast.makeText(context, "Login failed: ${response.code()}", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
+                    Log.e("LoginScreen", "Exception during login: ${e.message}", e)
                     Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
+            Log.e("LoginScreen", "Google sign-in failed - no token received")
             Toast.makeText(context, "Google sign-in failed", Toast.LENGTH_SHORT).show()
         }
     }

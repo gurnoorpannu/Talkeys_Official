@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 // Creates a DataStore instance tied to the application Context, named "user_prefs".
-// This is where we will store lightweight key-value data (like SharedPreferences but modern and safe).
 val Context.dataStore by preferencesDataStore(name = "user_prefs")
+
 
 // TokenManager handles saving, retrieving, and deleting the JWT token using DataStore.
 //A JWT (JSON Web Token) is a compact, secure token used to share user authentication data between a client and server.
