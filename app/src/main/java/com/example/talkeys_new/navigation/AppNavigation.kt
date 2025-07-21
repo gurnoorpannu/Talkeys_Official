@@ -70,14 +70,9 @@ fun AppNavigation(modifier: Modifier) {
             // For now, you can just show a placeholder or navigate back
         }
 
-        // PhonePe Payment Screen
-      /*  composable("payment") {
-            PaymentScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }*/
-
-        // PhonePe Payment Screen with Event Details
+        // Payment functionality disabled for now
+        // You can uncomment this when you need payment integration
+        /*
         composable(
             route = "payment/{eventId}/{eventName}/{eventPrice}",
             arguments = listOf(
@@ -90,13 +85,14 @@ fun AppNavigation(modifier: Modifier) {
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             val eventPrice = backStackEntry.arguments?.getString("eventPrice") ?: "0"
             
-       /*     EventPaymentScreen(
+            com.example.talkeys_new.screens.events.payment.EventPaymentScreen(
                 eventId = eventId,
                 eventName = eventName,
                 eventPrice = eventPrice,
                 onNavigateBack = { navController.popBackStack() }
-            )*/
+            )
         }
+        */
 
     }
 }
