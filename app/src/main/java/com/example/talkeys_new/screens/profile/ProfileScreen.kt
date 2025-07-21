@@ -53,7 +53,7 @@ fun ProfileScreen(navController: NavController) {
     // User profile state with proper error handling
     val userProfile by googleSignInManager.userProfile.collectAsState(initial = UserProfile())
     var mutualCommunities by remember { mutableStateOf(2) }
-    var userBio by remember { mutableStateOf("Well hello there! This is how the bio might appear if someone is adding it. You can write about your interests, hobbies, or anything you'd like others to know about you. The bio box will automatically adjust its height based on the content you write here.") }
+    var userBio by remember { mutableStateOf("this is how your card will look like to others and this is your sample bio") }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -151,6 +151,7 @@ fun ProfileScreen(navController: NavController) {
                 .background(Color.Black)
                 .verticalScroll(rememberScrollState())
         ) {
+            Spacer(modifier = Modifier.height(12.dp))
             // Enhanced Profile Section with rounded corners (removed spacing above)
             ProfileSection(
                 userProfile = userProfile,
@@ -630,7 +631,7 @@ private fun MenuItemsSection(navController: NavController) {
             Triple(R.drawable.registered_events, "Registered events") {
                 safeNavigate(navController, "registered_events")
             },
-            Triple(R.drawable.ic_events_icon, "Liked events") {
+            Triple(R.drawable.ic_liked_events, "Liked events") {
                 safeNavigate(navController, "liked_events")
             },
             Triple(R.drawable.hosted_events, "Hosted events") {
