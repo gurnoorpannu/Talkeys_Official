@@ -53,14 +53,12 @@ fun AppNavigation(modifier: Modifier) {
 
         // Create Event Screen
         composable("create_event_1") { CreateEvent1Screen(navController) }
-      //  composable("create_event_2") { CreateEvent2Screen(navController) }
         composable("create_event_2") { CreateEvent2Screen(navController) }
         composable("create_event_3") { CreateEvent3Screen(navController) }
         composable("create_event_4") { CreateEvent4Screen(navController) }
         composable("create_event_5") { CreateEvent5Screen(navController) }
         composable("create_event_6") { CreateEvent6Screen(navController) }
         composable("registration_success") { RegistrationSuccessScreen(navController) }
-       // composable("create_event_3") { CreateEvent3Screen(navController) }
 
         // Event Detail Screen with eventId parameter
         composable(
@@ -112,6 +110,5 @@ fun AppNavigation(modifier: Modifier) {
             )
         }
         */
-
     }
 }
