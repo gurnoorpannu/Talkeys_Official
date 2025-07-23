@@ -37,6 +37,9 @@ import coil.request.ImageRequest
 import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.authentication.GoogleSignInManager
 import com.example.talkeys_new.screens.authentication.UserProfile
+import com.example.talkeys_new.avatar.AvatarManager
+import com.example.talkeys_new.avatar.AvatarImageWithFallback
+import com.example.talkeys_new.avatar.ProfileAvatarSection
 import kotlinx.coroutines.launch
 import android.util.Log
 import com.example.talkeys_new.screens.authentication.TokenManager
@@ -159,7 +162,8 @@ fun ProfileScreen(navController: NavController) {
                 mutualCommunities = mutualCommunities,
                 isLoading = isLoading,
                 error = error,
-                clipboardManager = clipboardManager
+                clipboardManager = clipboardManager,
+                navController = navController
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -189,7 +193,8 @@ private fun ProfileSection(
     mutualCommunities: Int,
     isLoading: Boolean,
     error: String?,
-    clipboardManager: androidx.compose.ui.platform.ClipboardManager
+    clipboardManager: androidx.compose.ui.platform.ClipboardManager,
+    navController: NavController
 ) {
     Card(
         modifier = Modifier
@@ -211,7 +216,8 @@ private fun ProfileSection(
                     userProfile = userProfile,
                     userBio = userBio,
                     mutualCommunities = mutualCommunities,
-                    clipboardManager = clipboardManager
+                    clipboardManager = clipboardManager,
+                    navController = navController
                 )
             }
         }
@@ -270,17 +276,18 @@ private fun ProfileContent(
     userProfile: UserProfile,
     userBio: String,
     mutualCommunities: Int,
-    clipboardManager: androidx.compose.ui.platform.ClipboardManager
+    clipboardManager: androidx.compose.ui.platform.ClipboardManager,
+    navController: NavController
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            // Purple Strip at top
+            // Purple Strip at top - Increased height for larger avatar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(43.dp)
+                    .height(53.dp) // Increased from 43.dp to 53.dp for larger avatar
                     .background(
                         color = Color(0xFF6A4C93), // Purple color
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
@@ -324,7 +331,7 @@ private fun ProfileContent(
                     .padding(20.dp)
             ) {
                 Column {
-                    Spacer(modifier = Modifier.height(30.dp)) // Space for profile image overlap
+                    Spacer(modifier = Modifier.height(40.dp)) // Increased space for larger profile image overlap (100.dp avatar)
 
                     // User Name with Copy Icon (right next to name)
                     Row(
@@ -408,39 +415,12 @@ private fun ProfileContent(
             }
         }
 
-        // Profile Image (overlapping the purple strip)
-        Box(
-            modifier = Modifier
-                .offset(x = 20.dp, y = 15.dp) // Position to overlap purple strip
-                .size(80.dp)
-                .border(
-                    width = 3.dp,
-                    color = Color(0xFF171717), // Dark border to match background
-                    shape = CircleShape
-                )
-                .clip(CircleShape)
-                .background(Color(0xFFD9D9D9)),
-            contentAlignment = Alignment.Center
-        ) {
-            if (!userProfile.profileImageUrl.isNullOrEmpty()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(userProfile.profileImageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Default Profile",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(40.dp)
-                )
-            }
-        }
+        // Profile Avatar (overlapping the purple strip) - Using Avatar System
+        ProfileAvatarSection(
+            userProfile = userProfile,
+            navController = navController,
+            modifier = Modifier.offset(x = 20.dp, y = 20.dp) // Adjusted from y = 15.dp to y = 20.dp for better positioning with larger avatar
+        )
     }
 }
 
@@ -681,6 +661,7 @@ private fun LogoutSection(
     navController: NavController,
     scope: kotlinx.coroutines.CoroutineScope
 ) {
+    val context = LocalContext.current
     var isLoggingOut by remember { mutableStateOf(false) }
 
     Button(
@@ -689,8 +670,27 @@ private fun LogoutSection(
                 isLoggingOut = true
                 scope.launch {
                     try {
+                        // Clear app tokens and user profile
                         tokenManager.clearToken()
                         googleSignInManager.clearUserProfile()
+                        
+                        // Sign out from Google to force account picker on next login
+                        val googleAuthClient = com.example.talkeys_new.screens.authentication.GoogleAuthClient(
+                            context = context,
+                            clientId = "563385258779-75kq583ov98fk7h3dqp5em0639769a61.apps.googleusercontent.com"
+                        )
+                        
+                        // Revoke access to force account selection on next login
+                        googleAuthClient.revokeAccess().addOnCompleteListener {
+                            Log.d("ProfileScreen", "Google access revoked successfully")
+                        }.addOnFailureListener { exception ->
+                            Log.e("ProfileScreen", "Failed to revoke Google access", exception)
+                            // Even if revoke fails, still sign out
+                            googleAuthClient.signOut().addOnCompleteListener {
+                                Log.d("ProfileScreen", "Google sign out completed")
+                            }
+                        }
+                        
                         navController.navigate("landingpage") {
                             popUpTo(0) { inclusive = true }
                         }
