@@ -14,6 +14,7 @@ class GoogleAuthClient(context: Context, clientId: String) {
     private val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN) // Use the default sign-in settings
         .requestIdToken(clientId) // Ask for the ID token (used for authentication with backend)
         .requestEmail() // Ask for user's email address
+        .requestProfile() // Request user profile information
         .build() // Finalize the configuration
 
     // Step 2: Create a sign-in client using the context and sign-in options
@@ -46,4 +47,8 @@ class GoogleAuthClient(context: Context, clientId: String) {
     // Step 5: This function signs the user out of their Google account
     // Useful if the user clicks "Logout" in the app
     fun signOut() = signInClient.signOut()
+    
+    // Step 6: This function revokes access and signs out completely
+    // This ensures the account picker shows up on next login
+    fun revokeAccess() = signInClient.revokeAccess()
 }

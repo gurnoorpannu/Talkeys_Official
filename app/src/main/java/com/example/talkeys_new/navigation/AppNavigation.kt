@@ -18,14 +18,6 @@ import com.example.talkeys_new.screens.profile.ProfileScreen
 import com.example.talkeys_new.screens.profile.RegisteredEventsScreen
 import com.example.talkeys_new.screens.profile.LikedEventsScreen
 import com.example.talkeys_new.screens.profile.HostedEventsScreen
-import com.example.talkeys_new.screens.events.createEvent.CreateEvent1Screen
-import com.example.talkeys_new.screens.events.createEvent.CreateEvent2Screen
-import com.example.talkeys_new.screens.events.createEvent.CreateEvent3Screen
-import com.example.talkeys_new.screens.events.createEvent.CreateEvent4Screen
-import com.example.talkeys_new.screens.events.createEvent.CreateEvent5Screen
-import com.example.talkeys_new.screens.events.createEvent.CreateEvent6Screen
-//import com.example.talkeys_new.screens.events.createEvent.EventRegisteredSuccessfully
-import com.example.talkeysapk.screens.events.RegistrationSuccessScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
 import com.example.talkeysapk.screensUI.home.TermsAndConditionsScreen
@@ -35,7 +27,7 @@ import com.example.talkeysapk.screensUI.home.privacyPolicy
 fun AppNavigation(modifier: Modifier) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "home") {
+    NavHost(navController = navController, startDestination = "landingpage") {
         composable("landingpage") { LandingPage(navController) }
         composable("signup") { SignUpScreen(navController) }
         composable("login") { LoginScreen(navController) }
@@ -51,15 +43,6 @@ fun AppNavigation(modifier: Modifier) {
         composable("tas") { TermsAndConditionsScreen(navController) }
         composable("screen_not_found"){ScreenNotFound(navController)}
 
-        // Create Event Screen
-        composable("create_event_1") { CreateEvent1Screen(navController) }
-        composable("create_event_2") { CreateEvent2Screen(navController) }
-        composable("create_event_3") { CreateEvent3Screen(navController) }
-        composable("create_event_4") { CreateEvent4Screen(navController) }
-        composable("create_event_5") { CreateEvent5Screen(navController) }
-        composable("create_event_6") { CreateEvent6Screen(navController) }
-        composable("registration_success") { RegistrationSuccessScreen(navController) }
-
         // Event Detail Screen with eventId parameter
         composable(
             route = "eventDetail/{eventId}",
@@ -67,8 +50,6 @@ fun AppNavigation(modifier: Modifier) {
                 navArgument("eventId") {
                     type = NavType.StringType
                     nullable = false
-
-
                 }
             )
         ) { backStackEntry ->
@@ -103,7 +84,7 @@ fun AppNavigation(modifier: Modifier) {
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             val eventPrice = backStackEntry.arguments?.getString("eventPrice") ?: "0"
-
+            
             com.example.talkeys_new.screens.events.payment.EventPaymentScreen(
                 eventId = eventId,
                 eventName = eventName,
@@ -112,5 +93,6 @@ fun AppNavigation(modifier: Modifier) {
             )
         }
         */
+
     }
 }

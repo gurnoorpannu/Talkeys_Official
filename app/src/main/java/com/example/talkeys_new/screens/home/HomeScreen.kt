@@ -81,7 +81,8 @@ fun HomeScreen(navController: NavController) {
             topBar = { HomeTopBar(navController = navController) },
             containerColor = Color.Transparent, // Make scaffold background transparent
             contentColor = Color.White,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets.navigationBars,
         ) { paddingValues ->
             Box(
                 modifier = Modifier
@@ -119,25 +120,16 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
 
-                // Create a derived ScrollState from LazyListState for the BottomBar
-                val scrollState = rememberScrollState()
-
-                // Update scrollState whenever lazyListState changes
-                LaunchedEffect(lazyListState.firstVisibleItemScrollOffset) {
-                    scrollState.scrollTo(lazyListState.firstVisibleItemScrollOffset)
-                }
+                // Bottom navigation
+                BottomBar(
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                    scrollState = rememberScrollState()
+                )
             }
         }
-
-        // Add BottomBar outside the Scaffold to ensure it appears above everything
-        val scrollState = rememberScrollState()
-        BottomBar(
-            navController = navController,
-            scrollState = scrollState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-        )
     }
 }
 
