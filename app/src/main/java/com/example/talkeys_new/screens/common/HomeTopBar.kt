@@ -24,6 +24,7 @@ import coil.request.ImageRequest
 import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.authentication.GoogleSignInManager
 import com.example.talkeys_new.screens.authentication.UserProfile
+import com.example.talkeys_new.avatar.SimpleUserAvatar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,37 +65,12 @@ fun HomeTopBar(navController: NavController) {
             }
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Dynamic Profile Image
-            if (userProfile.profileImageUrl != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(userProfile.profileImageUrl)
-                        .build(),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .clickable { navController.navigate("profile") },
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                // Fallback to default profile icon
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray.copy(alpha = 0.3f))
-                        .clickable { navController.navigate("profile") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
+            // Custom Avatar Profile Image
+            SimpleUserAvatar(
+                userName = userProfile.name,
+                size = 44.dp,
+                modifier = Modifier.clickable { navController.navigate("profile") }
+            )
         },
         modifier = Modifier.fillMaxWidth()
     )
