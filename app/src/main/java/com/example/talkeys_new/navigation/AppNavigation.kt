@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.talkeys_new.screens.LandingPage
+import com.example.talkeys_new.screens.SplashScreen
 import com.example.talkeys_new.screens.authentication.loginScreen.LoginScreen
 import com.example.talkeys_new.screens.authentication.signupScreen.SignUpScreen
 import com.example.talkeys_new.screens.common.ScreenNotFound
@@ -18,16 +19,18 @@ import com.example.talkeys_new.screens.profile.ProfileScreen
 import com.example.talkeys_new.screens.profile.RegisteredEventsScreen
 import com.example.talkeys_new.screens.profile.LikedEventsScreen
 import com.example.talkeys_new.screens.profile.HostedEventsScreen
+import com.example.talkeys_new.avatar.AvatarCustomizerScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
 import com.example.talkeysapk.screensUI.home.TermsAndConditionsScreen
 import com.example.talkeysapk.screensUI.home.privacyPolicy
 
 @Composable
-fun AppNavigation(modifier: Modifier) {
+fun AppNavigation(modifier: Modifier, startDestination: String = "splash") {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "landingpage") {
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable("splash") { SplashScreen(navController) }
         composable("landingpage") { LandingPage(navController) }
         composable("signup") { SignUpScreen(navController) }
         composable("login") { LoginScreen(navController) }
@@ -42,6 +45,7 @@ fun AppNavigation(modifier: Modifier) {
         composable("privacy_policy") { privacyPolicy(navController) }
         composable("tas") { TermsAndConditionsScreen(navController) }
         composable("screen_not_found"){ScreenNotFound(navController)}
+        composable("avatar_customizer") { AvatarCustomizerScreen(navController) }
 
         // Event Detail Screen with eventId parameter
         composable(
