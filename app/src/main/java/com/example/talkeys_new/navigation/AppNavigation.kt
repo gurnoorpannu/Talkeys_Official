@@ -67,6 +67,8 @@ fun AppNavigation(modifier: Modifier) {
                 navArgument("eventId") {
                     type = NavType.StringType
                     nullable = false
+
+
                 }
             )
         ) { backStackEntry ->
