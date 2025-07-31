@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +19,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -173,10 +178,7 @@ private fun BackgroundImage() {
 
 @Composable
 private fun LoadingIndicator(modifier: Modifier = Modifier) {
-    CircularProgressIndicator(
-        modifier = modifier,
-        color = Color.White
-    )
+    EventDetailSkeleton(modifier = modifier)
 }
 
 @Composable
@@ -944,4 +946,450 @@ private fun shareEvent(context: Context, event: EventResponse) {
     } catch (e: Exception) {
         Log.e("EventDetailScreen", "Share failed", e)
     }
+}
+
+// SKELETON LOADING ANIMATION FOR EVENT DETAIL SCREEN
+@Composable
+private fun EventDetailSkeleton(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "skeleton_transition")
+
+    // Shimmer wave animation
+    val shimmerTranslateAnim by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer_wave"
+    )
+
+    // Pulse animation for skeleton elements
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_alpha"
+    )
+
+    // Breathing scale animation
+    val breathingScale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.01f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "breathing_scale"
+    )
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .graphicsLayer {
+                scaleX = breathingScale
+                scaleY = breathingScale
+            },
+        contentPadding = PaddingValues(bottom = 100.dp)
+    ) {
+        // Event header skeleton
+        item {
+            EventHeaderSkeleton(
+                pulseAlpha = pulseAlpha,
+                shimmerTranslateAnim = shimmerTranslateAnim
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(5.dp))
+        }
+
+        // Event info box skeleton
+        item {
+            EventInfoBoxSkeleton(
+                pulseAlpha = pulseAlpha,
+                shimmerTranslateAnim = shimmerTranslateAnim
+            )
+        }
+
+        // Tab selection skeleton
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+            SelectionBarSkeleton(
+                pulseAlpha = pulseAlpha,
+                shimmerTranslateAnim = shimmerTranslateAnim
+            )
+            Spacer(modifier = Modifier.height(33.dp))
+        }
+
+        // Tab content skeleton
+        items(4) { index ->
+            TabContentSkeleton(
+                pulseAlpha = pulseAlpha,
+                shimmerTranslateAnim = shimmerTranslateAnim,
+                index = index
+            )
+            Spacer(modifier = Modifier.height(30.dp))
+        }
+    }
+}
+
+@Composable
+private fun EventHeaderSkeleton(pulseAlpha: Float, shimmerTranslateAnim: Float) {
+    Card(
+        modifier = Modifier
+            .width(EventDetailConstants.CARD_WIDTH)
+            .height(EventDetailConstants.CARD_HEIGHT)
+            .padding(top = 34.dp, start = 20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Event image skeleton
+            SkeletonBox(
+                modifier = Modifier
+                    .width(EventDetailConstants.EVENT_CARD_WIDTH)
+                    .height(EventDetailConstants.CARD_HEIGHT),
+                alpha = pulseAlpha,
+                shimmerTranslateAnim = shimmerTranslateAnim,
+                shape = RoundedCornerShape(8.dp)
+            )
+
+            // Event details skeleton
+            Column {
+                // Event name skeleton - two lines
+                SkeletonBox(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .height(22.sp.value.dp),
+                    alpha = pulseAlpha,
+                    shimmerTranslateAnim = shimmerTranslateAnim
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                SkeletonBox(
+                    modifier = Modifier
+                        .width(140.dp)
+                        .height(22.sp.value.dp),
+                    alpha = pulseAlpha * 0.8f,
+                    shimmerTranslateAnim = shimmerTranslateAnim
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Event detail rows skeleton
+                repeat(4) { index ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        SkeletonBox(
+                            modifier = Modifier.size(EventDetailConstants.SMALL_ICON_SIZE),
+                            alpha = pulseAlpha * 0.6f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width((80 + index * 20).dp)
+                                .height(16.sp.value.dp),
+                            alpha = pulseAlpha * 0.7f,
+                            shimmerTranslateAnim = shimmerTranslateAnim
+                        )
+                    }
+                    if (index < 3) Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EventInfoBoxSkeleton(pulseAlpha: Float, shimmerTranslateAnim: Float) {
+    Card(
+        modifier = Modifier
+            .width(EventDetailConstants.INFO_CARD_WIDTH)
+            .height(EventDetailConstants.INFO_CARD_HEIGHT)
+            .padding(start = 20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF171717), shape = RoundedCornerShape(20.dp))
+                .padding(16.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Cost and actions row skeleton
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Cost information skeleton
+                    Column {
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(120.dp)
+                                .height(18.sp.value.dp),
+                            alpha = pulseAlpha,
+                            shimmerTranslateAnim = shimmerTranslateAnim
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(80.dp)
+                                .height(22.sp.value.dp),
+                            alpha = pulseAlpha * 0.9f,
+                            shimmerTranslateAnim = shimmerTranslateAnim
+                        )
+                    }
+
+                    // Action buttons skeleton
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(3) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                SkeletonBox(
+                                    modifier = Modifier.size(EventDetailConstants.DEFAULT_ICON_SIZE),
+                                    alpha = pulseAlpha * 0.6f,
+                                    shimmerTranslateAnim = shimmerTranslateAnim,
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                SkeletonBox(
+                                    modifier = Modifier
+                                        .width(30.dp)
+                                        .height(12.sp.value.dp),
+                                    alpha = pulseAlpha * 0.5f,
+                                    shimmerTranslateAnim = shimmerTranslateAnim
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Register button skeleton
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    SkeletonBox(
+                        modifier = Modifier
+                            .width(EventDetailConstants.REGISTER_BUTTON_WIDTH)
+                            .height(EventDetailConstants.REGISTER_BUTTON_HEIGHT),
+                        alpha = pulseAlpha,
+                        shimmerTranslateAnim = shimmerTranslateAnim,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Divider skeleton
+                SkeletonBox(
+                    modifier = Modifier
+                        .width(320.dp)
+                        .height(2.dp),
+                    alpha = pulseAlpha * 0.4f,
+                    shimmerTranslateAnim = shimmerTranslateAnim
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Event tags skeleton
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // First row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(104.dp)
+                                .height(25.dp),
+                            alpha = pulseAlpha * 0.6f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
+                            shape = RoundedCornerShape(27.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(104.dp)
+                                .height(25.dp),
+                            alpha = pulseAlpha * 0.6f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
+                            shape = RoundedCornerShape(27.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Second row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(149.dp)
+                                .height(25.dp),
+                            alpha = pulseAlpha * 0.6f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
+                            shape = RoundedCornerShape(27.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(104.dp)
+                                .height(25.dp),
+                            alpha = pulseAlpha * 0.6f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
+                            shape = RoundedCornerShape(27.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectionBarSkeleton(pulseAlpha: Float, shimmerTranslateAnim: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(Color(0xFF2E2E2E), shape = RoundedCornerShape(20.dp))
+            .padding(8.dp)
+    ) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp)
+        ) {
+            items(4) { index ->
+                SkeletonBox(
+                    modifier = Modifier
+                        .width((80 + index * 20).dp)
+                        .height(32.dp),
+                    alpha = if (index == 0) pulseAlpha else pulseAlpha * 0.6f,
+                    shimmerTranslateAnim = shimmerTranslateAnim,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TabContentSkeleton(pulseAlpha: Float, shimmerTranslateAnim: Float, index: Int) {
+    Column(
+        modifier = Modifier
+            .width(EventDetailConstants.CONTENT_CARD_WIDTH)
+            .wrapContentHeight()
+            .padding(start = 32.dp)
+            .background(Color(0xFF171717), shape = RoundedCornerShape(4.dp))
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Vertical indicator skeleton
+            SkeletonBox(
+                modifier = Modifier
+                    .width(5.dp)
+                    .height(39.dp),
+                alpha = pulseAlpha,
+                shimmerTranslateAnim = shimmerTranslateAnim,
+                shape = RoundedCornerShape(50.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Title skeleton
+            SkeletonBox(
+                modifier = Modifier
+                    .width((120 + index * 30).dp)
+                    .height(22.sp.value.dp),
+                alpha = pulseAlpha,
+                shimmerTranslateAnim = shimmerTranslateAnim
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Content skeleton - multiple lines
+        repeat(3 + index) { lineIndex ->
+            SkeletonBox(
+                modifier = Modifier
+                    .fillMaxWidth(if (lineIndex == 2 + index) 0.7f else 1f)
+                    .height(16.sp.value.dp),
+                alpha = pulseAlpha * (0.8f - lineIndex * 0.1f),
+                shimmerTranslateAnim = shimmerTranslateAnim
+            )
+            if (lineIndex < 2 + index) Spacer(modifier = Modifier.height(4.dp))
+        }
+    }
+}
+
+// Helper composable for skeleton elements
+@Composable
+private fun SkeletonBox(
+    modifier: Modifier = Modifier,
+    alpha: Float = 0.5f,
+    shimmerTranslateAnim: Float = 0f,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(4.dp)
+) {
+    Box(
+        modifier = modifier
+            .background(
+                color = Color(0xFF404040).copy(alpha = alpha),
+                shape = shape
+            )
+            .drawWithCache {
+                // Shimmer gradient effect
+                val shimmerColors = listOf(
+                    Color.Transparent,
+                    Color(0xFF8A44CB).copy(alpha = 0.1f),
+                    Color.White.copy(alpha = 0.2f),
+                    Color(0xFF8A44CB).copy(alpha = 0.1f),
+                    Color.Transparent
+                )
+                
+                val brush = Brush.linearGradient(
+                    colors = shimmerColors,
+                    start = Offset(shimmerTranslateAnim - 200f, 0f),
+                    end = Offset(shimmerTranslateAnim + 200f, size.height)
+                )
+                
+                onDrawBehind {
+                    drawRoundRect(
+                        brush = brush,
+                        size = size,
+                        cornerRadius = CornerRadius(
+                            when (shape) {
+                                is RoundedCornerShape -> 4.dp.toPx()
+                                else -> 0f
+                            }
+                        )
+                    )
+                }
+            }
+    )
 }
