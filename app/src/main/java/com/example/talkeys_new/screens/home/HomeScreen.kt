@@ -49,7 +49,7 @@ import com.example.talkeys_new.R
 @Composable
 fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
-    
+
     // Initialize EventViewModel with proper factory
     val eventViewModel: EventViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -61,11 +61,11 @@ fun HomeScreen(navController: NavController) {
             }
         }
     )
-    
+
     // Collect events state
     val events by eventViewModel.eventList.collectAsState()
     val isLoading by eventViewModel.isLoading.collectAsState()
-    
+
     // Fetch events when screen loads
     LaunchedEffect(Unit) {
         eventViewModel.fetchAllEvents()
@@ -103,11 +103,11 @@ fun HomeScreen(navController: NavController) {
                 ) {
                     item { BannerSection(navController) }
                     item { CategoryTitle("Live Events") }
-                    item { 
+                    item {
                         if (isLoading) {
                             LoadingEventRow()
                         } else {
-                            EventRow(events.filter { it.isLive }, navController) 
+                            EventRow(events.filter { it.isLive }, navController)
                         }
                     }
                     item { CategoryTitle("Featured Communities") }
@@ -135,6 +135,7 @@ fun HomeScreen(navController: NavController) {
         }
     }
 }
+
 @Composable
 fun HostYourOwnEvent(navController: NavController) {
     Row(
@@ -175,12 +176,16 @@ fun HostYourOwnEvent(navController: NavController) {
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // Updated button with click handler for create_event_1
             Box(
                 modifier = Modifier
                     .width(130.dp)
                     .height(45.dp)
                     .background(color = Color(0xFF8A44CB), shape = RoundedCornerShape(8.dp))
-                    .clickable { navController.navigate("create_event") },
+                    .clickable {
+                        // Navigate to create_event_1 screen
+                        navController.navigate("create_event_1")
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -245,9 +250,9 @@ fun BannerSection(navController: NavController) {
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
