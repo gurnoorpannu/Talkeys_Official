@@ -21,7 +21,7 @@ import com.example.talkeys_new.api.DashboardApiService
 import com.example.talkeys_new.dataModels.EventResponse
 import com.example.talkeys_new.screens.authentication.TokenManager
 import com.example.talkeys_new.screens.events.exploreEvents.EventCard
-import com.example.talkeys_new.screens.events.exploreEvents.ShimmerEventCard
+import com.example.talkeys_new.screens.events.exploreEvents.SkeletonEventCard
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -116,7 +116,7 @@ fun HostedEventsScreen(navController: NavController) {
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
                         items(6) {
-                            ShimmerEventCard()
+                            SkeletonEventCard()
                         }
                     }
                 }
