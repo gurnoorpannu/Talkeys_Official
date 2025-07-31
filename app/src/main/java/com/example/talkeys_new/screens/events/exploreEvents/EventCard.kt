@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.LocationOn
@@ -308,55 +309,50 @@ fun EventCard(
     }
 }
 
-// SHIVERING LOADING EFFECT
+// SKELETON LOADING ANIMATION
 @Composable
-fun ShimmerEventCard(
-    modifier: Modifier = Modifier
+fun SkeletonEventCard(
+    modifier: Modifier = Modifier,
+    isFocused: Boolean = true
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "shimmer_transition")
+    // Calculate dimensions based on focus state
+    val cardWidth = if (isFocused) 165.dp else 130.dp
+    val cardHeight = if (isFocused) 286.dp else 247.dp
+    val imageHeight = if (isFocused) 165.dp else 130.dp
 
-    // Shivering effect
-    val shiver by infiniteTransition.animateFloat(
-        initialValue = -1.5f,
-        targetValue = 1.5f,
+    val infiniteTransition = rememberInfiniteTransition(label = "skeleton_transition")
+
+    // Pulse animation for skeleton elements
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.8f,
         animationSpec = infiniteRepeatable(
-            animation = tween(120, easing = LinearEasing),
+            animation = tween(1000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "shiver"
+        label = "pulse_alpha"
     )
 
-    // Shimmer effect
-    val shimmerTranslateAnim by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
+    // Subtle scale animation
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.01f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer"
-    )
-
-    // Pulsing effect
-    val pulse by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.02f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
+            animation = tween(1500, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "pulse"
+        label = "pulse_scale"
     )
 
     Card(
         modifier = modifier
-            .height(281.87.dp)
+            .width(cardWidth)
+            .height(cardHeight)
             .graphicsLayer {
-                translationX = shiver
-                scaleX = pulse
-                scaleY = pulse
+                scaleX = pulseScale
+                scaleY = pulseScale
             },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(15.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -364,117 +360,140 @@ fun ShimmerEventCard(
             modifier = Modifier
                 .fillMaxSize()
                 .border(
-                    width = 1.dp,
-                    color = Color(0xFFDCB6FF).copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(16.dp)
+                    width = 2.dp,
+                    color = Color(0xFF703CA0).copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(15.dp)
                 )
+                .padding(2.dp)
                 .background(
-                    color = Color(0xFF262626).copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(16.dp)
+                    color = Color(0xFF262626),
+                    shape = RoundedCornerShape(15.dp)
                 )
-                .drawWithCache {
-                    val brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.White.copy(alpha = 0.2f),
-                            Color.Transparent
-                        ),
-                        start = Offset(shimmerTranslateAnim - 200f, 0f),
-                        end = Offset(shimmerTranslateAnim, size.height)
-                    )
-                    onDrawBehind {
-                        drawRoundRect(
-                            brush = brush,
-                            size = size,
-                            cornerRadius = CornerRadius(16.dp.toPx())
-                        )
-                    }
-                }
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Shimmer image placeholder
+                // Image skeleton
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(165.dp)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                        .background(Color(0xFF404040).copy(alpha = 0.6f))
+                        .height(imageHeight)
+                        .background(
+                            color = Color(0xFF404040).copy(alpha = pulseAlpha),
+                            shape = RoundedCornerShape(
+                                topStart = 8.18715.dp,
+                                topEnd = 8.18715.dp,
+                                bottomStart = 0.dp,
+                                bottomEnd = 0.dp
+                            )
+                        )
                 )
 
-                // Shimmer content placeholders
+                // Content skeleton
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(12.dp)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Title placeholder
-                    Box(
+                    // Title skeleton - two lines
+                    SkeletonBox(
                         modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .height(20.dp)
-                            .background(
-                                Color(0xFF404040).copy(alpha = 0.6f),
-                                RoundedCornerShape(4.dp)
-                            )
+                            .fillMaxWidth(0.9f)
+                            .height(if (isFocused) 16.sp.value.dp else 14.sp.value.dp),
+                        alpha = pulseAlpha
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Location placeholder
-                    Box(
+                    SkeletonBox(
                         modifier = Modifier
-                            .fillMaxWidth(0.6f)
-                            .height(14.dp)
-                            .background(
-                                Color(0xFF404040).copy(alpha = 0.6f),
-                                RoundedCornerShape(4.dp)
-                            )
+                            .fillMaxWidth(0.7f)
+                            .height(if (isFocused) 16.sp.value.dp else 14.sp.value.dp),
+                        alpha = pulseAlpha * 0.8f
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    // Date placeholder
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .height(14.dp)
-                            .background(
-                                Color(0xFF404040).copy(alpha = 0.6f),
-                                RoundedCornerShape(4.dp)
-                            )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Tags placeholder
+                    // Location row skeleton
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SkeletonBox(
+                            modifier = Modifier.size(12.dp),
+                            alpha = pulseAlpha * 0.6f,
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(80.dp)
+                                .height(10.sp.value.dp),
+                            alpha = pulseAlpha * 0.7f
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Date row skeleton
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SkeletonBox(
+                            modifier = Modifier.size(12.dp),
+                            alpha = pulseAlpha * 0.6f,
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                        SkeletonBox(
+                            modifier = Modifier
+                                .width(90.dp)
+                                .height(10.sp.value.dp),
+                            alpha = pulseAlpha * 0.7f
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Tags skeleton
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Box(
+                        SkeletonBox(
                             modifier = Modifier
-                                .width(50.dp)
-                                .height(24.dp)
-                                .background(
-                                    Color(0xFF404040).copy(alpha = 0.6f),
-                                    RoundedCornerShape(12.dp)
-                                )
+                                .width(63.dp)
+                                .height(24.dp),
+                            alpha = pulseAlpha * 0.5f,
+                            shape = RoundedCornerShape(16.dp)
                         )
-                        Box(
+                        SkeletonBox(
                             modifier = Modifier
-                                .width(70.dp)
-                                .height(24.dp)
-                                .background(
-                                    Color(0xFF404040).copy(alpha = 0.6f),
-                                    RoundedCornerShape(12.dp)
-                                )
+                                .width(63.dp)
+                                .height(24.dp),
+                            alpha = pulseAlpha * 0.5f,
+                            shape = RoundedCornerShape(16.dp)
                         )
                     }
                 }
             }
         }
     }
+}
+
+// Helper composable for skeleton elements
+@Composable
+private fun SkeletonBox(
+    modifier: Modifier = Modifier,
+    alpha: Float = 0.5f,
+    shape: Shape = RoundedCornerShape(4.dp)
+) {
+    Box(
+        modifier = modifier
+            .background(
+                color = Color(0xFF404040).copy(alpha = alpha),
+                shape = shape
+            )
+    )
 }
 
 // Helper function to format date (unchanged)

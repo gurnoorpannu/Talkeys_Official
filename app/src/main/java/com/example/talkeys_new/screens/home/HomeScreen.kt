@@ -1,5 +1,8 @@
 package com.example.talkeys_new.screens.home
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -319,14 +322,22 @@ fun EventRow(events: List<com.example.talkeys_new.dataModels.EventResponse>, nav
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoadingEventRow() {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(3) {
-            com.example.talkeys_new.screens.events.exploreEvents.ShimmerEventCard()
+        items(4) { index ->
+            com.example.talkeys_new.screens.events.exploreEvents.SkeletonEventCard(
+                modifier = Modifier.animateItemPlacement(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+            )
         }
     }
 }
