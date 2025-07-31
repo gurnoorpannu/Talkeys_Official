@@ -322,12 +322,23 @@ fun SkeletonEventCard(
 
     val infiniteTransition = rememberInfiniteTransition(label = "skeleton_transition")
 
+    // Shimmer wave animation
+    val shimmerTranslateAnim by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer_wave"
+    )
+
     // Pulse animation for skeleton elements
     val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 0.8f,
+        initialValue = 0.3f,
+        targetValue = 0.7f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = FastOutSlowInEasing),
+            animation = tween(1500, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulse_alpha"
@@ -338,7 +349,7 @@ fun SkeletonEventCard(
         initialValue = 1.0f,
         targetValue = 1.01f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
+            animation = tween(2000, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulse_scale"
@@ -387,6 +398,30 @@ fun SkeletonEventCard(
                                 bottomEnd = 0.dp
                             )
                         )
+                        .drawWithCache {
+                            // Shimmer gradient effect for image
+                            val shimmerColors = listOf(
+                                Color.Transparent,
+                                Color(0xFF703CA0).copy(alpha = 0.1f),
+                                Color.White.copy(alpha = 0.2f),
+                                Color(0xFF703CA0).copy(alpha = 0.1f),
+                                Color.Transparent
+                            )
+                            
+                            val brush = Brush.linearGradient(
+                                colors = shimmerColors,
+                                start = Offset(shimmerTranslateAnim - 200f, 0f),
+                                end = Offset(shimmerTranslateAnim + 200f, size.height)
+                            )
+                            
+                            onDrawBehind {
+                                drawRoundRect(
+                                    brush = brush,
+                                    size = size,
+                                    cornerRadius = CornerRadius(8.18715.dp.toPx())
+                                )
+                            }
+                        }
                 )
 
                 // Content skeleton
@@ -401,13 +436,15 @@ fun SkeletonEventCard(
                         modifier = Modifier
                             .fillMaxWidth(0.9f)
                             .height(if (isFocused) 16.sp.value.dp else 14.sp.value.dp),
-                        alpha = pulseAlpha
+                        alpha = pulseAlpha,
+                        shimmerTranslateAnim = shimmerTranslateAnim
                     )
                     SkeletonBox(
                         modifier = Modifier
                             .fillMaxWidth(0.7f)
                             .height(if (isFocused) 16.sp.value.dp else 14.sp.value.dp),
-                        alpha = pulseAlpha * 0.8f
+                        alpha = pulseAlpha * 0.8f,
+                        shimmerTranslateAnim = shimmerTranslateAnim
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -421,13 +458,15 @@ fun SkeletonEventCard(
                         SkeletonBox(
                             modifier = Modifier.size(12.dp),
                             alpha = pulseAlpha * 0.6f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
                             shape = RoundedCornerShape(2.dp)
                         )
                         SkeletonBox(
                             modifier = Modifier
                                 .width(80.dp)
                                 .height(10.sp.value.dp),
-                            alpha = pulseAlpha * 0.7f
+                            alpha = pulseAlpha * 0.7f,
+                            shimmerTranslateAnim = shimmerTranslateAnim
                         )
                     }
 
@@ -442,13 +481,15 @@ fun SkeletonEventCard(
                         SkeletonBox(
                             modifier = Modifier.size(12.dp),
                             alpha = pulseAlpha * 0.6f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
                             shape = RoundedCornerShape(2.dp)
                         )
                         SkeletonBox(
                             modifier = Modifier
                                 .width(90.dp)
                                 .height(10.sp.value.dp),
-                            alpha = pulseAlpha * 0.7f
+                            alpha = pulseAlpha * 0.7f,
+                            shimmerTranslateAnim = shimmerTranslateAnim
                         )
                     }
 
@@ -464,6 +505,7 @@ fun SkeletonEventCard(
                                 .width(63.dp)
                                 .height(24.dp),
                             alpha = pulseAlpha * 0.5f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
                             shape = RoundedCornerShape(16.dp)
                         )
                         SkeletonBox(
@@ -471,6 +513,7 @@ fun SkeletonEventCard(
                                 .width(63.dp)
                                 .height(24.dp),
                             alpha = pulseAlpha * 0.5f,
+                            shimmerTranslateAnim = shimmerTranslateAnim,
                             shape = RoundedCornerShape(16.dp)
                         )
                     }
@@ -485,6 +528,7 @@ fun SkeletonEventCard(
 private fun SkeletonBox(
     modifier: Modifier = Modifier,
     alpha: Float = 0.5f,
+    shimmerTranslateAnim: Float = 0f,
     shape: Shape = RoundedCornerShape(4.dp)
 ) {
     Box(
@@ -493,6 +537,35 @@ private fun SkeletonBox(
                 color = Color(0xFF404040).copy(alpha = alpha),
                 shape = shape
             )
+            .drawWithCache {
+                // Shimmer gradient effect
+                val shimmerColors = listOf(
+                    Color.Transparent,
+                    Color(0xFF703CA0).copy(alpha = 0.1f),
+                    Color.White.copy(alpha = 0.2f),
+                    Color(0xFF703CA0).copy(alpha = 0.1f),
+                    Color.Transparent
+                )
+                
+                val brush = Brush.linearGradient(
+                    colors = shimmerColors,
+                    start = Offset(shimmerTranslateAnim - 200f, 0f),
+                    end = Offset(shimmerTranslateAnim + 200f, size.height)
+                )
+                
+                onDrawBehind {
+                    drawRoundRect(
+                        brush = brush,
+                        size = size,
+                        cornerRadius = CornerRadius(
+                            when (shape) {
+                                is RoundedCornerShape -> 4.dp.toPx()
+                                else -> 0f
+                            }
+                        )
+                    )
+                }
+            }
     )
 }
 
