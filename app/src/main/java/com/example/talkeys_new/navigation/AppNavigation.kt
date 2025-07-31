@@ -18,6 +18,7 @@ import com.example.talkeys_new.screens.profile.ProfileScreen
 import com.example.talkeys_new.screens.profile.RegisteredEventsScreen
 import com.example.talkeys_new.screens.profile.LikedEventsScreen
 import com.example.talkeys_new.screens.profile.HostedEventsScreen
+import com.example.talkeys_new.avatar.AvatarCustomizerScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
 import com.example.talkeysapk.screensUI.home.TermsAndConditionsScreen
@@ -41,6 +42,7 @@ fun AppNavigation(modifier: Modifier) {
         composable("about_us") { AboutUsScreen(navController) }
         composable("privacy_policy") { privacyPolicy(navController) }
         composable("tas") { TermsAndConditionsScreen(navController) }
+        composable("avatar_customizer") { AvatarCustomizerScreen(navController) }
         composable("screen_not_found"){ScreenNotFound(navController)}
 
         // Event Detail Screen with eventId parameter
