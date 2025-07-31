@@ -2,6 +2,7 @@ package com.example.talkeys_new.avatar
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -163,19 +164,47 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                 )
                             )
 
-                            // Refresh button - now updates the main avatar preview
-                            IconButton(
-                                onClick = {
-                                    // Force refresh of the main avatar by updating the config
-                                    refreshKey++
-                                }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = "Refresh Current Avatar",
-                                    tint = Color(0xFF8A44CB),
-                                    modifier = Modifier.size(20.dp)
+                                // Random text button
+                                Text(
+                                    text = "Random",
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF8A44CB)
+                                    ),
+                                    modifier = Modifier.clickable {
+                                        // Select random avatar style
+                                        val randomStyle = AvatarConstants.AVATAR_STYLES.random()
+                                        avatarManager.updateAvatarStyle(randomStyle)
+                                        
+                                        // Select random background color
+                                        val randomColor = AvatarConstants.BACKGROUND_COLORS.random()
+                                        avatarManager.updateBackgroundColor(randomColor.value)
+                                        
+                                        // Add some randomness to the avatar generation
+                                        refreshKey = (1..999).random()
+                                    }
                                 )
+
+                                // Refresh button - now updates the main avatar preview
+                                IconButton(
+                                    onClick = {
+                                        // Force refresh of the main avatar by updating the config
+                                        refreshKey++
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Refresh Current Avatar",
+                                        tint = Color(0xFF8A44CB),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -286,6 +315,8 @@ fun AvatarCustomizerScreen(navController: NavController) {
                         }
                     }
                 }
+
+
 
                 // Action Buttons
                 Row(
