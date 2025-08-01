@@ -615,7 +615,7 @@ private fun MenuItemsSection(navController: NavController) {
                 safeNavigate(navController, "liked_events")
             },
             Triple(R.drawable.hosted_events, "Hosted events") {
-                safeNavigate(navController, "hosted_events")
+                safeNavigate(navController, "Organizer Dashboard")
             },
             Triple(R.drawable.dropdown_hostevent_icon, "Host new event") {
                 /* Navigate to create event */

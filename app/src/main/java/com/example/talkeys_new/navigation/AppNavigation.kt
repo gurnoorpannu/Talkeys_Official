@@ -18,6 +18,7 @@ import com.example.talkeys_new.screens.profile.ProfileScreen
 import com.example.talkeys_new.screens.profile.RegisteredEventsScreen
 import com.example.talkeys_new.screens.profile.LikedEventsScreen
 import com.example.talkeys_new.screens.profile.HostedEventsScreen
+import com.example.talkeys_new.screens.SplashScreen
 import com.example.talkeys_new.avatar.AvatarCustomizerScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
@@ -28,7 +29,8 @@ import com.example.talkeysapk.screensUI.home.privacyPolicy
 fun AppNavigation(modifier: Modifier) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "landingpage") {
+    NavHost(navController = navController, startDestination = "splash") {
+        composable("splash") { SplashScreen(navController) }
         composable("landingpage") { LandingPage(navController) }
         composable("signup") { SignUpScreen(navController) }
         composable("login") { LoginScreen(navController) }
