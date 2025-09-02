@@ -20,6 +20,12 @@ import com.example.talkeys_new.screens.profile.LikedEventsScreen
 import com.example.talkeys_new.screens.profile.HostedEventsScreen
 import com.example.talkeys_new.screens.profile.OrganizerDashboardScreen
 import com.example.talkeys_new.avatar.AvatarCustomizerScreen
+import com.example.talkeys_new.screens.events.createEvent.CreateEvent1Screen
+import com.example.talkeys_new.screens.events.createEvent.CreateEvent2Screen
+import com.example.talkeys_new.screens.events.createEvent.CreateEvent3Screen
+import com.example.talkeys_new.screens.events.createEvent.CreateEvent4Screen
+import com.example.talkeys_new.screens.events.createEvent.CreateEvent5Screen
+import com.example.talkeys_new.screens.events.createEvent.CreateEvent6Screen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
 import com.example.talkeysapk.screensUI.home.TermsAndConditionsScreen
@@ -52,6 +58,14 @@ fun AppNavigation(modifier: Modifier) {
         composable("tas") { TermsAndConditionsScreen(navController) }
         composable("avatar_customizer") { AvatarCustomizerScreen(navController) }
         composable("screen_not_found"){ScreenNotFound(navController)}
+        
+        // Create Event Flow
+        composable("create_event_1") { CreateEvent1Screen(navController) }
+        composable("create_event_2") { CreateEvent2Screen(navController) }
+        composable("create_event_3") { CreateEvent3Screen(navController) }
+        composable("create_event_4") { CreateEvent4Screen(navController) }
+        composable("create_event_5") { CreateEvent5Screen(navController) }
+        composable("create_event_6") { CreateEvent6Screen(navController) }
 
         // Event Detail Screen with eventId parameter
         composable(
