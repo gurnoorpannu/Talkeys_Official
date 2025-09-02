@@ -25,7 +25,7 @@ import androidx.navigation.NavController
 import com.example.talkeys_new.screens.common.HomeTopBar
 import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.common.Footer
-
+import android.util.Log
 
 @Composable
 fun ContactUsScreen(navController: NavController) {
