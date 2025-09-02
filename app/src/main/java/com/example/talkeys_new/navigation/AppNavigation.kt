@@ -49,7 +49,7 @@ fun AppNavigation(modifier: Modifier) {
         composable("organizer_dashboard") {
             OrganizerDashboardScreen(
                 onBackClick = { navController.popBackStack() },
-                onHostEventClick = { navController.navigate("create_event") }
+                onHostEventClick = { navController.navigate("create_event_1") }
             )
         }
         composable("events") { ExploreEventsScreen(navController) }
