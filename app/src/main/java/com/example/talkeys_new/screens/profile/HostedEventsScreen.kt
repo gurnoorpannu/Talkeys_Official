@@ -16,57 +16,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.talkeys_new.api.DashboardApiService
-import com.example.talkeys_new.dataModels.EventResponse
-import com.example.talkeys_new.screens.authentication.TokenManager
+import com.example.talkeys_new.screens.common.ErrorCard
+import com.example.talkeys_new.screens.dashboard.DashboardViewModel
 import com.example.talkeys_new.screens.events.exploreEvents.EventCard
 import com.example.talkeys_new.screens.events.exploreEvents.SkeletonEventCard
-import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import com.example.talkeys_new.utils.ViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HostedEventsScreen(navController: NavController) {
-    val context = LocalContext.current
-    val tokenManager = TokenManager(context)
-    val scope = rememberCoroutineScope()
+fun HostedEventsScreen(
+    navController: NavController,
+    viewModel: DashboardViewModel = viewModel(
+        factory = ViewModelFactory(LocalContext.current)
+    )
+) {
+    // State collection
+    val events by viewModel.userEvents.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
 
-    var events by remember { mutableStateOf<List<EventResponse>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    // Create API service
-    val apiService = remember {
-        Retrofit.Builder()
-            .baseUrl("https://talkeys-backend.onrender.com/api/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(DashboardApiService::class.java)
-    }
-
-    // Load hosted events
+    // Fetch hosted events when screen is first displayed
     LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                val token = tokenManager.getToken()
-                if (token != null) {
-                    val response = apiService.getUserEvents("Bearer $token", "hosted")
-                    if (response.isSuccessful) {
-                        events = response.body()?.events ?: emptyList()
-                    } else {
-                        errorMessage = "Failed to load hosted events"
-                    }
-                } else {
-                    errorMessage = "Authentication required"
-                }
-            } catch (e: Exception) {
-                errorMessage = "Network error: ${e.message}"
-            } finally {
-                isLoading = false
-            }
-        }
+        viewModel.fetchUserEvents("hosted")
     }
 
     Column(
@@ -121,46 +94,13 @@ fun HostedEventsScreen(navController: NavController) {
                     }
                 }
 
-                errorMessage != null -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = errorMessage!!,
-                            color = Color.White,
-                            fontSize = 16.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = {
-                                isLoading = true
-                                errorMessage = null
-                                scope.launch {
-                                    try {
-                                        val token = tokenManager.getToken()
-                                        if (token != null) {
-                                            val response = apiService.getUserEvents("Bearer $token", "hosted")
-                                            if (response.isSuccessful) {
-                                                events = response.body()?.events ?: emptyList()
-                                            } else {
-                                                errorMessage = "Failed to load hosted events"
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        errorMessage = "Network error: ${e.message}"
-                                    } finally {
-                                        isLoading = false
-                                    }
-                                }
-                            }
-                        ) {
-                            Text("Retry")
+                error != null -> {
+                    ErrorCard(
+                        message = error ?: "An unknown error occurred",
+                        onRetry = {
+                            viewModel.fetchUserEvents("hosted")
                         }
-                    }
+                    )
                 }
 
                 events.isEmpty() -> {
@@ -182,6 +122,20 @@ fun HostedEventsScreen(navController: NavController) {
                             color = Color.Gray,
                             fontSize = 14.sp
                         )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { navController.navigate("create_event") },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF8A44CB)
+                            )
+                        ) {
+                            Text(
+                                text = "Create Event",
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
