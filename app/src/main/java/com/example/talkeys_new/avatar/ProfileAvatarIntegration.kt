@@ -30,7 +30,8 @@ import androidx.core.graphics.toColorInt
 fun ProfileAvatarSection(
     userProfile: UserProfile,
     navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    avatarUrl: String? = null
 ) {
     val context = LocalContext.current
     val avatarManager = remember { AvatarManager.getInstance(context) }
@@ -50,7 +51,7 @@ fun ProfileAvatarSection(
         // Avatar with edit functionality
         Box {
             AvatarImageWithFallback(
-                avatarUrl = avatarConfig.generateAvatarUrl(),
+                avatarUrl = avatarConfig.generateAvatarUrl(), // Always use AvatarManager's generated URL
                 size = 100.dp, // Increased from 80dp to 100dp
                 borderColor = Color(0xFF171717),
                 borderWidth = 3.dp,
