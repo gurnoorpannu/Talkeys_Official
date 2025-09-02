@@ -26,6 +26,7 @@ import com.example.talkeys_new.screens.events.createEvent.CreateEvent3Screen
 import com.example.talkeys_new.screens.events.createEvent.CreateEvent4Screen
 import com.example.talkeys_new.screens.events.createEvent.CreateEvent5Screen
 import com.example.talkeys_new.screens.events.createEvent.CreateEvent6Screen
+import com.example.talkeysapk.screens.events.RegistrationSuccessScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
 import com.example.talkeysapk.screensUI.home.TermsAndConditionsScreen
@@ -66,6 +67,7 @@ fun AppNavigation(modifier: Modifier) {
         composable("create_event_4") { CreateEvent4Screen(navController) }
         composable("create_event_5") { CreateEvent5Screen(navController) }
         composable("create_event_6") { CreateEvent6Screen(navController) }
+        composable("registration_success") { RegistrationSuccessScreen(navController) }
 
         // Event Detail Screen with eventId parameter
         composable(
