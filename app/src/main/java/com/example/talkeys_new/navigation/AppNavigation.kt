@@ -18,6 +18,7 @@ import com.example.talkeys_new.screens.profile.ProfileScreen
 import com.example.talkeys_new.screens.profile.RegisteredEventsScreen
 import com.example.talkeys_new.screens.profile.LikedEventsScreen
 import com.example.talkeys_new.screens.profile.HostedEventsScreen
+import com.example.talkeys_new.screens.profile.OrganizerDashboardScreen
 import com.example.talkeys_new.avatar.AvatarCustomizerScreen
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
@@ -38,6 +39,12 @@ fun AppNavigation(modifier: Modifier) {
         composable("registered_events") { RegisteredEventsScreen(navController) }
         composable("liked_events") { LikedEventsScreen(navController) }
         composable("hosted_events") { HostedEventsScreen(navController) }
+        composable("organizer_dashboard") {
+            OrganizerDashboardScreen(
+                onBackClick = { navController.popBackStack() },
+                onHostEventClick = { navController.navigate("create_event") }
+            )
+        }
         composable("events") { ExploreEventsScreen(navController) }
         composable("contact_us") { ContactUsScreen(navController) }
         composable("about_us") { AboutUsScreen(navController) }
