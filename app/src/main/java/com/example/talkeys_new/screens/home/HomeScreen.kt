@@ -176,14 +176,14 @@ fun HostYourOwnEvent(navController: NavController) {
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Updated button with click handler for create_event_1
+            // Updated button with click handler for unified create event
             Box(
                 modifier = Modifier
                     .width(130.dp)
                     .height(45.dp)
                     .background(color = Color(0xFF8A44CB), shape = RoundedCornerShape(8.dp))
                     .clickable {
-                        // Navigate to create_event_1 screen
+                        // Navigate to create event screen
                         navController.navigate("create_event_1")
                     },
                 contentAlignment = Alignment.Center
