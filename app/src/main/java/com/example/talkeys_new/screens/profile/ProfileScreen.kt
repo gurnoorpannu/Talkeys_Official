@@ -35,11 +35,14 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.talkeys_new.R
+import com.example.talkeys_new.api.UserProfileResponse
 import com.example.talkeys_new.screens.authentication.GoogleSignInManager
 import com.example.talkeys_new.screens.authentication.UserProfile
 import com.example.talkeys_new.avatar.AvatarManager
 import com.example.talkeys_new.avatar.AvatarImageWithFallback
 import com.example.talkeys_new.avatar.ProfileAvatarSection
+import com.example.talkeys_new.screens.dashboard.DashboardViewModel
+import com.example.talkeys_new.utils.ViewModelFactory
 import kotlinx.coroutines.launch
 import android.util.Log
 import com.example.talkeys_new.screens.authentication.TokenManager
@@ -419,7 +422,8 @@ private fun ProfileContent(
         ProfileAvatarSection(
             userProfile = userProfile,
             navController = navController,
-            modifier = Modifier.offset(x = 20.dp, y = 20.dp) // Adjusted from y = 15.dp to y = 20.dp for better positioning with larger avatar
+            modifier = Modifier.offset(x = 20.dp, y = 20.dp), // Adjusted from y = 15.dp to y = 20.dp for better positioning with larger avatar
+            avatarUrl = userProfile.profileImageUrl
         )
     }
 }
