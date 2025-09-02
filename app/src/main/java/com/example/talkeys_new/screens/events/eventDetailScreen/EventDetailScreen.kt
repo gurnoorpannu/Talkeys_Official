@@ -721,7 +721,11 @@ private fun ActionButtons(
         ActionButton(
             iconRes = R.drawable.ic_comment,
             contentDescription = "Comment on event",
-            onClick = { /* TODO: Implement comment functionality */ }
+            onClick = {
+                // Replace with actual comment system implementation
+                // This would typically navigate to a comments screen or open a comment dialog
+                Log.d("EventDetail", "Comment button clicked for event: ${event.name}")
+            }
         )
 
         // Share button
@@ -1371,13 +1375,13 @@ private fun SkeletonBox(
                     Color(0xFF8A44CB).copy(alpha = 0.1f),
                     Color.Transparent
                 )
-                
+
                 val brush = Brush.linearGradient(
                     colors = shimmerColors,
                     start = Offset(shimmerTranslateAnim - 200f, 0f),
                     end = Offset(shimmerTranslateAnim + 200f, size.height)
                 )
-                
+
                 onDrawBehind {
                     drawRoundRect(
                         brush = brush,
