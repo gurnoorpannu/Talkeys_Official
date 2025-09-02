@@ -4,11 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkeys_new.dataModels.EventResponse
+import com.example.talkeys_new.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Response
 import java.util.concurrent.CancellationException
 
 /**
@@ -73,54 +73,27 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
                 _isLoading.value = true
                 _errorMessage.value = null
 
-                val response: Response<List<EventResponse>> = repository.getAllEvents()
-
-                Log.d(TAG, "Response received: ${response.code()}")
-                Log.d(TAG, "Response successful: ${response.isSuccessful}")
-
-                if (response.isSuccessful) {
-                    val events = response.body()
-
-                    if (events != null) {
+                when (val result = repository.getAllEvents()) {
+                    is Result.Success -> {
+                        val events = result.data
                         Log.d(TAG, "Events received: ${events.size}")
                         _allEvents.value = events
                         filterEvents() // Apply current filter
                         _errorMessage.value = null
-                    } else {
-                        Log.w(TAG, "Response body is null")
-                        _errorMessage.value = "No events data received"
+                    }
+                    is Result.Error -> {
+                        Log.e(TAG, "Error fetching events: ${result.message}")
+                        _errorMessage.value = result.message
                         _eventList.value = emptyList()
                     }
-                } else {
-                    val errorBody = response.errorBody()?.string()
-                    val errorMsg = when (response.code()) {
-                        401 -> "Unauthorized access. Please login again."
-                        403 -> "Access forbidden. Check your permissions."
-                        404 -> "Events not found."
-                        408 -> "Request timeout. Please try again."
-                        429 -> "Too many requests. Please wait before retrying."
-                        500 -> "Server error. Please try again later."
-                        502, 503, 504 -> "Service temporarily unavailable. Please try again later."
-                        else -> "Error: ${response.code()} ${response.message()}"
+                    is Result.Loading -> {
+                        // Already handled by setting _isLoading to true above
                     }
-
-                    Log.e(TAG, "HTTP Error: $errorMsg")
-                    Log.e(TAG, "Error body: $errorBody")
-                    _errorMessage.value = errorMsg
                 }
             } catch (e: CancellationException) {
                 // Don't log cancellation exceptions as errors
                 Log.d(TAG, "Request cancelled")
                 throw e
-            } catch (e: java.net.SocketTimeoutException) {
-                Log.e(TAG, "Network timeout: ${e.message}")
-                _errorMessage.value = "Network timeout. Please check your connection and try again."
-            } catch (e: java.net.UnknownHostException) {
-                Log.e(TAG, "Network error - no internet: ${e.message}")
-                _errorMessage.value = "No internet connection. Please check your network and try again."
-            } catch (e: java.net.ConnectException) {
-                Log.e(TAG, "Connection failed: ${e.message}")
-                _errorMessage.value = "Unable to connect to server. Please try again later."
             } catch (e: Exception) {
                 Log.e(TAG, "Unexpected error occurred: ${e.message}", e)
                 _errorMessage.value = "An unexpected error occurred. Please try again."
@@ -183,41 +156,24 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
 
             try {
                 Log.d(TAG, "Fetching event with ID: $eventId")
-                val response = repository.getEventById(eventId)
-
-                if (response.isSuccessful) {
-                    val event = response.body()
-                    if (event != null) {
+                
+                when (val result = repository.getEventById(eventId)) {
+                    is Result.Success -> {
+                        val event = result.data
                         _selectedEvent.value = event
                         Log.d(TAG, "Successfully fetched event: ${event.name}")
-                    } else {
-                        _eventError.value = "Event data not found"
-                        Log.w(TAG, "Event response body is null for ID: $eventId")
                     }
-                } else {
-                    val errorMsg = when (response.code()) {
-                        401 -> "Unauthorized access. Please login again."
-                        403 -> "Access forbidden."
-                        404 -> "Event not found."
-                        408 -> "Request timeout. Please try again."
-                        429 -> "Too many requests. Please wait before retrying."
-                        500 -> "Server error. Please try again later."
-                        502, 503, 504 -> "Service temporarily unavailable. Please try again later."
-                        else -> "Failed to load event: ${response.message()}"
+                    is Result.Error -> {
+                        _eventError.value = result.message
+                        Log.e(TAG, "Error fetching event: ${result.message}")
                     }
-
-                    _eventError.value = errorMsg
-                    Log.e(TAG, "Error fetching event: ${response.code()} ${response.message()}")
+                    is Result.Loading -> {
+                        // Already handled by setting _eventLoading to true above
+                    }
                 }
             } catch (e: CancellationException) {
                 Log.d(TAG, "Event fetch cancelled for ID: $eventId")
                 throw e
-            } catch (e: java.net.SocketTimeoutException) {
-                Log.e(TAG, "Network timeout fetching event: ${e.message}")
-                _eventError.value = "Network timeout. Please try again."
-            } catch (e: java.net.UnknownHostException) {
-                Log.e(TAG, "Network error fetching event: ${e.message}")
-                _eventError.value = "No internet connection. Please check your network."
             } catch (e: Exception) {
                 Log.e(TAG, "Exception fetching event: ${e.message}", e)
                 _eventError.value = "An unexpected error occurred. Please try again."
