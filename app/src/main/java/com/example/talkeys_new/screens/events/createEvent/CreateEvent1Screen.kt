@@ -1,4 +1,6 @@
 package com.example.talkeys_new.screens.events.createEvent
+
+// This file now serves as the unified create event screen with all steps combined
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
