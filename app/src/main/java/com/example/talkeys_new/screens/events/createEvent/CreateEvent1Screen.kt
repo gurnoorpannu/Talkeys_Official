@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
@@ -18,11 +19,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.talkeys_new.screens.common.HomeTopBar
+import java.util.regex.Pattern
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +39,115 @@ fun CreateEvent1Screen(navController: NavController) {
     var socialMediaLinks by remember { mutableStateOf("") }
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var fileName by remember { mutableStateOf("No file selected") }
+    
+    // Error state variables
+    var organizerNameError by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf("") }
+    var contactNumberError by remember { mutableStateOf("") }
+    var organizationNameError by remember { mutableStateOf("") }
+    var cityStateError by remember { mutableStateOf("") }
+    var socialMediaError by remember { mutableStateOf("") }
+    var fileError by remember { mutableStateOf("") }
+    
+    // Validation functions
+    fun isValidEmail(email: String): Boolean {
+        val emailPattern = Pattern.compile(
+            "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
+            "\\@" +
+            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+            "(" +
+            "\\." +
+            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+            ")+"
+        )
+        return emailPattern.matcher(email).matches()
+    }
+    
+    fun isValidPhoneNumber(phone: String): Boolean {
+        val phonePattern = Pattern.compile("^[+]?[0-9]{10,15}$")
+        return phonePattern.matcher(phone.replace("\\s".toRegex(), "")).matches()
+    }
+    
+    fun isValidUrl(url: String): Boolean {
+        val urlPattern = Pattern.compile(
+            "^(https?://)?" +
+            "([\\da-z\\.-]+)\\.([a-z\\.]{2,6})" +
+            "([/\\w \\.-]*)*/?$"
+        )
+        return urlPattern.matcher(url).matches()
+    }
+    
+    // Validation function
+    fun validateFields(): Boolean {
+        var isValid = true
+        
+        // Validate organizer name
+        if (organizerName.isBlank()) {
+            organizerNameError = "Organizer name is required"
+            isValid = false
+        } else {
+            organizerNameError = ""
+        }
+        
+        // Validate email
+        if (emailAddress.isBlank()) {
+            emailError = "Email address is required"
+            isValid = false
+        } else if (!isValidEmail(emailAddress)) {
+            emailError = "Please enter a valid email address"
+            isValid = false
+        } else {
+            emailError = ""
+        }
+        
+        // Validate contact number
+        if (contactNumber.isBlank()) {
+            contactNumberError = "Contact number is required"
+            isValid = false
+        } else if (!isValidPhoneNumber(contactNumber)) {
+            contactNumberError = "Please enter a valid phone number (10-15 digits)"
+            isValid = false
+        } else {
+            contactNumberError = ""
+        }
+        
+        // Validate organization name
+        if (organizationName.isBlank()) {
+            organizationNameError = "Organization name is required"
+            isValid = false
+        } else {
+            organizationNameError = ""
+        }
+        
+        // Validate city & state
+        if (cityState.isBlank()) {
+            cityStateError = "City & State is required"
+            isValid = false
+        } else {
+            cityStateError = ""
+        }
+        
+        // Validate social media links
+        if (socialMediaLinks.isBlank()) {
+            socialMediaError = "Social media link is required"
+            isValid = false
+        } else if (!isValidUrl(socialMediaLinks)) {
+            socialMediaError = "Please enter a valid URL (e.g., https://instagram.com/...)"
+            isValid = false
+        } else {
+            socialMediaError = ""
+        }
+        
+        // Validate file upload
+        if (selectedFileUri == null) {
+            fileError = "Please upload a verification document"
+            isValid = false
+        } else {
+            fileError = ""
+        }
+        
+        return isValid
+    }
 
     val context = LocalContext.current
 
@@ -136,23 +248,28 @@ fun CreateEvent1Screen(navController: NavController) {
 
                         // Organizer Name Field
                         Text(
-                            text = "Organizer Name",
+                            text = "Organizer Name *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = organizerName,
-                            onValueChange = { organizerName = it },
+                            onValueChange = { 
+                                organizerName = it
+                                if (organizerNameError.isNotEmpty()) organizerNameError = ""
+                            },
                             placeholder = {
                                 Text(
                                     "Enter organizer name",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            isError = organizerNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (organizerNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (organizerNameError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -162,28 +279,42 @@ fun CreateEvent1Screen(navController: NavController) {
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (organizerNameError.isNotEmpty()) {
+                            Text(
+                                text = organizerNameError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Email Address Field
                         Text(
-                            text = "📧 Email Address",
+                            text = "📧 Email Address *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = emailAddress,
-                            onValueChange = { emailAddress = it },
+                            onValueChange = { 
+                                emailAddress = it
+                                if (emailError.isNotEmpty()) emailError = ""
+                            },
                             placeholder = {
                                 Text(
-                                    "Enter email",
+                                    "Enter email address",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            isError = emailError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (emailError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (emailError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -193,28 +324,42 @@ fun CreateEvent1Screen(navController: NavController) {
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (emailError.isNotEmpty()) {
+                            Text(
+                                text = emailError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Contact Number Field
                         Text(
-                            text = "📞 Contact Number",
+                            text = "📞 Contact Number *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = contactNumber,
-                            onValueChange = { contactNumber = it },
+                            onValueChange = { 
+                                contactNumber = it
+                                if (contactNumberError.isNotEmpty()) contactNumberError = ""
+                            },
                             placeholder = {
                                 Text(
                                     "Enter contact number",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            isError = contactNumberError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (contactNumberError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (contactNumberError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -224,28 +369,41 @@ fun CreateEvent1Screen(navController: NavController) {
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (contactNumberError.isNotEmpty()) {
+                            Text(
+                                text = contactNumberError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Organization Name Field
                         Text(
-                            text = "Organization / Society Name",
+                            text = "Organization / Society Name *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = organizationName,
-                            onValueChange = { organizationName = it },
+                            onValueChange = { 
+                                organizationName = it
+                                if (organizationNameError.isNotEmpty()) organizationNameError = ""
+                            },
                             placeholder = {
                                 Text(
                                     "Enter organization name",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            isError = organizationNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (organizationNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (organizationNameError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -255,28 +413,41 @@ fun CreateEvent1Screen(navController: NavController) {
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (organizationNameError.isNotEmpty()) {
+                            Text(
+                                text = organizationNameError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // City & State Field
                         Text(
-                            text = "City & State",
+                            text = "City & State *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = cityState,
-                            onValueChange = { cityState = it },
+                            onValueChange = { 
+                                cityState = it
+                                if (cityStateError.isNotEmpty()) cityStateError = ""
+                            },
                             placeholder = {
                                 Text(
                                     "e.g Patiala, Punjab",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            isError = cityStateError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (cityStateError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (cityStateError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -286,28 +457,42 @@ fun CreateEvent1Screen(navController: NavController) {
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (cityStateError.isNotEmpty()) {
+                            Text(
+                                text = cityStateError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Social Media Links Field
                         Text(
-                            text = "Social Media Links",
+                            text = "Social Media Links *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = socialMediaLinks,
-                            onValueChange = { socialMediaLinks = it },
+                            onValueChange = { 
+                                socialMediaLinks = it
+                                if (socialMediaError.isNotEmpty()) socialMediaError = ""
+                            },
                             placeholder = {
                                 Text(
                                     "https://instagram.com/...",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                            isError = socialMediaError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (socialMediaError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (socialMediaError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -317,12 +502,20 @@ fun CreateEvent1Screen(navController: NavController) {
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (socialMediaError.isNotEmpty()) {
+                            Text(
+                                text = socialMediaError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // File Upload Section
                         Text(
-                            text = "📎 Upload Verification Document",
+                            text = "📎 Upload Verification Document *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 12.dp)
@@ -332,6 +525,7 @@ fun CreateEvent1Screen(navController: NavController) {
                         OutlinedButton(
                             onClick = {
                                 filePickerLauncher.launch("*/*")
+                                if (fileError.isNotEmpty()) fileError = ""
                             },
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
@@ -339,7 +533,7 @@ fun CreateEvent1Screen(navController: NavController) {
                             ),
                             border = androidx.compose.foundation.BorderStroke(
                                 1.dp,
-                                Color.White.copy(alpha = 0.3f)
+                                if (fileError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f)
                             ),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -361,19 +555,28 @@ fun CreateEvent1Screen(navController: NavController) {
                             color = if (selectedFileUri != null) Color.Green else Color.White.copy(alpha = 0.7f),
                             modifier = Modifier.padding(top = 8.dp)
                         )
+                        
+                        if (fileError.isNotEmpty()) {
+                            Text(
+                                text = fileError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(32.dp))
 
                         // Next Button
                         Button(
                             onClick = {
-                                if (areAllFieldsFilled) {
+                                if (validateFields()) {
                                     navController.navigate("create_event_2") // Fixed route name
                                 }
                             },
-                            enabled = areAllFieldsFilled,
+                            enabled = validateFields(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (areAllFieldsFilled)
+                                containerColor = if (validateFields())
                                     Color(0xFFE91E63) else Color.Gray.copy(alpha = 0.3f),
                                 contentColor = Color.White,
                                 disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
