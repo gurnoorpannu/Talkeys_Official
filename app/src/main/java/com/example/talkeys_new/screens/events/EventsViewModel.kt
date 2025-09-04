@@ -55,10 +55,11 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
     private var isCurrentlyFetching = false
 
     /**
-     * Fetches all events from the repository
+     * Fetches all events from the repository with caching support
+     * @param forceRefresh If true, bypasses cache and fetches fresh data
      * Handles loading states, errors, and prevents duplicate requests
      */
-    fun fetchAllEvents() {
+    fun fetchAllEvents(forceRefresh: Boolean = false) {
         // Prevent multiple simultaneous requests
         if (isCurrentlyFetching) {
             Log.d(TAG, "Already fetching events, skipping duplicate request")
@@ -68,12 +69,12 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 isCurrentlyFetching = true
-                Log.d(TAG, "Starting to fetch events...")
+                Log.d(TAG, "Starting to fetch events... (forceRefresh: $forceRefresh)")
 
                 _isLoading.value = true
                 _errorMessage.value = null
 
-                when (val result = repository.getAllEvents()) {
+                when (val result = repository.getAllEvents(forceRefresh)) {
                     is Result.Success -> {
                         val events = result.data
                         Log.d(TAG, "Events received: ${events.size}")
@@ -140,10 +141,11 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
     }
 
     /**
-     * Fetches a specific event by ID
+     * Fetches a specific event by ID with caching support
      * @param eventId The ID of the event to fetch
+     * @param forceRefresh If true, bypasses cache and fetches fresh data
      */
-    fun fetchEventById(eventId: String) {
+    fun fetchEventById(eventId: String, forceRefresh: Boolean = false) {
         if (eventId.isBlank()) {
             Log.e(TAG, "Event ID is blank or empty")
             _eventError.value = "Invalid event ID"
@@ -155,9 +157,9 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
             _eventError.value = null
 
             try {
-                Log.d(TAG, "Fetching event with ID: $eventId")
+                Log.d(TAG, "Fetching event with ID: $eventId (forceRefresh: $forceRefresh)")
                 
-                when (val result = repository.getEventById(eventId)) {
+                when (val result = repository.getEventById(eventId, forceRefresh)) {
                     is Result.Success -> {
                         val event = result.data
                         _selectedEvent.value = event
@@ -200,10 +202,10 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
     }
 
     /**
-     * Refreshes the events list
+     * Refreshes the events list by forcing a cache refresh
      */
     fun refreshEvents() {
-        fetchAllEvents()
+        fetchAllEvents(forceRefresh = true)
     }
 
     /**
