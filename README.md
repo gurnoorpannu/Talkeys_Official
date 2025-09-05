@@ -392,13 +392,5 @@ For technical support or questions:
 - ✅ Avatar customization system
 - ✅ Material Design 3 UI
 
-### **Upcoming Features**
-- 🔄 Push notifications
-- 🔄 Social sharing
-- 🔄 Event recommendations
-- 🔄 Advanced search filters
-- 🔄 Offline event creation
 
 ---
-
-**Happy Coding! 🚀**
