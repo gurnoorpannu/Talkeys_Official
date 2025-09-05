@@ -1,6 +1,6 @@
 package com.example.talkeys_new.screens.events.createEvent
 
-// This file now serves as the unified create event screen with all steps combined
+// Enhanced Create Event Screen 1 with comprehensive validation
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,7 +39,7 @@ fun CreateEvent1Screen(navController: NavController) {
     var socialMediaLinks by remember { mutableStateOf("") }
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var fileName by remember { mutableStateOf("No file selected") }
-    
+
     // Error state variables
     var organizerNameError by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf("") }
@@ -48,47 +48,67 @@ fun CreateEvent1Screen(navController: NavController) {
     var cityStateError by remember { mutableStateOf("") }
     var socialMediaError by remember { mutableStateOf("") }
     var fileError by remember { mutableStateOf("") }
-    
-    // Validation functions
+
+    // Enhanced validation functions
     fun isValidEmail(email: String): Boolean {
         val emailPattern = Pattern.compile(
-            "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
-            "\\@" +
-            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
-            "(" +
-            "\\." +
-            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
-            ")+"
+            "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
         )
-        return emailPattern.matcher(email).matches()
+        return email.isNotBlank() && emailPattern.matcher(email.trim()).matches()
     }
-    
+
     fun isValidPhoneNumber(phone: String): Boolean {
-        val phonePattern = Pattern.compile("^[+]?[0-9]{10,15}$")
-        return phonePattern.matcher(phone.replace("\\s".toRegex(), "")).matches()
+        // Remove all spaces, hyphens, parentheses, and plus signs for validation
+        val cleanPhone = phone.replace(Regex("[\\s\\-()\\+]"), "")
+        // Must be between 10-15 digits
+        val phonePattern = Pattern.compile("^[0-9]{10,15}$")
+        return cleanPhone.isNotBlank() && phonePattern.matcher(cleanPhone).matches()
     }
-    
+
     fun isValidUrl(url: String): Boolean {
+        if (url.isBlank()) return false
         val urlPattern = Pattern.compile(
             "^(https?://)?" +
-            "([\\da-z\\.-]+)\\.([a-z\\.]{2,6})" +
-            "([/\\w \\.-]*)*/?$"
+                    "(www\\.)?" +
+                    "([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\\.)+" +
+                    "[a-zA-Z]{2,}" +
+                    "([/?].*)?$"
         )
-        return urlPattern.matcher(url).matches()
+        return urlPattern.matcher(url.trim()).matches()
     }
-    
-    // Validation function
+
+    fun isValidName(name: String): Boolean {
+        val namePattern = Pattern.compile("^[a-zA-Z\\s]{2,50}$")
+        return name.isNotBlank() && namePattern.matcher(name.trim()).matches()
+    }
+
+    fun isValidOrganization(org: String): Boolean {
+        // Allow letters, numbers, spaces, and common punctuation
+        val orgPattern = Pattern.compile("^[a-zA-Z0-9\\s&.,'-]{2,100}$")
+        return org.isNotBlank() && orgPattern.matcher(org.trim()).matches()
+    }
+
+    fun isValidCityState(cityState: String): Boolean {
+        // Allow letters, spaces, commas
+        val cityStatePattern = Pattern.compile("^[a-zA-Z\\s,]{2,100}$")
+        return cityState.isNotBlank() && cityStatePattern.matcher(cityState.trim()).matches()
+    }
+
+    // Enhanced validation function
     fun validateFields(): Boolean {
         var isValid = true
-        
+
         // Validate organizer name
         if (organizerName.isBlank()) {
             organizerNameError = "Organizer name is required"
             isValid = false
+        } else if (!isValidName(organizerName)) {
+            organizerNameError = "Please enter a valid name (2-50 characters, letters only)"
+            isValid = false
         } else {
             organizerNameError = ""
         }
-        
+
         // Validate email
         if (emailAddress.isBlank()) {
             emailError = "Email address is required"
@@ -99,7 +119,7 @@ fun CreateEvent1Screen(navController: NavController) {
         } else {
             emailError = ""
         }
-        
+
         // Validate contact number
         if (contactNumber.isBlank()) {
             contactNumberError = "Contact number is required"
@@ -110,34 +130,40 @@ fun CreateEvent1Screen(navController: NavController) {
         } else {
             contactNumberError = ""
         }
-        
+
         // Validate organization name
         if (organizationName.isBlank()) {
             organizationNameError = "Organization name is required"
             isValid = false
+        } else if (!isValidOrganization(organizationName)) {
+            organizationNameError = "Please enter a valid organization name (2-100 characters)"
+            isValid = false
         } else {
             organizationNameError = ""
         }
-        
+
         // Validate city & state
         if (cityState.isBlank()) {
             cityStateError = "City & State is required"
             isValid = false
+        } else if (!isValidCityState(cityState)) {
+            cityStateError = "Please enter a valid city and state (e.g., Patiala, Punjab)"
+            isValid = false
         } else {
             cityStateError = ""
         }
-        
+
         // Validate social media links
         if (socialMediaLinks.isBlank()) {
             socialMediaError = "Social media link is required"
             isValid = false
         } else if (!isValidUrl(socialMediaLinks)) {
-            socialMediaError = "Please enter a valid URL (e.g., https://instagram.com/...)"
+            socialMediaError = "Please enter a valid URL (e.g., https://instagram.com/username)"
             isValid = false
         } else {
             socialMediaError = ""
         }
-        
+
         // Validate file upload
         if (selectedFileUri == null) {
             fileError = "Please upload a verification document"
@@ -145,33 +171,31 @@ fun CreateEvent1Screen(navController: NavController) {
         } else {
             fileError = ""
         }
-        
+
         return isValid
     }
 
     val context = LocalContext.current
 
-    // File picker launcher
+    // File picker launcher - restrict to documents and images
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedFileUri = uri
         fileName = if (uri != null) {
             // Extract file name from URI (simplified)
-            uri.lastPathSegment ?: "File selected"
+            uri.lastPathSegment?.let { segment ->
+                // Get the part after the last '/' and before any query parameters
+                segment.split("/").lastOrNull()?.split("?")?.firstOrNull() ?: "File selected"
+            } ?: "File selected"
         } else {
             "No file selected"
         }
+        // Clear error when file is selected
+        if (uri != null && fileError.isNotEmpty()) {
+            fileError = ""
+        }
     }
-
-    // Check if all fields are filled
-    val areAllFieldsFilled = organizerName.isNotBlank() &&
-            emailAddress.isNotBlank() &&
-            contactNumber.isNotBlank() &&
-            organizationName.isNotBlank() &&
-            cityState.isNotBlank() &&
-            socialMediaLinks.isNotBlank() &&
-            selectedFileUri != null
 
     Box(
         modifier = Modifier
@@ -218,7 +242,7 @@ fun CreateEvent1Screen(navController: NavController) {
                             text = "Create Your Event",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE91E63), // Pink color matching the image
+                            color = Color(0xFFE91E63),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -255,7 +279,7 @@ fun CreateEvent1Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = organizerName,
-                            onValueChange = { 
+                            onValueChange = {
                                 organizerName = it
                                 if (organizerNameError.isNotEmpty()) organizerNameError = ""
                             },
@@ -265,6 +289,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = organizerNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = if (organizerNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
@@ -277,6 +302,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (organizerNameError.isNotEmpty()) {
@@ -299,8 +325,8 @@ fun CreateEvent1Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = emailAddress,
-                            onValueChange = { 
-                                emailAddress = it
+                            onValueChange = {
+                                emailAddress = it.trim()
                                 if (emailError.isNotEmpty()) emailError = ""
                             },
                             placeholder = {
@@ -322,6 +348,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (emailError.isNotEmpty()) {
@@ -344,8 +371,12 @@ fun CreateEvent1Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = contactNumber,
-                            onValueChange = { 
-                                contactNumber = it
+                            onValueChange = {
+                                // Allow only numbers, spaces, hyphens, parentheses, and plus signs
+                                val filteredInput = it.filter { char ->
+                                    char.isDigit() || char in listOf(' ', '-', '(', ')', '+')
+                                }
+                                contactNumber = filteredInput
                                 if (contactNumberError.isNotEmpty()) contactNumberError = ""
                             },
                             placeholder = {
@@ -367,6 +398,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (contactNumberError.isNotEmpty()) {
@@ -389,7 +421,7 @@ fun CreateEvent1Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = organizationName,
-                            onValueChange = { 
+                            onValueChange = {
                                 organizationName = it
                                 if (organizationNameError.isNotEmpty()) organizationNameError = ""
                             },
@@ -399,6 +431,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = organizationNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = if (organizationNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
@@ -411,6 +444,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (organizationNameError.isNotEmpty()) {
@@ -433,7 +467,7 @@ fun CreateEvent1Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = cityState,
-                            onValueChange = { 
+                            onValueChange = {
                                 cityState = it
                                 if (cityStateError.isNotEmpty()) cityStateError = ""
                             },
@@ -443,6 +477,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = cityStateError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = if (cityStateError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
@@ -455,6 +490,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (cityStateError.isNotEmpty()) {
@@ -477,8 +513,8 @@ fun CreateEvent1Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = socialMediaLinks,
-                            onValueChange = { 
-                                socialMediaLinks = it
+                            onValueChange = {
+                                socialMediaLinks = it.trim()
                                 if (socialMediaError.isNotEmpty()) socialMediaError = ""
                             },
                             placeholder = {
@@ -500,6 +536,7 @@ fun CreateEvent1Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (socialMediaError.isNotEmpty()) {
@@ -525,7 +562,6 @@ fun CreateEvent1Screen(navController: NavController) {
                         OutlinedButton(
                             onClick = {
                                 filePickerLauncher.launch("*/*")
-                                if (fileError.isNotEmpty()) fileError = ""
                             },
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
@@ -555,7 +591,7 @@ fun CreateEvent1Screen(navController: NavController) {
                             color = if (selectedFileUri != null) Color.Green else Color.White.copy(alpha = 0.7f),
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        
+
                         if (fileError.isNotEmpty()) {
                             Text(
                                 text = fileError,
@@ -571,13 +607,12 @@ fun CreateEvent1Screen(navController: NavController) {
                         Button(
                             onClick = {
                                 if (validateFields()) {
-                                    navController.navigate("create_event_2") // Fixed route name
+                                    navController.navigate("create_event_2")
                                 }
                             },
-                            enabled = validateFields(),
+                            enabled = true, // Always enabled, validation happens on click
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (validateFields())
-                                    Color(0xFFE91E63) else Color.Gray.copy(alpha = 0.3f),
+                                containerColor = Color(0xFFE91E63),
                                 contentColor = Color.White,
                                 disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
                                 disabledContentColor = Color.White.copy(alpha = 0.4f)
