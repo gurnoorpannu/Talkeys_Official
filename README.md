@@ -22,11 +22,15 @@ Talkeys is a comprehensive event management Android application built with moder
 - **Event Management**: Track hosted, registered, and liked events
 
 ### 🚀 **Advanced Features**
+- **Event Mediator Pattern**: Centralized event coordination and state management
 - **LRU Caching System**: Comprehensive caching for optimal performance
 - **Offline Support**: Cached data availability when offline
 - **Real-time Validation**: Form validation with user-friendly error handling
 - **Image Optimization**: Dual-layer image caching (memory + disk)
 - **Smart Navigation**: Type-safe navigation with Jetpack Navigation Compose
+- **Advanced Event Filtering**: Real-time search and category-based filtering
+- **Event Actions**: Like, share, and register functionality with optimistic updates
+- **Multi-step Event Creation**: Coordinated wizard flow with draft saving
 
 ### 🎨 **UI/UX Features**
 - **Material Design 3**: Modern, accessible design system
@@ -34,21 +38,36 @@ Talkeys is a comprehensive event management Android application built with moder
 - **Responsive Layout**: Optimized for different screen sizes
 - **Custom Avatar System**: Personalized user avatars
 - **Smooth Animations**: Polished user interactions
+## 🏧 Architecture
 
-## 🏗️ Architecture
-
-### **Clean Architecture Pattern**
+### **Enhanced Clean Architecture with Mediator Pattern**
 ```
-┌─────────────────────────────────────┐
-│              UI Layer               │
-│  (Screens, ViewModels, Compose UI)  │
-├─────────────────────────────────────┤
-│            Domain Layer             │
-│     (Use Cases, Repositories)       │
-├─────────────────────────────────────┤
-│             Data Layer              │
-│  (API Services, Cache, DataStore)   │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        UI Layer                         │
+│        (Screens, Compose UI, Event Listeners)         │
+├─────────────────────────────────────────────────────────────────┤
+│                   Presentation Layer                    │
+│          (EventMediatedViewModel, StateFlow)          │
+├─────────────────────────────────────────────────────────────────┤
+│                   🎯 Mediator Layer                  │
+│    (EventMediator, Coordination, State Management)    │
+├─────────────────────────────────────────────────────────────────┤
+│                    Domain Layer                      │
+│             (Use Cases, Repositories)               │
+├─────────────────────────────────────────────────────────────────┤
+│                     Data Layer                       │
+│          (API Services, LRU Cache, DataStore)        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### **Event Mediator Architecture Benefits**
+- **🎯 Centralized Coordination**: All event operations flow through the mediator
+- **🔄 Reactive State**: StateFlow-based state management with automatic UI updates
+- **🔗 Loose Coupling**: Components communicate through the mediator, not directly
+- **🔍 Advanced Filtering**: Real-time search and category filtering
+- **🚀 Navigation Coordination**: Centralized navigation management
+- **⚙️ Error Handling**: Unified error processing with context awareness
+- **📊 Event Listeners**: Observer pattern for component communication
 ```
 
 ### **Technology Stack**
@@ -119,6 +138,13 @@ app/src/main/java/com/example/talkeys_new/
 ├── screens/                      # UI screens
 │   ├── authentication/          # Login/Signup screens
 │   ├── events/                  # Event-related screens
+│   │   ├── mediator/            # 🎯 Event Mediator Pattern
+│   │   │   ├── EventMediator.kt
+│   │   │   ├── EventMediatorImpl.kt
+│   │   │   └── EventMediatorProvider.kt
+│   │   ├── EventMediatedViewModel.kt
+│   │   ├── EventsRepository.kt
+│   │   └── EventApiService.kt
 │   ├── home/                    # Home screen
 │   ├── profile/                 # Profile screens
 │   └── common/                  # Shared UI components
@@ -145,10 +171,19 @@ class AuthenticationManager {
 
 ### **Event Management**
 ```kotlin
-// Event operations
+// Event operations with Mediator Pattern
 class EventsRepository {
     suspend fun getAllEvents(forceRefresh: Boolean = false): Result<List<EventResponse>>
     suspend fun getEventById(eventId: String, forceRefresh: Boolean = false): Result<EventResponse>
+}
+
+// Enhanced Event Management with Mediator Pattern
+class EventMediatedViewModel(context: Context) : ViewModel(), EventListener {
+    private val mediator = EventMediatorProvider.getMediator(context)
+    
+    fun fetchAllEvents() = viewModelScope.launch { mediator.fetchAllEvents() }
+    fun likeEvent(eventId: String) = viewModelScope.launch { mediator.likeEvent(eventId) }
+    fun navigateToEventDetail(eventId: String) = mediator.navigateToEventDetail(eventId)
 }
 ```
 
@@ -158,6 +193,40 @@ class EventsRepository {
 class PaymentManager {
     fun initiatePayment(eventId: String, amount: Double): PaymentResult
     fun handlePaymentCallback(result: PaymentResult)
+}
+```
+
+### **Event Mediator Pattern**
+```kotlin
+// Centralized event coordination and state management
+interface EventMediator {
+    suspend fun fetchAllEvents(forceRefresh: Boolean = false)
+    suspend fun likeEvent(eventId: String): Boolean
+    fun navigateToEventDetail(eventId: String)
+    fun startEventCreation()
+    val eventList: StateFlow<List<EventResponse>>
+    val isLoading: StateFlow<Boolean>
+}
+
+// Usage in Composables
+@Composable
+fun ExploreEventsScreen(navController: NavController) {
+    val context = LocalContext.current
+    val viewModel: EventMediatedViewModel = viewModel { EventMediatedViewModel(context) }
+    
+    LaunchedEffect(navController) {
+        EventMediatorProvider.setNavController(navController)
+    }
+    
+    val events by viewModel.filteredEvents.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    
+    // UI with mediator-powered actions
+    EventsList(
+        events = events,
+        onEventClick = { event -> viewModel.navigateToEventDetail(event._id) },
+        onLikeEvent = { eventId -> viewModel.likeEvent(eventId) }
+    )
 }
 ```
 
@@ -323,6 +392,10 @@ The app requires backend APIs for:
 
 See [BACKEND_API_SPEC.md](BACKEND_API_SPEC.md) for detailed API specifications.
 
+### **Architecture Documentation**
+- **[MEDIATOR_PATTERN_IMPLEMENTATION.md](MEDIATOR_PATTERN_IMPLEMENTATION.md)**: Comprehensive guide to the Event Mediator Pattern implementation
+- **[CACHING_IMPLEMENTATION.md](CACHING_IMPLEMENTATION.md)**: LRU caching system documentation
+
 ### **Key Endpoints**
 ```
 POST /api/auth/google-signin
@@ -383,7 +456,19 @@ For technical support or questions:
 
 ## 🔄 Recent Updates
 
-### **v1.0.0** (Current)
+### **v1.1.0** (Latest - January 2025)
+- ✅ **Event Mediator Pattern Implementation**: Complete architectural enhancement
+- ✅ **Advanced Event Filtering**: Real-time search and category filtering
+- ✅ **Enhanced Event Actions**: Like, share, register with optimistic updates
+- ✅ **Improved Error Handling**: Centralized error management with proper Exception handling
+- ✅ **Code Quality Improvements**: Fixed linter errors and improved type safety
+- ✅ **Reactive State Management**: StateFlow-based event state coordination
+- ✅ **Enhanced Navigation**: Centralized navigation coordination through mediator
+- ✅ **Event Creation Flow**: Coordinated multi-step wizard with draft saving
+- ✅ **Listener Pattern**: Component communication for better separation of concerns
+- ✅ **Documentation**: Comprehensive mediator pattern implementation guide
+
+### **v1.0.0** (Base)
 - ✅ Complete LRU caching system implementation
 - ✅ PhonePe payment integration
 - ✅ Google Sign-In authentication
