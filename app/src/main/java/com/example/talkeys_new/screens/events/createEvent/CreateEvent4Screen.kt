@@ -1,8 +1,10 @@
 package com.example.talkeys_new.screens.events.createEvent
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -16,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,12 +32,18 @@ fun CreateEvent4Screen(navController: NavController) {
     // State variables for form fields
     var eventType by remember { mutableStateOf("") }
     var eventTypeDropdownExpanded by remember { mutableStateOf(false) }
+    var ticketPrice by remember { mutableStateOf("") }
     var discounts by remember { mutableStateOf("") }
     var discountsDropdownExpanded by remember { mutableStateOf(false) }
+    var discountPercentage by remember { mutableStateOf("") }
     var qrCheckIn by remember { mutableStateOf("") }
     var qrCheckInDropdownExpanded by remember { mutableStateOf(false) }
     var refundPolicy by remember { mutableStateOf("") }
     var refundPolicyDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Error states
+    var ticketPriceError by remember { mutableStateOf("") }
+    var discountPercentageError by remember { mutableStateOf("") }
 
     val context = LocalContext.current
 
@@ -49,11 +58,60 @@ fun CreateEvent4Screen(navController: NavController) {
         "Custom Policy"
     )
 
-    // Check if all fields are filled
+    // Validation functions
+    fun validateTicketPrice(value: String): Boolean {
+        return try {
+            val price = value.toDouble()
+            price >= 0
+        } catch (e: NumberFormatException) {
+            false
+        }
+    }
+
+    fun validateDiscountPercentage(value: String): Boolean {
+        return try {
+            val percentage = value.toInt()
+            percentage in 1..100
+        } catch (e: NumberFormatException) {
+            false
+        }
+    }
+
+    fun validateForm(): Boolean {
+        var isValid = true
+
+        // Validate ticket price if event is paid
+        if (eventType == "Paid") {
+            if (ticketPrice.isBlank()) {
+                ticketPriceError = "Ticket price is required for paid events"
+                isValid = false
+            } else if (!validateTicketPrice(ticketPrice)) {
+                ticketPriceError = "Please enter a valid price (0 or greater)"
+                isValid = false
+            }
+        }
+
+        // Validate discount percentage if discounts are enabled
+        if (discounts == "Yes") {
+            if (discountPercentage.isBlank()) {
+                discountPercentageError = "Discount percentage is required"
+                isValid = false
+            } else if (!validateDiscountPercentage(discountPercentage)) {
+                discountPercentageError = "Please enter a valid percentage (1-100)"
+                isValid = false
+            }
+        }
+
+        return isValid
+    }
+
+    // Check if all required fields are filled and valid
     val areAllFieldsFilled = eventType.isNotBlank() &&
             discounts.isNotBlank() &&
             qrCheckIn.isNotBlank() &&
-            refundPolicy.isNotBlank()
+            refundPolicy.isNotBlank() &&
+            (eventType != "Paid" || (ticketPrice.isNotBlank() && validateTicketPrice(ticketPrice))) &&
+            (discounts != "Yes" || (discountPercentage.isNotBlank() && validateDiscountPercentage(discountPercentage)))
 
     Box(
         modifier = Modifier
@@ -61,8 +119,8 @@ fun CreateEvent4Screen(navController: NavController) {
             .background(
                 Brush.radialGradient(
                     colors = listOf(
-                        Color.Black,        // Black at top left
-                        Color(0xFF4A0E4E)   // Purple at bottom right
+                        Color.Black,
+                        Color(0xFF4A0E4E)
                     ),
                     center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
                     radius = 1200f
@@ -99,9 +157,9 @@ fun CreateEvent4Screen(navController: NavController) {
                         Text(
                             text = "Create Your Event",
                             fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily(Font(R.font.urbanist_bold)),
-                            color = Color(0xFFE91E63), // Pink color matching the image
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                            color = Color(0xFFE91E63),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -111,7 +169,7 @@ fun CreateEvent4Screen(navController: NavController) {
                         Text(
                             text = "Step 4 of 6",
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.urbanist_medium)),
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White.copy(alpha = 0.8f),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
@@ -123,8 +181,8 @@ fun CreateEvent4Screen(navController: NavController) {
                         Text(
                             text = "4. Ticketing & Access",
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily(Font(R.font.urbanist_bold)),
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -135,22 +193,24 @@ fun CreateEvent4Screen(navController: NavController) {
                         Text(
                             text = "Is the Event Free or Paid?",
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.urbanist_medium)),
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
                         ExposedDropdownMenuBox(
                             expanded = eventTypeDropdownExpanded,
-                            onExpandedChange = { eventTypeDropdownExpanded = !eventTypeDropdownExpanded }
+                            onExpandedChange = {
+                                eventTypeDropdownExpanded = !eventTypeDropdownExpanded
+                            }
                         ) {
                             OutlinedTextField(
-                                value = eventType.ifEmpty { "Free" },
+                                value = eventType.ifEmpty { "-- Select an option --" },
                                 onValueChange = { },
                                 readOnly = true,
                                 placeholder = {
                                     Text(
-                                        "Free",
+                                        "-- Select an option --",
                                         fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                                         color = Color.White.copy(alpha = 0.5f)
                                     )
@@ -196,6 +256,11 @@ fun CreateEvent4Screen(navController: NavController) {
                                         onClick = {
                                             eventType = option
                                             eventTypeDropdownExpanded = false
+                                            // Clear ticket price if switching to Free
+                                            if (option == "Free") {
+                                                ticketPrice = ""
+                                                ticketPriceError = ""
+                                            }
                                         }
                                     )
                                 }
@@ -204,11 +269,71 @@ fun CreateEvent4Screen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
+                        // Ticket Price Field (only show if event is paid)
+                        if (eventType == "Paid") {
+                            Text(
+                                text = "Ticket Price (₹)",
+                                fontSize = 16.sp,
+                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                color = Color.White.copy(alpha = 0.9f),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            OutlinedTextField(
+                                value = ticketPrice,
+                                onValueChange = { value ->
+                                    // Allow only numbers and decimal point
+                                    val filtered = value.filter { it.isDigit() || it == '.' }
+                                    if (filtered.count { it == '.' } <= 1) {
+                                        ticketPrice = filtered
+                                        if (ticketPrice.isNotEmpty() && validateTicketPrice(ticketPrice)) {
+                                            ticketPriceError = ""
+                                        }
+                                    }
+                                },
+                                placeholder = {
+                                    Text(
+                                        "500.00",
+                                        fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                        color = Color.White.copy(alpha = 0.5f)
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                isError = ticketPriceError.isNotEmpty(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFE91E63),
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                    errorBorderColor = Color.Red,
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    cursorColor = Color(0xFFE91E63),
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent
+                                ),
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular))
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            if (ticketPriceError.isNotEmpty()) {
+                                Text(
+                                    text = ticketPriceError,
+                                    color = Color.Red,
+                                    fontSize = 14.sp,
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+
                         // Any Discounts? Dropdown
                         Text(
                             text = "Any Discounts?",
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.urbanist_medium)),
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -269,6 +394,11 @@ fun CreateEvent4Screen(navController: NavController) {
                                         onClick = {
                                             discounts = option
                                             discountsDropdownExpanded = false
+                                            // Clear discount percentage if switching to No
+                                            if (option == "No") {
+                                                discountPercentage = ""
+                                                discountPercentageError = ""
+                                            }
                                         }
                                     )
                                 }
@@ -277,11 +407,70 @@ fun CreateEvent4Screen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(20.dp))
 
+                        // Discount Percentage Field (only show if discounts are enabled)
+                        if (discounts == "Yes") {
+                            Text(
+                                text = "Discount Percentage (%)",
+                                fontSize = 16.sp,
+                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                color = Color.White.copy(alpha = 0.9f),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            OutlinedTextField(
+                                value = discountPercentage,
+                                onValueChange = { value ->
+                                    val filtered = value.filter { it.isDigit() }
+                                    if (filtered.length <= 3) { // Max 3 digits (100%)
+                                        discountPercentage = filtered
+                                        if (discountPercentage.isNotEmpty() && validateDiscountPercentage(discountPercentage)) {
+                                            discountPercentageError = ""
+                                        }
+                                    }
+                                },
+                                placeholder = {
+                                    Text(
+                                        "10",
+                                        fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                        color = Color.White.copy(alpha = 0.5f)
+                                    )
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                isError = discountPercentageError.isNotEmpty(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFE91E63),
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                    errorBorderColor = Color.Red,
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    cursorColor = Color(0xFFE91E63),
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent
+                                ),
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular))
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            if (discountPercentageError.isNotEmpty()) {
+                                Text(
+                                    text = discountPercentageError,
+                                    color = Color.Red,
+                                    fontSize = 14.sp,
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                    modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+
                         // Enable QR-based check-in? Dropdown
                         Text(
                             text = "Enable QR-based check-in?",
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.urbanist_medium)),
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -354,7 +543,7 @@ fun CreateEvent4Screen(navController: NavController) {
                         Text(
                             text = "Refund Policy",
                             fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.urbanist_medium)),
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -456,8 +645,8 @@ fun CreateEvent4Screen(navController: NavController) {
                                 Text(
                                     "Previous",
                                     fontSize = 16.sp,
-                                    fontFamily = FontFamily(Font(R.font.urbanist_medium)),
-                                    fontWeight = FontWeight.Medium
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
 
@@ -466,7 +655,7 @@ fun CreateEvent4Screen(navController: NavController) {
                             // Next Button
                             Button(
                                 onClick = {
-                                    if (areAllFieldsFilled) {
+                                    if (validateForm() && areAllFieldsFilled) {
                                         navController.navigate("create_event_5")
                                     }
                                 },
@@ -486,8 +675,8 @@ fun CreateEvent4Screen(navController: NavController) {
                                 Text(
                                     "Next ›",
                                     fontSize = 18.sp,
-                                    fontFamily = FontFamily(Font(R.font.urbanist_bold)),
-                                    fontWeight = FontWeight.SemiBold
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
                         }
