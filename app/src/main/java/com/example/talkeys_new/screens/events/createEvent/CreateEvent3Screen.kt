@@ -1,13 +1,19 @@
 package com.example.talkeys_new.screens.events.createEvent
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,14 +23,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.common.HomeTopBar
-
-// Font family definition - using only urbanist_regular for all weights
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,17 +46,128 @@ fun CreateEvent3Screen(navController: NavController) {
     var willBeRecorded by remember { mutableStateOf("") }
     var recordingDropdownExpanded by remember { mutableStateOf(false) }
 
+    // Error states
+    var eventDateError by remember { mutableStateOf("") }
+    var startTimeError by remember { mutableStateOf("") }
+    var endTimeError by remember { mutableStateOf("") }
+    var registrationDeadlineError by remember { mutableStateOf("") }
+    var maxAttendeesError by remember { mutableStateOf("") }
+
     val context = LocalContext.current
+    val calendar = Calendar.getInstance()
 
     // Recording options
     val recordingOptions = listOf("Yes", "No")
 
-    // Check if all fields are filled
+    // Date picker for event dates
+    val eventDatePicker = DatePickerDialog(
+        context,
+        { _, year, month, day ->
+            eventDates = String.format("%04d-%02d-%02d", year, month + 1, day)
+            eventDateError = ""
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    // Date picker for registration deadline
+    val registrationDatePicker = DatePickerDialog(
+        context,
+        { _, year, month, day ->
+            registrationDeadline = String.format("%04d-%02d-%02d", year, month + 1, day)
+            registrationDeadlineError = ""
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    // Time picker for start time
+    val startTimePicker = TimePickerDialog(
+        context,
+        { _, hour, minute ->
+            val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+            }
+            startTime = timeFormat.format(cal.time)
+            startTimeError = ""
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        false
+    )
+
+    // Time picker for end time
+    val endTimePicker = TimePickerDialog(
+        context,
+        { _, hour, minute ->
+            val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+            }
+            endTime = timeFormat.format(cal.time)
+            endTimeError = ""
+        },
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE),
+        false
+    )
+
+    // Validation functions
+    fun validateMaxAttendees(value: String): Boolean {
+        return try {
+            val num = value.toInt()
+            num > 0
+        } catch (e: NumberFormatException) {
+            false
+        }
+    }
+
+    fun validateForm(): Boolean {
+        var isValid = true
+
+        if (eventDates.isBlank()) {
+            eventDateError = "Event date is required"
+            isValid = false
+        }
+
+        if (startTime.isBlank()) {
+            startTimeError = "Start time is required"
+            isValid = false
+        }
+
+        if (endTime.isBlank()) {
+            endTimeError = "End time is required"
+            isValid = false
+        }
+
+        if (registrationDeadline.isBlank()) {
+            registrationDeadlineError = "Registration deadline is required"
+            isValid = false
+        }
+
+        if (maxAttendees.isBlank()) {
+            maxAttendeesError = "Maximum attendees is required"
+            isValid = false
+        } else if (!validateMaxAttendees(maxAttendees)) {
+            maxAttendeesError = "Please enter a valid number greater than 0"
+            isValid = false
+        }
+
+        return isValid
+    }
+
+    // Check if all fields are filled and valid
     val areAllFieldsFilled = eventDates.isNotBlank() &&
             startTime.isNotBlank() &&
             endTime.isNotBlank() &&
             registrationDeadline.isNotBlank() &&
             maxAttendees.isNotBlank() &&
+            validateMaxAttendees(maxAttendees) &&
             platformUsed.isNotBlank() &&
             willBeRecorded.isNotBlank()
 
@@ -59,8 +177,8 @@ fun CreateEvent3Screen(navController: NavController) {
             .background(
                 Brush.radialGradient(
                     colors = listOf(
-                        Color.Black,        // Black at top left
-                        Color(0xFF4A0E4E)   // Purple at bottom right
+                        Color.Black,
+                        Color(0xFF4A0E4E)
                     ),
                     center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
                     radius = 1200f
@@ -97,9 +215,9 @@ fun CreateEvent3Screen(navController: NavController) {
                         Text(
                             text = "Create Your Event",
                             fontSize = 28.sp,
-                            fontWeight = FontWeight.Normal, // Changed from Bold to Normal
+                            fontWeight = FontWeight.Normal,
                             fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                            color = Color(0xFFE91E63), // Pink color matching the image
+                            color = Color(0xFFE91E63),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -121,7 +239,7 @@ fun CreateEvent3Screen(navController: NavController) {
                         Text(
                             text = "3. Event Timing & Logistics",
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Normal, // Changed from SemiBold to Normal
+                            fontWeight = FontWeight.Normal,
                             fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White,
                             modifier = Modifier.fillMaxWidth()
@@ -129,7 +247,7 @@ fun CreateEvent3Screen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Event Date(s) Field
+                        // Event Date(s) Field with Date Picker
                         Text(
                             text = "📅 Event Date(s)",
                             fontSize = 16.sp,
@@ -139,17 +257,30 @@ fun CreateEvent3Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = eventDates,
-                            onValueChange = { eventDates = it },
+                            onValueChange = { },
+                            readOnly = true,
                             placeholder = {
                                 Text(
-                                    "2023-12-25 or comma separated",
+                                    "Select event date",
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Select Date",
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.clickable {
+                                        eventDatePicker.show()
+                                    }
+                                )
+                            },
+                            isError = eventDateError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFFE91E63),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -160,12 +291,26 @@ fun CreateEvent3Screen(navController: NavController) {
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular))
                             ),
                             shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    eventDatePicker.show()
+                                }
                         )
+
+                        if (eventDateError.isNotEmpty()) {
+                            Text(
+                                text = eventDateError,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Start Time Field
+                        // Start Time Field with Time Picker
                         Text(
                             text = "🕒 Start Time",
                             fontSize = 16.sp,
@@ -175,17 +320,30 @@ fun CreateEvent3Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = startTime,
-                            onValueChange = { startTime = it },
+                            onValueChange = { },
+                            readOnly = true,
                             placeholder = {
                                 Text(
-                                    "HH:MM AM/PM",
+                                    "Select start time",
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = "Select Time",
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.clickable {
+                                        startTimePicker.show()
+                                    }
+                                )
+                            },
+                            isError = startTimeError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFFE91E63),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -196,12 +354,26 @@ fun CreateEvent3Screen(navController: NavController) {
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular))
                             ),
                             shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    startTimePicker.show()
+                                }
                         )
+
+                        if (startTimeError.isNotEmpty()) {
+                            Text(
+                                text = startTimeError,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // End Time Field
+                        // End Time Field with Time Picker
                         Text(
                             text = "🕐 End Time",
                             fontSize = 16.sp,
@@ -211,17 +383,30 @@ fun CreateEvent3Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = endTime,
-                            onValueChange = { endTime = it },
+                            onValueChange = { },
+                            readOnly = true,
                             placeholder = {
                                 Text(
-                                    "HH:MM AM/PM",
+                                    "Select end time",
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = "Select Time",
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.clickable {
+                                        endTimePicker.show()
+                                    }
+                                )
+                            },
+                            isError = endTimeError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFFE91E63),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -232,12 +417,26 @@ fun CreateEvent3Screen(navController: NavController) {
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular))
                             ),
                             shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    endTimePicker.show()
+                                }
                         )
+
+                        if (endTimeError.isNotEmpty()) {
+                            Text(
+                                text = endTimeError,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Registration Deadline Field
+                        // Registration Deadline Field with Date Picker
                         Text(
                             text = "Registration Deadline",
                             fontSize = 16.sp,
@@ -247,17 +446,30 @@ fun CreateEvent3Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = registrationDeadline,
-                            onValueChange = { registrationDeadline = it },
+                            onValueChange = { },
+                            readOnly = true,
                             placeholder = {
                                 Text(
-                                    "YYYY-MM-DD",
+                                    "Select registration deadline",
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Select Date",
+                                    tint = Color(0xFFE91E63),
+                                    modifier = Modifier.clickable {
+                                        registrationDatePicker.show()
+                                    }
+                                )
+                            },
+                            isError = registrationDeadlineError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFFE91E63),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -268,12 +480,26 @@ fun CreateEvent3Screen(navController: NavController) {
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular))
                             ),
                             shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    registrationDatePicker.show()
+                                }
                         )
+
+                        if (registrationDeadlineError.isNotEmpty()) {
+                            Text(
+                                text = registrationDeadlineError,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // Max No. of Attendees Field
+                        // Max No. of Attendees Field with Number Keyboard
                         Text(
                             text = "Max No. of Attendees",
                             fontSize = 16.sp,
@@ -283,7 +509,12 @@ fun CreateEvent3Screen(navController: NavController) {
                         )
                         OutlinedTextField(
                             value = maxAttendees,
-                            onValueChange = { maxAttendees = it },
+                            onValueChange = { value ->
+                                maxAttendees = value.filter { it.isDigit() }
+                                if (maxAttendees.isNotEmpty() && validateMaxAttendees(maxAttendees)) {
+                                    maxAttendeesError = ""
+                                }
+                            },
                             placeholder = {
                                 Text(
                                     "100",
@@ -291,9 +522,12 @@ fun CreateEvent3Screen(navController: NavController) {
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            isError = maxAttendeesError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFFE91E63),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -307,13 +541,23 @@ fun CreateEvent3Screen(navController: NavController) {
                             modifier = Modifier.fillMaxWidth()
                         )
 
+                        if (maxAttendeesError.isNotEmpty()) {
+                            Text(
+                                text = maxAttendeesError,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Online Details Section
                         Text(
                             text = "Online Details",
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.Normal, // Changed from SemiBold to Normal
+                            fontWeight = FontWeight.Normal,
                             fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                             color = Color.White,
                             modifier = Modifier.fillMaxWidth()
@@ -464,7 +708,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                     "Previous",
                                     fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                    fontWeight = FontWeight.Normal // Changed from Medium to Normal
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
 
@@ -473,7 +717,7 @@ fun CreateEvent3Screen(navController: NavController) {
                             // Next Button
                             Button(
                                 onClick = {
-                                    if (areAllFieldsFilled) {
+                                    if (validateForm() && areAllFieldsFilled) {
                                         navController.navigate("create_event_4")
                                     }
                                 },
@@ -494,7 +738,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                     "Next ›",
                                     fontSize = 18.sp,
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                    fontWeight = FontWeight.Normal // Changed from SemiBold to Normal
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
                         }
