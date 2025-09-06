@@ -1,4 +1,6 @@
 package com.example.talkeys_new.screens.events.createEvent
+
+// Enhanced Create Event Screen 2 with comprehensive validation
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -6,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -19,11 +22,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.talkeys_new.screens.common.HomeTopBar
+import java.util.regex.Pattern
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +42,13 @@ fun CreateEvent2Screen(navController: NavController) {
     var fileName by remember { mutableStateOf("No file selected") }
     var expanded by remember { mutableStateOf(false) }
 
+    // Error state variables
+    var eventNameError by remember { mutableStateOf("") }
+    var eventTypeError by remember { mutableStateOf("") }
+    var eventCategoryError by remember { mutableStateOf("") }
+    var eventDescriptionError by remember { mutableStateOf("") }
+    var fileError by remember { mutableStateOf("") }
+
     val context = LocalContext.current
 
     // Event type options
@@ -49,28 +61,102 @@ fun CreateEvent2Screen(navController: NavController) {
         "Sports Event",
         "Exhibition",
         "Networking Event",
+        "Competition",
+        "Hackathon",
+        "Meetup",
+        "Training Session",
         "Other"
     )
 
-    // File picker launcher
+    // Validation functions
+    fun isValidEventName(name: String): Boolean {
+        // Allow letters, numbers, spaces, and common punctuation
+        val namePattern = Pattern.compile("^[a-zA-Z0-9\\s&.,'-:!?()]{3,100}$")
+        return name.isNotBlank() && namePattern.matcher(name.trim()).matches()
+    }
+
+    fun isValidEventCategory(category: String): Boolean {
+        val categoryPattern = Pattern.compile("^[a-zA-Z\\s,&-]{2,50}$")
+        return category.isNotBlank() && categoryPattern.matcher(category.trim()).matches()
+    }
+
+    fun isValidDescription(description: String): Boolean {
+        return description.isNotBlank() &&
+                description.trim().length >= 10 &&
+                description.trim().length <= 1000
+    }
+
+    // Enhanced validation function
+    fun validateFields(): Boolean {
+        var isValid = true
+
+        // Validate event name
+        if (eventName.isBlank()) {
+            eventNameError = "Event name is required"
+            isValid = false
+        } else if (!isValidEventName(eventName)) {
+            eventNameError = "Please enter a valid event name (3-100 characters)"
+            isValid = false
+        } else {
+            eventNameError = ""
+        }
+
+        // Validate event type
+        if (eventType.isBlank()) {
+            eventTypeError = "Event type is required"
+            isValid = false
+        } else {
+            eventTypeError = ""
+        }
+
+        // Validate event category
+        if (eventCategory.isBlank()) {
+            eventCategoryError = "Event category is required"
+            isValid = false
+        } else if (!isValidEventCategory(eventCategory)) {
+            eventCategoryError = "Please enter a valid category (2-50 characters)"
+            isValid = false
+        } else {
+            eventCategoryError = ""
+        }
+
+        // Validate event description
+        if (eventDescription.isBlank()) {
+            eventDescriptionError = "Event description is required"
+            isValid = false
+        } else if (!isValidDescription(eventDescription)) {
+            eventDescriptionError = "Description must be between 10-1000 characters"
+            isValid = false
+        } else {
+            eventDescriptionError = ""
+        }
+
+        // File is optional for this step, but validate if provided
+        if (selectedFileUri != null) {
+            fileError = ""
+        }
+
+        return isValid
+    }
+
+    // File picker launcher - restrict to images for banner/poster
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedFileUri = uri
         fileName = if (uri != null) {
             // Extract file name from URI (simplified)
-            uri.lastPathSegment ?: "File selected"
+            uri.lastPathSegment?.let { segment ->
+                segment.split("/").lastOrNull()?.split("?")?.firstOrNull() ?: "Image selected"
+            } ?: "Image selected"
         } else {
             "No file selected"
         }
+        // Clear error when file is selected
+        if (uri != null && fileError.isNotEmpty()) {
+            fileError = ""
+        }
     }
-
-    // Check if all fields are filled
-    val areAllFieldsFilled = eventName.isNotBlank() &&
-            eventType.isNotBlank() &&
-            eventCategory.isNotBlank() &&
-            eventDescription.isNotBlank() &&
-            selectedFileUri != null
 
     Box(
         modifier = Modifier
@@ -117,7 +203,7 @@ fun CreateEvent2Screen(navController: NavController) {
                             text = "Create Your Event",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE91E63), // Pink color matching the image
+                            color = Color(0xFFE91E63),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -147,23 +233,29 @@ fun CreateEvent2Screen(navController: NavController) {
 
                         // Event Name Field
                         Text(
-                            text = "Event Name",
+                            text = "Event Name *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = eventName,
-                            onValueChange = { eventName = it },
+                            onValueChange = {
+                                eventName = it
+                                if (eventNameError.isNotEmpty()) eventNameError = ""
+                            },
                             placeholder = {
                                 Text(
                                     "Enter event name",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                            isError = eventNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (eventNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (eventNameError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -171,14 +263,23 @@ fun CreateEvent2Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (eventNameError.isNotEmpty()) {
+                            Text(
+                                text = eventNameError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Event Type Dropdown
                         Text(
-                            text = "Event Type",
+                            text = "Event Type *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -186,7 +287,10 @@ fun CreateEvent2Screen(navController: NavController) {
 
                         ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onExpandedChange = { expanded = !expanded }
+                            onExpandedChange = {
+                                expanded = !expanded
+                                if (eventTypeError.isNotEmpty()) eventTypeError = ""
+                            }
                         ) {
                             OutlinedTextField(
                                 value = eventType.ifEmpty { "-- Select an option --" },
@@ -205,9 +309,11 @@ fun CreateEvent2Screen(navController: NavController) {
                                         tint = Color.White.copy(alpha = 0.7f)
                                     )
                                 },
+                                isError = eventTypeError.isNotEmpty(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFE91E63),
-                                    unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                    focusedBorderColor = if (eventTypeError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                    unfocusedBorderColor = if (eventTypeError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                    errorBorderColor = Color.Red,
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
                                     focusedContainerColor = Color.Transparent,
@@ -235,33 +341,48 @@ fun CreateEvent2Screen(navController: NavController) {
                                         onClick = {
                                             eventType = option
                                             expanded = false
+                                            if (eventTypeError.isNotEmpty()) eventTypeError = ""
                                         }
                                     )
                                 }
                             }
+                        }
+                        if (eventTypeError.isNotEmpty()) {
+                            Text(
+                                text = eventTypeError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Event Category Field
                         Text(
-                            text = "Event Category",
+                            text = "Event Category *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = eventCategory,
-                            onValueChange = { eventCategory = it },
+                            onValueChange = {
+                                eventCategory = it
+                                if (eventCategoryError.isNotEmpty()) eventCategoryError = ""
+                            },
                             placeholder = {
                                 Text(
                                     "Concert, Gaming, Workshop etc",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                            isError = eventCategoryError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (eventCategoryError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (eventCategoryError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -269,30 +390,45 @@ fun CreateEvent2Screen(navController: NavController) {
                                 unfocusedContainerColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(8.dp),
+                            singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (eventCategoryError.isNotEmpty()) {
+                            Text(
+                                text = eventCategoryError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Event Description Field
                         Text(
-                            text = "Event Description",
+                            text = "Event Description *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         OutlinedTextField(
                             value = eventDescription,
-                            onValueChange = { eventDescription = it },
+                            onValueChange = {
+                                eventDescription = it
+                                if (eventDescriptionError.isNotEmpty()) eventDescriptionError = ""
+                            },
                             placeholder = {
                                 Text(
-                                    "Short and clear explanation",
+                                    "Short and clear explanation (10-1000 characters)",
                                     color = Color.White.copy(alpha = 0.5f)
                                 )
                             },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                            isError = eventDescriptionError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                focusedBorderColor = if (eventDescriptionError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                unfocusedBorderColor = if (eventDescriptionError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
+                                errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 cursorColor = Color(0xFFE91E63),
@@ -304,12 +440,28 @@ fun CreateEvent2Screen(navController: NavController) {
                             maxLines = 6,
                             modifier = Modifier.fillMaxWidth()
                         )
+                        if (eventDescriptionError.isNotEmpty()) {
+                            Text(
+                                text = eventDescriptionError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
+
+                        // Character count
+                        Text(
+                            text = "${eventDescription.length}/1000 characters",
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // File Upload Section
                         Text(
-                            text = "📎 Event Banner / Poster",
+                            text = "Event Banner / Poster (Optional)",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 12.dp)
@@ -333,12 +485,12 @@ fun CreateEvent2Screen(navController: NavController) {
                         ) {
                             Icon(
                                 imageVector = Icons.Default.AttachFile,
-                                contentDescription = "Choose File",
+                                contentDescription = "Choose Image",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Choose File", fontSize = 16.sp)
+                            Text("Choose Image", fontSize = 16.sp)
                         }
 
                         // File Status
@@ -348,6 +500,15 @@ fun CreateEvent2Screen(navController: NavController) {
                             color = if (selectedFileUri != null) Color.Green else Color.White.copy(alpha = 0.7f),
                             modifier = Modifier.padding(top = 8.dp)
                         )
+
+                        if (fileError.isNotEmpty()) {
+                            Text(
+                                text = fileError,
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(32.dp))
 
@@ -393,14 +554,13 @@ fun CreateEvent2Screen(navController: NavController) {
                             // Next Button
                             Button(
                                 onClick = {
-                                    if (areAllFieldsFilled) {
+                                    if (validateFields()) {
                                         navController.navigate("create_event_3")
                                     }
                                 },
-                                enabled = areAllFieldsFilled,
+                                enabled = true, // Always enabled, validation happens on click
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (areAllFieldsFilled)
-                                        Color(0xFFE91E63) else Color.Gray.copy(alpha = 0.3f),
+                                    containerColor = Color(0xFFE91E63),
                                     contentColor = Color.White,
                                     disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
                                     disabledContentColor = Color.White.copy(alpha = 0.4f)
