@@ -14,10 +14,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -117,7 +120,7 @@ fun ExploreEventsScreen(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Main content
+            // Main content with pull-to-refresh
             ExploreEventsContent(
                 groupedEvents = groupedEvents,
                 isLoading = isLoading,
@@ -125,6 +128,7 @@ fun ExploreEventsScreen(navController: NavController) {
                 showLiveEvents = showLiveEvents,
                 onToggleFilter = { viewModel.toggleEventFilter() },
                 onRetry = { viewModel.fetchAllEvents() },
+                onRefresh = { viewModel.fetchAllEvents() },
                 onEventClick = { event ->
                     handleEventClick(event, navController)
                 },
@@ -147,6 +151,7 @@ fun ExploreEventsScreen(navController: NavController) {
 /**
  * Main content composable for the explore events screen
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExploreEventsContent(
     groupedEvents: Map<String, List<EventResponse>>,
@@ -155,24 +160,45 @@ private fun ExploreEventsContent(
     showLiveEvents: Boolean,
     onToggleFilter: () -> Unit,
     onRetry: () -> Unit,
+    onRefresh: () -> Unit,
     onEventClick: (EventResponse) -> Unit,
     onClearError: () -> Unit,
     navController: NavController
 ) {
-    when {
-        errorMessage != null -> {
-            ErrorContent(
-                errorMessage = errorMessage,
-                onRetry = onRetry,
-                onClearError = onClearError
-            )
+    val pullToRefreshState = rememberPullToRefreshState()
+    
+    // Handle pull to refresh
+    LaunchedEffect(pullToRefreshState.isRefreshing) {
+        if (pullToRefreshState.isRefreshing) {
+            onRefresh()
         }
-        else -> {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 100.dp)
-            ) {
+    }
+    
+    // Reset refresh state when loading completes
+    LaunchedEffect(isLoading) {
+        if (!isLoading && pullToRefreshState.isRefreshing) {
+            pullToRefreshState.endRefresh()
+        }
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+    ) {
+        when {
+            errorMessage != null -> {
+                ErrorContent(
+                    errorMessage = errorMessage,
+                    onRetry = onRetry,
+                    onClearError = onClearError
+                )
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 100.dp)
+                ) {
                 // Header section
                 item {
                     HeaderSection(
@@ -203,13 +229,20 @@ private fun ExploreEventsContent(
                     }
                 }
 
-                // Footer
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Footer(navController = navController)
+                    // Footer
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Footer(navController = navController)
+                    }
                 }
             }
         }
+        
+        // Pull to refresh indicator
+        PullToRefreshContainer(
+            state = pullToRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
