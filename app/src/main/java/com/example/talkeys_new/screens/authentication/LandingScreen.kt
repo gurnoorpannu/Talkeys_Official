@@ -1,4 +1,4 @@
-package com.example.talkeys_new.screens
+package com.example.talkeys_new.screens.authentication
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,10 +23,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.authentication.AuthService.RetrofitClient
-import com.example.talkeys_new.screens.authentication.GoogleAuthClient
-import com.example.talkeys_new.screens.authentication.TokenManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 @Composable
 fun LandingPage(navController: NavController) {
     val context = LocalContext.current
@@ -34,6 +33,7 @@ fun LandingPage(navController: NavController) {
     val tokenManager = remember { TokenManager(context) }
 
     var isCheckingToken by remember { mutableStateOf(true) }
+    var isGoogleSignInLoading by remember { mutableStateOf(false) }
 
     // ✅ Token auto-login logic with flicker prevention
     LaunchedEffect(Unit) {
@@ -88,10 +88,13 @@ fun LandingPage(navController: NavController) {
                     }
                 } catch (e: Exception) {
                     Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    isGoogleSignInLoading = false
                 }
             }
         } else {
             Toast.makeText(context, "Google sign-in failed", Toast.LENGTH_SHORT).show()
+            isGoogleSignInLoading = false
         }
     }
 
@@ -135,21 +138,58 @@ fun LandingPage(navController: NavController) {
 
             Button(
                 onClick = {
-                    launcher.launch(googleAuthClient.getSignInIntent())
+                    if (!isGoogleSignInLoading) {
+                        isGoogleSignInLoading = true
+                        launcher.launch(googleAuthClient.getSignInIntent())
+                        
+                        // Timeout mechanism - reset loading state after 30 seconds if no response
+                        coroutineScope.launch {
+                            delay(30000) // 30 seconds timeout
+                            if (isGoogleSignInLoading) {
+                                isGoogleSignInLoading = false
+                                Toast.makeText(context, "Google Sign-In timed out. Please try again.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                 },
+                enabled = !isGoogleSignInLoading,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFB768FF)
+                    containerColor = if (isGoogleSignInLoading) Color(0xFF9C4DCD) else Color(0xFFB768FF),
+                    disabledContainerColor = Color(0xFF9C4DCD)
                 )
             ) {
-                Text(
-                    text = "LOGIN WITH GOOGLE",
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                )
+                if (isGoogleSignInLoading) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "SIGNING IN...",
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "LOGIN WITH GOOGLE",
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
