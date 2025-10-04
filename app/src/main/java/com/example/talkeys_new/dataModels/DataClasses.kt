@@ -26,7 +26,7 @@ data class EventResponse(
     val visibility: String,
     val startDate: String,
     val startTime: String,
-    val endRegistrationDate: String,
+    val endRegistrationDate: String?, // Changed to nullable to handle null values from backend
     val totalSeats: Any, // Changed from Int to Any to handle both Int and String
     val eventDescription: String?,
     val photographs: List<String>?,
@@ -78,7 +78,7 @@ data class EventDetail(
     val startTime: String,
     val endDate: String,
     val endTime: String,
-    val endRegistrationDate: String,
+    val endRegistrationDate: String?, // Changed to nullable to handle null values from backend
     val eventDescription: String?,
     val isLive: Boolean,
     val isPaid: Boolean,
