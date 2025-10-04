@@ -1,0 +1,31 @@
+CREATE TABLE User (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    profilePicture TEXT,
+    createdAt TEXT NOT NULL
+);
+
+-- Queries
+selectAll:
+SELECT * FROM User;
+
+selectById:
+SELECT * FROM User WHERE id = ?;
+
+selectByEmail:
+SELECT * FROM User WHERE email = ?;
+
+insertUser:
+INSERT INTO User(id, name, email, profilePicture, createdAt)
+VALUES (?, ?, ?, ?, ?);
+
+updateUser:
+UPDATE User SET 
+    name = ?,
+    email = ?,
+    profilePicture = ?
+WHERE id = ?;
+
+deleteUser:
+DELETE FROM User WHERE id = ?;
