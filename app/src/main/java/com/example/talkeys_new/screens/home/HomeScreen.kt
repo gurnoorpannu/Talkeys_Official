@@ -395,7 +395,7 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
                 ambientColor = Color(0xFF20201F)
             )
             .width(148.dp)
-            .clickable { navController.navigate("communityInfo/$name") }
+            .clickable { navController.navigate("screen_not_found") }
             .height(200.dp) // Slightly increased height to accommodate extra text
             .background(color = Color(0xFF212020), shape = RoundedCornerShape(size = 15.dp))
             .padding(start = 6.dp, top = 7.dp, end = 6.dp, bottom = 7.dp)
@@ -419,9 +419,9 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
                     .clip(RoundedCornerShape(topStart = 20.dp, bottomEnd = 20.dp))
             )
 
-            // ✅ Community Name
+            // ✅ Community Name - Changed to "Coming Soon"
             Text(
-                text = name,
+                text = "Coming Soon",
                 style = TextStyle(
                     fontSize = 16.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_bold)),
