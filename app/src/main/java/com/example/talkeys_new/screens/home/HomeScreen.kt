@@ -429,17 +429,6 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
                 ),
                 modifier = Modifier.padding(start = 6.dp, top = 4.dp)
             )
-
-            // ✅ Additional Description Text
-            Text(
-                text = description,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.urbanist_medium)), // Less bold
-                    color = Color.White
-                ),
-                modifier = Modifier.padding(start = 6.dp, top = 2.dp)
-            )
         }
     }
 }
