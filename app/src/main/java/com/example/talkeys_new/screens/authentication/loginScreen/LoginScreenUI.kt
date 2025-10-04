@@ -43,6 +43,7 @@ fun LoginScreen(navController: NavController) {
     val urbanistFont = FontFamily(Font(R.font.urbanist_regular))
 
     var isCheckingToken by remember { mutableStateOf(true) }
+    var isGoogleSignInLoading by remember { mutableStateOf(false) }
 
     // ✅ Check for existing token
     LaunchedEffect(Unit) {
