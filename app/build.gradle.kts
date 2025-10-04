@@ -45,7 +45,9 @@ dependencies {
     implementation(project(":shared"))
     implementation(libs.koin.androidx.compose)
 
-    //googlesignin dependencies
+    implementation("androidx.compose.material3:material3:1.2.0")
+
+    //google sign in dependencies
     implementation("com.google.android.gms:play-services-auth:20.7.0") // for Google Sign-In
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

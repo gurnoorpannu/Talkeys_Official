@@ -14,13 +14,19 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
+
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -151,7 +157,6 @@ fun ExploreEventsScreen(navController: NavController) {
 /**
  * Main content composable for the explore events screen
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExploreEventsContent(
     groupedEvents: Map<String, List<EventResponse>>,
@@ -165,37 +170,127 @@ private fun ExploreEventsContent(
     onClearError: () -> Unit,
     navController: NavController
 ) {
-    val pullToRefreshState = rememberPullToRefreshState()
+    // Pull to refresh state
+    var isRefreshing by remember { mutableStateOf(false) }
+    var pullOffset by remember { mutableStateOf(0f) }
+    val pullThreshold = 150f
     
-    // Handle pull to refresh
-    LaunchedEffect(pullToRefreshState.isRefreshing) {
-        if (pullToRefreshState.isRefreshing) {
+    // Animation for pull offset
+    val animatedPullOffset by animateFloatAsState(
+        targetValue = if (isRefreshing) pullThreshold else pullOffset,
+        animationSpec = tween(300),
+        label = "pullOffset"
+    )
+    
+    // Handle refresh function
+    val handleRefresh = {
+        Log.d("ExploreEvents", "handleRefresh called - isRefreshing: $isRefreshing, isLoading: $isLoading")
+        if (!isRefreshing && !isLoading) {
+            Log.d("ExploreEvents", "Starting refresh...")
+            isRefreshing = true
             onRefresh()
+        } else {
+            Log.d("ExploreEvents", "Refresh blocked - already refreshing or loading")
         }
     }
     
     // Reset refresh state when loading completes
     LaunchedEffect(isLoading) {
-        if (!isLoading && pullToRefreshState.isRefreshing) {
-            pullToRefreshState.endRefresh()
+        Log.d("ExploreEvents", "Loading state changed: $isLoading, isRefreshing: $isRefreshing")
+        if (!isLoading && isRefreshing) {
+            Log.d("ExploreEvents", "Resetting refresh state")
+            isRefreshing = false
+            pullOffset = 0f
         }
     }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(pullToRefreshState.nestedScrollConnection)
-    ) {
-        when {
-            errorMessage != null -> {
-                ErrorContent(
-                    errorMessage = errorMessage,
-                    onRetry = onRetry,
-                    onClearError = onClearError
-                )
+    
+    // Debug logging for states
+    LaunchedEffect(isRefreshing, isLoading, pullOffset) {
+        Log.d("ExploreEvents", "State - isRefreshing: $isRefreshing, isLoading: $isLoading, pullOffset: $pullOffset")
+    }
+    
+    // Nested scroll connection for pull to refresh
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                
+                // If we're pulling down and at the top, handle the pull
+                if (delta > 0 && pullOffset > 0) {
+                    val consumed = pullOffset.coerceAtMost(delta)
+                    pullOffset -= consumed
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
             }
-            else -> {
+            
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                
+                // If we're at the top and trying to scroll up (pull down), start pull to refresh
+                if (delta > 0 && source == NestedScrollSource.Drag) {
+                    pullOffset = (pullOffset + delta).coerceAtMost(pullThreshold * 1.5f)
+                    return Offset(0f, delta)
+                }
+                return Offset.Zero
+            }
+            
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                // Handle fling end - trigger refresh if threshold met
+                if (pullOffset >= pullThreshold && !isRefreshing) {
+                    handleRefresh()
+                } else {
+                    pullOffset = 0f
+                }
+                return Velocity.Zero
+            }
+        }
+    }
+    
+    when {
+        errorMessage != null -> {
+            ErrorContent(
+                errorMessage = errorMessage,
+                onRetry = onRetry,
+                onClearError = onClearError
+            )
+        }
+        else -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(nestedScrollConnection)
+            ) {
+                // Refresh indicator
+                if (animatedPullOffset > 0f || isRefreshing) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .offset(y = (animatedPullOffset - 60f).dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isRefreshing || pullOffset >= pullThreshold) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF8A44CB),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        } else {
+                            // Show pull indicator
+                            val alpha = (pullOffset / pullThreshold).coerceIn(0f, 1f)
+                            CircularProgressIndicator(
+                                progress = { alpha },
+                                color = Color(0xFF8A44CB).copy(alpha = alpha),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(y = animatedPullOffset.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
@@ -237,12 +332,6 @@ private fun ExploreEventsContent(
                 }
             }
         }
-        
-        // Pull to refresh indicator
-        PullToRefreshContainer(
-            state = pullToRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
 }
 

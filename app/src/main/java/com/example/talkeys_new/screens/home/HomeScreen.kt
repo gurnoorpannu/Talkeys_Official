@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,15 +15,20 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.*
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -36,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.talkeys_new.screens.common.BottomBar
@@ -70,24 +77,87 @@ fun HomeScreen(navController: NavController) {
     val isLoading by eventViewModel.isLoading.collectAsState()
     
     // Pull to refresh state
-    val pullToRefreshState = rememberPullToRefreshState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    var pullOffset by remember { mutableStateOf(0f) }
+    val pullThreshold = 120f
+    
+    // Animation for pull offset
+    val animatedPullOffset by animateFloatAsState(
+        targetValue = if (isRefreshing) pullThreshold else pullOffset,
+        animationSpec = tween(300),
+        label = "pullOffset"
+    )
 
     // Fetch events when screen loads
     LaunchedEffect(Unit) {
         eventViewModel.fetchAllEvents()
     }
     
-    // Handle pull to refresh
-    LaunchedEffect(pullToRefreshState.isRefreshing) {
-        if (pullToRefreshState.isRefreshing) {
+    // Handle refresh function
+    val onRefresh = {
+        Log.d("HomeScreen", "onRefresh called - isRefreshing: $isRefreshing, isLoading: $isLoading")
+        if (!isRefreshing && !isLoading) {
+            Log.d("HomeScreen", "Starting refresh...")
+            isRefreshing = true
             eventViewModel.fetchAllEvents()
+        } else {
+            Log.d("HomeScreen", "Refresh blocked - already refreshing or loading")
         }
     }
     
     // Reset refresh state when loading completes
     LaunchedEffect(isLoading) {
-        if (!isLoading && pullToRefreshState.isRefreshing) {
-            pullToRefreshState.endRefresh()
+        Log.d("HomeScreen", "Loading state changed: $isLoading, isRefreshing: $isRefreshing")
+        if (!isLoading && isRefreshing) {
+            Log.d("HomeScreen", "Resetting refresh state")
+            isRefreshing = false
+            pullOffset = 0f
+        }
+    }
+    
+    // Debug logging for states
+    LaunchedEffect(isRefreshing, isLoading, pullOffset) {
+        Log.d("HomeScreen", "State - isRefreshing: $isRefreshing, isLoading: $isLoading, pullOffset: $pullOffset")
+    }
+    
+    // Nested scroll connection for pull to refresh
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                
+                // If we're pulling down and at the top, handle the pull
+                if (delta > 0 && pullOffset > 0) {
+                    val consumed = pullOffset.coerceAtMost(delta)
+                    pullOffset -= consumed
+                    return Offset(0f, consumed)
+                }
+                return Offset.Zero
+            }
+            
+            override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                
+                // If we're at the top and trying to scroll up (pull down), start pull to refresh
+                if (delta > 0 && source == NestedScrollSource.Drag) {
+                    pullOffset = (pullOffset + delta).coerceAtMost(pullThreshold * 1.5f)
+                    return Offset(0f, delta)
+                }
+                return Offset.Zero
+            }
+            
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                // Handle fling end - trigger refresh if threshold met
+                Log.d("HomeScreen", "onPreFling - pullOffset: $pullOffset, threshold: $pullThreshold, isRefreshing: $isRefreshing")
+                if (pullOffset >= pullThreshold && !isRefreshing) {
+                    Log.d("HomeScreen", "Threshold met, triggering refresh")
+                    onRefresh()
+                } else {
+                    Log.d("HomeScreen", "Threshold not met or already refreshing, resetting pullOffset")
+                    pullOffset = 0f
+                }
+                return Velocity.Zero
+            }
         }
     }
 
@@ -111,30 +181,59 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .nestedScroll(pullToRefreshState.nestedScrollConnection)
+                    .nestedScroll(nestedScrollConnection)
             ) {
                 // LazyColumn with LazyListState for scroll tracking
                 val lazyListState = rememberLazyListState()
+                
+                // Refresh indicator
+                if (animatedPullOffset > 0f || isRefreshing) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .offset(y = (animatedPullOffset - 60f).dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isRefreshing || pullOffset >= pullThreshold) {
+                            CircularProgressIndicator(
+                                color = Color(0xFF8A44CB),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        } else {
+                            // Show pull indicator
+                            val alpha = (pullOffset / pullThreshold).coerceIn(0f, 1f)
+                            CircularProgressIndicator(
+                                progress = { alpha },
+                                color = Color(0xFF8A44CB).copy(alpha = alpha),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
 
+                // Main content with offset
                 LazyColumn(
                     state = lazyListState,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(y = animatedPullOffset.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 100.dp) // Padding for BottomBar
                 ) {
-                    item { BannerSection(navController) }
-                    item { CategoryTitle("Live Events") }
-                    item {
-                        if (isLoading) {
-                            LoadingEventRow()
-                        } else {
-                            EventRow(events.filter { it.isLive }, navController)
+                        item { BannerSection(navController) }
+                        item { CategoryTitle("Live Events") }
+                        item {
+                            if (isLoading && !isRefreshing) {
+                                LoadingEventRow()
+                            } else {
+                                EventRow(events.filter { it.isLive }, navController)
+                            }
                         }
-                    }
-                    item { CategoryTitle("Featured Communities") }
-                    item { CommunityRow(navController) }
-                    item { CategoryTitle("Influencers Shaping the Community") }
-                    item { InfluencerRow() }
+                        item { CategoryTitle("Featured Communities") }
+                        item { CommunityRow(navController) }
+                        item { CategoryTitle("Influencers Shaping the Community") }
+                        item { InfluencerRow() }
                     item { HostYourOwnEvent(navController) }
                     item {
                         Footer(
@@ -143,12 +242,6 @@ fun HomeScreen(navController: NavController) {
                         )
                     }
                 }
-
-                // Pull to refresh indicator
-                PullToRefreshContainer(
-                    state = pullToRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
 
                 // Bottom navigation
                 BottomBar(
