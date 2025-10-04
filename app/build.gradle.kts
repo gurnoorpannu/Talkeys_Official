@@ -41,6 +41,9 @@ android {
 }
 
 dependencies {
+    // Shared KMP module
+    implementation(project(":shared"))
+    implementation(libs.koin.androidx.compose)
 
     //googlesignin dependencies
     implementation("com.google.android.gms:play-services-auth:20.7.0") // for Google Sign-In
