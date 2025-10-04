@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.talkeys_new.screens.LandingPage
+import com.example.talkeys_new.screens.authentication.LandingPage
 import com.example.talkeys_new.screens.authentication.loginScreen.LoginScreen
 import com.example.talkeys_new.screens.authentication.signupScreen.SignUpScreen
 import com.example.talkeys_new.screens.common.ScreenNotFound
