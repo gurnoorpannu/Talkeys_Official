@@ -843,7 +843,7 @@ private fun RegisterButton(
     Box(
         modifier = Modifier
             .width(EventDetailConstants.REGISTER_BUTTON_WIDTH)
-            .height(EventDetailConstants.REGISTER_BUTTON_HEIGHT)
+            .height(48.dp) // Increased height for better text visibility
             .background(Color(0xFF8A44CB), shape = RoundedCornerShape(8.dp))
             .clickable {
                 // Safe navigation with null checks
@@ -856,15 +856,15 @@ private fun RegisterButton(
                 } catch (e: Exception) {
                     Log.e("RegisterButton", "Navigation failed", e)
                 }
-            }
-            .padding(10.dp),
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "Register Now",
             color = Color.White,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center
         )
     }
 }
