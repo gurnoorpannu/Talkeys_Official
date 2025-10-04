@@ -26,3 +26,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Talkeys_New"
 include(":app")
+include(":shared")
