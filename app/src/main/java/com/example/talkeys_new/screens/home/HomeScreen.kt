@@ -14,12 +14,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -65,10 +68,27 @@ fun HomeScreen(navController: NavController) {
     // Collect events state
     val events by eventViewModel.eventList.collectAsState()
     val isLoading by eventViewModel.isLoading.collectAsState()
+    
+    // Pull to refresh state
+    val pullToRefreshState = rememberPullToRefreshState()
 
     // Fetch events when screen loads
     LaunchedEffect(Unit) {
         eventViewModel.fetchAllEvents()
+    }
+    
+    // Handle pull to refresh
+    LaunchedEffect(pullToRefreshState.isRefreshing) {
+        if (pullToRefreshState.isRefreshing) {
+            eventViewModel.fetchAllEvents()
+        }
+    }
+    
+    // Reset refresh state when loading completes
+    LaunchedEffect(isLoading) {
+        if (!isLoading && pullToRefreshState.isRefreshing) {
+            pullToRefreshState.endRefresh()
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -91,6 +111,7 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .nestedScroll(pullToRefreshState.nestedScrollConnection)
             ) {
                 // LazyColumn with LazyListState for scroll tracking
                 val lazyListState = rememberLazyListState()
@@ -122,6 +143,12 @@ fun HomeScreen(navController: NavController) {
                         )
                     }
                 }
+
+                // Pull to refresh indicator
+                PullToRefreshContainer(
+                    state = pullToRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
 
                 // Bottom navigation
                 BottomBar(
