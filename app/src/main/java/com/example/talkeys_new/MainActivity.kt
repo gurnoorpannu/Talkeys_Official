@@ -13,11 +13,20 @@ import com.example.talkeys_new.navigation.AppNavigation
 import com.example.talkeys_new.screens.authentication.TokenManager
 import com.example.talkeys_new.ui.theme.Talkeys_NewTheme
 import kotlinx.coroutines.flow.first
+import com.talkeys.shared.Greeting
+import com.talkeys.shared.initKoin
 
 class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize KMP shared module
+        initKoin()
+        
+        // Test shared module
+        val greeting = Greeting().greet()
+        Log.d("KMP_TEST", greeting)
         
         setContent {
             Talkeys_NewTheme {
