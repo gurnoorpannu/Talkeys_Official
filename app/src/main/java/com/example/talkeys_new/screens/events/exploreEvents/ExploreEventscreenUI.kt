@@ -134,7 +134,7 @@ fun ExploreEventsScreen(navController: NavController) {
                 showLiveEvents = showLiveEvents,
                 onToggleFilter = { viewModel.toggleEventFilter() },
                 onRetry = { viewModel.fetchAllEvents() },
-                onRefresh = { viewModel.fetchAllEvents() },
+                onRefresh = { viewModel.fetchAllEvents(forceRefresh = true) },
                 onEventClick = { event ->
                     handleEventClick(event, navController)
                 },
@@ -175,9 +175,9 @@ private fun ExploreEventsContent(
     var pullOffset by remember { mutableStateOf(0f) }
     val pullThreshold = 150f
     
-    // Animation for pull offset
+    // Animation for pull offset (reduced for subtler effect)
     val animatedPullOffset by animateFloatAsState(
-        targetValue = if (isRefreshing) pullThreshold else pullOffset,
+        targetValue = if (isRefreshing) pullThreshold * 0.4f else pullOffset * 0.4f,
         animationSpec = tween(300),
         label = "pullOffset"
     )
@@ -186,7 +186,7 @@ private fun ExploreEventsContent(
     val handleRefresh = {
         Log.d("ExploreEvents", "handleRefresh called - isRefreshing: $isRefreshing, isLoading: $isLoading")
         if (!isRefreshing && !isLoading) {
-            Log.d("ExploreEvents", "Starting refresh...")
+            Log.d("ExploreEvents", "Starting refresh with forceRefresh=true...")
             isRefreshing = true
             onRefresh()
         } else {
@@ -204,9 +204,22 @@ private fun ExploreEventsContent(
         }
     }
     
-    // Debug logging for states
-    LaunchedEffect(isRefreshing, isLoading, pullOffset) {
-        Log.d("ExploreEvents", "State - isRefreshing: $isRefreshing, isLoading: $isLoading, pullOffset: $pullOffset")
+    // Timeout mechanism to prevent stuck refresh state
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            Log.d("ExploreEvents", "Starting refresh timeout")
+            kotlinx.coroutines.delay(5000) // 5 second timeout
+            if (isRefreshing) {
+                Log.w("ExploreEvents", "Refresh timeout reached, forcing reset")
+                isRefreshing = false
+                pullOffset = 0f
+            }
+        }
+    }
+    
+    // Debug logging for states (only log significant changes)
+    LaunchedEffect(isRefreshing, isLoading) {
+        Log.d("ExploreEvents", "State - isRefreshing: $isRefreshing, isLoading: $isLoading")
     }
     
     // Nested scroll connection for pull to refresh
@@ -215,8 +228,8 @@ private fun ExploreEventsContent(
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
                 
-                // If we're pulling down and at the top, handle the pull
-                if (delta > 0 && pullOffset > 0) {
+                // Only consume scroll when we're releasing (scrolling back up)
+                if (delta > 0 && pullOffset > 0 && source != NestedScrollSource.Drag) {
                     val consumed = pullOffset.coerceAtMost(delta)
                     pullOffset -= consumed
                     return Offset(0f, consumed)
@@ -229,7 +242,9 @@ private fun ExploreEventsContent(
                 
                 // If we're at the top and trying to scroll up (pull down), start pull to refresh
                 if (delta > 0 && source == NestedScrollSource.Drag) {
-                    pullOffset = (pullOffset + delta).coerceAtMost(pullThreshold * 1.5f)
+                    val newOffset = (pullOffset + delta * 0.6f).coerceAtMost(pullThreshold * 1.2f)
+                    Log.d("ExploreEvents", "onPostScroll - delta: $delta, oldOffset: $pullOffset, newOffset: $newOffset")
+                    pullOffset = newOffset
                     return Offset(0f, delta)
                 }
                 return Offset.Zero
@@ -237,9 +252,12 @@ private fun ExploreEventsContent(
             
             override suspend fun onPreFling(available: Velocity): Velocity {
                 // Handle fling end - trigger refresh if threshold met
+                Log.d("ExploreEvents", "onPreFling - pullOffset: $pullOffset, threshold: $pullThreshold, isRefreshing: $isRefreshing")
                 if (pullOffset >= pullThreshold && !isRefreshing) {
+                    Log.d("ExploreEvents", "Threshold met, triggering refresh")
                     handleRefresh()
                 } else {
+                    Log.d("ExploreEvents", "Threshold not met or already refreshing, resetting pullOffset")
                     pullOffset = 0f
                 }
                 return Velocity.Zero
@@ -261,13 +279,13 @@ private fun ExploreEventsContent(
                     .fillMaxSize()
                     .nestedScroll(nestedScrollConnection)
             ) {
-                // Refresh indicator
+                // Refresh indicator (positioned more subtly)
                 if (animatedPullOffset > 0f || isRefreshing) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(60.dp)
-                            .offset(y = (animatedPullOffset - 60f).dp),
+                            .height(50.dp)
+                            .offset(y = (animatedPullOffset - 40f).dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (isRefreshing || pullOffset >= pullThreshold) {

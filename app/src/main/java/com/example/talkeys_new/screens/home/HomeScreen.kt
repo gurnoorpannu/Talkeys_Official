@@ -81,9 +81,9 @@ fun HomeScreen(navController: NavController) {
     var pullOffset by remember { mutableStateOf(0f) }
     val pullThreshold = 120f
     
-    // Animation for pull offset
+    // Animation for pull offset (reduced for subtler effect)
     val animatedPullOffset by animateFloatAsState(
-        targetValue = if (isRefreshing) pullThreshold else pullOffset,
+        targetValue = if (isRefreshing) pullThreshold * 0.4f else pullOffset * 0.4f,
         animationSpec = tween(300),
         label = "pullOffset"
     )
@@ -97,9 +97,9 @@ fun HomeScreen(navController: NavController) {
     val onRefresh = {
         Log.d("HomeScreen", "onRefresh called - isRefreshing: $isRefreshing, isLoading: $isLoading")
         if (!isRefreshing && !isLoading) {
-            Log.d("HomeScreen", "Starting refresh...")
+            Log.d("HomeScreen", "Starting refresh with forceRefresh=true...")
             isRefreshing = true
-            eventViewModel.fetchAllEvents()
+            eventViewModel.fetchAllEvents(forceRefresh = true)
         } else {
             Log.d("HomeScreen", "Refresh blocked - already refreshing or loading")
         }
@@ -115,9 +115,22 @@ fun HomeScreen(navController: NavController) {
         }
     }
     
-    // Debug logging for states
-    LaunchedEffect(isRefreshing, isLoading, pullOffset) {
-        Log.d("HomeScreen", "State - isRefreshing: $isRefreshing, isLoading: $isLoading, pullOffset: $pullOffset")
+    // Timeout mechanism to prevent stuck refresh state
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            Log.d("HomeScreen", "Starting refresh timeout")
+            kotlinx.coroutines.delay(5000) // 5 second timeout
+            if (isRefreshing) {
+                Log.w("HomeScreen", "Refresh timeout reached, forcing reset")
+                isRefreshing = false
+                pullOffset = 0f
+            }
+        }
+    }
+    
+    // Debug logging for states (only log significant changes)
+    LaunchedEffect(isRefreshing, isLoading) {
+        Log.d("HomeScreen", "State - isRefreshing: $isRefreshing, isLoading: $isLoading")
     }
     
     // Nested scroll connection for pull to refresh
@@ -126,8 +139,8 @@ fun HomeScreen(navController: NavController) {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
                 
-                // If we're pulling down and at the top, handle the pull
-                if (delta > 0 && pullOffset > 0) {
+                // Only consume scroll when we're releasing (scrolling back up)
+                if (delta > 0 && pullOffset > 0 && source != NestedScrollSource.Drag) {
                     val consumed = pullOffset.coerceAtMost(delta)
                     pullOffset -= consumed
                     return Offset(0f, consumed)
@@ -140,7 +153,9 @@ fun HomeScreen(navController: NavController) {
                 
                 // If we're at the top and trying to scroll up (pull down), start pull to refresh
                 if (delta > 0 && source == NestedScrollSource.Drag) {
-                    pullOffset = (pullOffset + delta).coerceAtMost(pullThreshold * 1.5f)
+                    val newOffset = (pullOffset + delta * 0.6f).coerceAtMost(pullThreshold * 1.2f)
+                    Log.d("HomeScreen", "onPostScroll - delta: $delta, oldOffset: $pullOffset, newOffset: $newOffset")
+                    pullOffset = newOffset
                     return Offset(0f, delta)
                 }
                 return Offset.Zero
@@ -191,8 +206,8 @@ fun HomeScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(60.dp)
-                            .offset(y = (animatedPullOffset - 60f).dp),
+                            .height(65.dp)
+                            .offset(y = (animatedPullOffset - 65f).dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (isRefreshing || pullOffset >= pullThreshold) {

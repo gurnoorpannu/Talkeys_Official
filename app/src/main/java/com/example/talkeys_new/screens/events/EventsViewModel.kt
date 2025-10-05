@@ -70,10 +70,12 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
             try {
                 isCurrentlyFetching = true
                 Log.d(TAG, "Starting to fetch events... (forceRefresh: $forceRefresh)")
+                Log.d(TAG, "Setting isLoading to true")
 
                 _isLoading.value = true
                 _errorMessage.value = null
 
+                Log.d(TAG, "Calling repository.getAllEvents with forceRefresh: $forceRefresh")
                 when (val result = repository.getAllEvents(forceRefresh)) {
                     is Result.Success -> {
                         val events = result.data
@@ -99,9 +101,10 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
                 Log.e(TAG, "Unexpected error occurred: ${e.message}", e)
                 _errorMessage.value = "An unexpected error occurred. Please try again."
             } finally {
+                Log.d(TAG, "Setting isLoading to false")
                 _isLoading.value = false
                 isCurrentlyFetching = false
-                Log.d(TAG, "Finished fetching events")
+                Log.d(TAG, "Finished fetching events - isLoading: ${_isLoading.value}, isCurrentlyFetching: $isCurrentlyFetching")
             }
         }
     }
