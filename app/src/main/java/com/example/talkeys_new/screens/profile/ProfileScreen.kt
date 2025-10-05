@@ -625,7 +625,7 @@ private fun MenuItemsSection(navController: NavController) {
                 safeNavigate(navController, "organizer_dashboard")
             },
             Triple(R.drawable.dropdown_hostevent_icon, "Host new event") {
-                /* Navigate to create event */
+                safeNavigate(navController, "create_event_1")
             },
             Triple(R.drawable.dialogbox_notification_icon, "Notifications") {
                 /* Navigate to notifications */

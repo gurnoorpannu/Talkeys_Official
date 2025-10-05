@@ -570,10 +570,10 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
 @Composable
 fun InfluencerRow() {
     val influencers = listOf(
-        InfluencerItem("Arijit Sharma", "F1 Racer", R.drawable.ic_influencer_banner, "125K"),
-        InfluencerItem("Arsh Chatrath", "Cricketer", R.drawable.ic_influencer_banner, "89K"),
-        InfluencerItem("Rohan Mehta", "Tech Reviewer", R.drawable.ic_influencer_banner, "234K"),
-        InfluencerItem("Priya Singh", "Content Creator", R.drawable.ic_influencer_banner, "156K")
+        InfluencerItem("Coming Soom", "", R.drawable.ic_influencer_banner, "125K"),
+        InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "89K"),
+        InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "234K"),
+        InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "156K")
     )
 
     LazyRow(
