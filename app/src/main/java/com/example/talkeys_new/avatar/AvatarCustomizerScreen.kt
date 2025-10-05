@@ -1,5 +1,6 @@
 package com.example.talkeys_new.avatar
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,7 +27,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -50,6 +51,72 @@ fun AvatarCustomizerScreen(navController: NavController) {
 
     // Refresh state to trigger avatar regeneration
     var refreshKey by remember { mutableStateOf(0) }
+    
+    // Simple loading state for 3D rotation animation
+    var isAvatarLoading by remember { mutableStateOf(false) }
+    var imageLoadingState by remember { mutableStateOf<AvatarLoadingState?>(null) }
+    
+    // Refresh button animation state
+    var isRefreshClicked by remember { mutableStateOf(false) }
+    
+    // 3D rotation animation for loading with faster speed
+    val infiniteTransition = rememberInfiniteTransition(label = "avatar_rotation")
+    val rotationY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(300, easing = LinearEasing), // Faster rotation: 500ms instead of 800ms
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation_y"
+    )
+    
+    // Jumping/bouncing effect animation
+    val jumpOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -12f, // Jump up by 12dp
+        animationSpec = infiniteRepeatable(
+            animation = tween(400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "jump_offset"
+    )
+    
+    // Scale effect for more dynamic feel
+    val scaleEffect by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale_effect"
+    )
+    
+    // Helper function to start controlled loading with minimum duration
+    fun startAvatarLoading() {
+        isAvatarLoading = true
+        imageLoadingState = null
+    }
+    
+    // Simple loading management: fixed short duration for better UX
+    LaunchedEffect(isAvatarLoading) {
+        if (isAvatarLoading) {
+            // Fixed loading time of 1.2 seconds (4 rotations at 300ms each)
+            kotlinx.coroutines.delay(1200L)
+            isAvatarLoading = false
+        }
+    }
+    
+    // Refresh button rotation animation
+    val refreshRotation by animateFloatAsState(
+        targetValue = if (isRefreshClicked) 360f else 0f,
+        animationSpec = tween(500, easing = FastOutSlowInEasing),
+        label = "refresh_rotation",
+        finishedListener = {
+            isRefreshClicked = false
+        }
+    )
 
     Scaffold(
         topBar = {
@@ -86,7 +153,6 @@ fun AvatarCustomizerScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Background image
             Image(
                 painter = painterResource(id = R.drawable.background),
                 contentDescription = "Background",
@@ -101,7 +167,7 @@ fun AvatarCustomizerScreen(navController: NavController) {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Current Avatar Preview
+                // Avatar Preview with 3D Loading Animation
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -126,13 +192,64 @@ fun AvatarCustomizerScreen(navController: NavController) {
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                        AvatarImageWithFallback(
-                            avatarUrl = generateRefreshedAvatarUrl(avatarConfig, refreshKey),
-                            size = 120.dp,
-                            borderColor = Color(0xFF8A44CB),
-                            borderWidth = 3.dp,
-                            backgroundColor = Color(android.graphics.Color.parseColor("#${avatarConfig.backgroundColor}"))
-                        )
+                        // Avatar with 3D rotation, jumping, and scaling effects
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(120.dp)
+                                .offset(y = if (isAvatarLoading) jumpOffset.dp else 0.dp)
+                                .graphicsLayer {
+                                    if (isAvatarLoading) {
+                                        this.rotationY = rotationY
+                                        this.scaleX = scaleEffect
+                                        this.scaleY = scaleEffect
+                                        cameraDistance = 12f * density
+                                    }
+                                }
+                        ) {
+                            // Show loading placeholder during loading
+                            if (isAvatarLoading) {
+                                // Empty rotating placeholder - just the border and background
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .background(
+                                            Color(android.graphics.Color.parseColor("#${avatarConfig.backgroundColor}")),
+                                            RoundedCornerShape(60.dp)
+                                        )
+                                        .then(
+                                            if (3.dp > 0.dp) {
+                                                Modifier.padding(3.dp)
+                                            } else Modifier
+                                        )
+                                        .background(
+                                            Color(0xFF8A44CB),
+                                            RoundedCornerShape(57.dp)
+                                        )
+                                        .padding(3.dp)
+                                        .background(
+                                            Color(android.graphics.Color.parseColor("#${avatarConfig.backgroundColor}")),
+                                            RoundedCornerShape(54.dp)
+                                        )
+                                )
+                            } else {
+                                // Show actual avatar when not loading
+                                AvatarImageWithFallback(
+                                    avatarUrl = generateRefreshedAvatarUrl(avatarConfig, refreshKey),
+                                    size = 120.dp,
+                                    borderColor = Color(0xFF8A44CB),
+                                    borderWidth = 3.dp,
+                                    backgroundColor = Color(android.graphics.Color.parseColor("#${avatarConfig.backgroundColor}")),
+                                    showLoadingIndicator = false,
+                                    onLoadingStateChange = { loadingState ->
+                                        // Only update loading state if we're actually in a loading animation
+                                        if (isAvatarLoading) {
+                                            imageLoadingState = loadingState
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -168,7 +285,6 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                // Random text button
                                 Text(
                                     text = "Random",
                                     style = TextStyle(
@@ -177,26 +293,40 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFF8A44CB)
                                     ),
-                                    modifier = Modifier.clickable {
-                                        // Select random avatar style
-                                        val randomStyle = AvatarConstants.AVATAR_STYLES.random()
-                                        avatarManager.updateAvatarStyle(randomStyle)
-                                        
-                                        // Select random background color
-                                        val randomColor = AvatarConstants.BACKGROUND_COLORS.random()
-                                        avatarManager.updateBackgroundColor(randomColor.value)
-                                        
-                                        // Add some randomness to the avatar generation
-                                        refreshKey = (1..999).random()
-                                    }
+                                    modifier = Modifier
+                                        .clickable {
+                                            startAvatarLoading()
+                                            // Select random avatar style
+                                            val randomStyle = AvatarConstants.AVATAR_STYLES.random()
+                                            avatarManager.updateAvatarStyle(randomStyle)
+                                            
+                                            // Select random background color
+                                            val randomColor = AvatarConstants.BACKGROUND_COLORS.random()
+                                            avatarManager.updateBackgroundColor(randomColor.value)
+                                            
+                                            // Add some randomness to the avatar generation
+                                            refreshKey = (1..999).random()
+                                        }
+                                        .background(
+                                            Color(0xFF8A44CB).copy(alpha = 0.1f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
                                 )
 
-                                // Refresh button - now updates the main avatar preview
                                 IconButton(
                                     onClick = {
-                                        // Force refresh of the main avatar by updating the config
+                                        isRefreshClicked = true
                                         refreshKey++
-                                    }
+                                    },
+                                    modifier = Modifier
+                                        .background(
+                                            Color(0xFF8A44CB).copy(alpha = 0.1f),
+                                            RoundedCornerShape(50)
+                                        )
+                                        .graphicsLayer {
+                                            rotationZ = refreshRotation
+                                        }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Refresh,
@@ -214,15 +344,18 @@ fun AvatarCustomizerScreen(navController: NavController) {
                             columns = GridCells.Fixed(5),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.height(200.dp)
+                            modifier = Modifier.height(160.dp)
                         ) {
                             items(AvatarConstants.AVATAR_STYLES) { style ->
                                 AvatarPreview(
                                     style = style,
                                     isSelected = style == avatarConfig.style,
-                                    onClick = { avatarManager.updateAvatarStyle(style) },
+                                    onClick = { 
+                                        startAvatarLoading()
+                                        avatarManager.updateAvatarStyle(style)
+                                    },
                                     refreshKey = refreshKey,
-                                    avatarConfig = avatarConfig // Pass current config for consistent preview
+                                    avatarConfig = avatarConfig
                                 )
                             }
                         }
@@ -315,8 +448,6 @@ fun AvatarCustomizerScreen(navController: NavController) {
                         }
                     }
                 }
-
-
 
                 // Action Buttons
                 Row(
