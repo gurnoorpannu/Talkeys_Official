@@ -54,7 +54,6 @@ import com.example.talkeys_new.screens.events.EventsRepository
 import com.example.talkeys_new.screens.events.provideEventApiService
 import com.example.talkeys_new.R
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -409,7 +408,7 @@ fun BannerSection(navController: NavController) {
                         )
                     }
                     Button(
-                        onClick = { navController.navigate("communities") },
+                        onClick = { navController.navigate("screen_not_found") },
                         modifier = Modifier
                             .weight(1.2f)
                             .height(48.dp),
