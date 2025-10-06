@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -58,6 +59,15 @@ import com.example.talkeys_new.R
 @Composable
 fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
+    
+    // Get screen dimensions for responsive design with better detection
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection to handle different device densities and font scales
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
+    val isVerySmallScreen = screenWidth < 340.dp
 
     // Initialize EventViewModel with proper factory
     val eventViewModel: EventViewModel = viewModel(
@@ -232,8 +242,8 @@ fun HomeScreen(navController: NavController) {
                     modifier = Modifier
                         .fillMaxSize()
                         .offset(y = animatedPullOffset.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 100.dp) // Padding for BottomBar
+                    verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp),
+                    contentPadding = PaddingValues(bottom = if (isSmallScreen) 80.dp else 100.dp) // Padding for BottomBar
                 ) {
                         item { BannerSection(navController) }
                         item { CategoryTitle("Live Events") }
@@ -272,10 +282,14 @@ fun HomeScreen(navController: NavController) {
 
 @Composable
 fun HostYourOwnEvent(navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = if (isSmallScreen) 12.dp else 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -285,36 +299,38 @@ fun HostYourOwnEvent(navController: NavController) {
             Text(
                 text = "Host your own EVENT!!!",
                 style = TextStyle(
-                    fontSize = 22.sp,
+                    fontSize = if (isSmallScreen) 18.sp else 22.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_bold)),
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFFFCFCFC),
                 ),
-                fontSize = 22.sp,
-                color = Color(0xFFFCFCFC),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(if (isSmallScreen) 12.dp else 16.dp))
 
             Text(
                 text = "Create an event, invite your community, and manage everything in one place.",
                 style = TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = if (isSmallScreen) 14.sp else 16.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_medium)),
                     fontWeight = FontWeight.Normal,
                     color = Color.White,
                     textAlign = TextAlign.Start,
                 ),
-                modifier = Modifier.width(237.dp)
+                modifier = Modifier.fillMaxWidth(if (isSmallScreen) 0.9f else 0.8f),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(if (isSmallScreen) 20.dp else 28.dp))
 
             // Updated button with click handler for unified create event
             Box(
                 modifier = Modifier
-                    .width(130.dp)
-                    .height(45.dp)
+                    .width(if (isSmallScreen) 110.dp else 130.dp)
+                    .height(if (isSmallScreen) 40.dp else 45.dp)
                     .background(color = Color(0xFF8A44CB), shape = RoundedCornerShape(8.dp))
                     .clickable {
                         // Navigate to create event screen
@@ -324,8 +340,10 @@ fun HostYourOwnEvent(navController: NavController) {
             ) {
                 Text(
                     text = "Host Event",
-                    fontSize = 16.sp,
+                    fontSize = if (isSmallScreen) 14.sp else 16.sp,
                     color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -333,17 +351,25 @@ fun HostYourOwnEvent(navController: NavController) {
             painter = painterResource(id = R.drawable.hostevent_sticker),
             contentDescription = "Host Event Sticker",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.size(200.dp)
+            modifier = Modifier.size(if (isSmallScreen) 160.dp else 200.dp)
         )
     }
 }
 
 @Composable
 fun BannerSection(navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
+    val isVerySmallScreen = screenWidth < 340.dp
+    
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .height(if (isSmallScreen) 250.dp else 300.dp)
     ) {
         Image(
             painter = painterResource(id = R.drawable.banner),
@@ -358,70 +384,76 @@ fun BannerSection(navController: NavController) {
                 .align(Alignment.Center)
                 .background(
                     Color.Black.copy(alpha = 0.8f),
-                    RoundedCornerShape(12.dp)
+                    RoundedCornerShape(if (isSmallScreen) 10.dp else 12.dp)
                 )
-                .padding(16.dp),
+                .padding(if (isSmallScreen) 12.dp else 16.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "Explore Shows and \nevents with ease.",
                     color = Color.White,
-                    fontSize = 20.sp,
+                    fontSize = if (isSmallScreen) 16.sp else 20.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_bold)),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(if (isSmallScreen) 6.dp else 4.dp))
 
                 Text(
                     text = "Connect with fellow enthusiasts in our \nchat rooms. Share experiences and ideas\nanonymously.",
                     color = Color(0xFF8A44CB),
-                    fontSize = 14.sp,
+                    fontSize = if (isSmallScreen) 12.sp else 14.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_medium)),
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(if (isSmallScreen) 8.dp else 12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 6.dp else 8.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Button(
                         onClick = { navController.navigate("events") },
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp),
+                            .height(if (isSmallScreen) 40.dp else 48.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A44CB))
                     ) {
                         Text(
-                            text = "Explore Events",
-                            fontSize = 14.sp,
+                            text = if (isVerySmallScreen) "Events" else "Explore Events",
+                            fontSize = if (isVerySmallScreen) 11.sp else if (isSmallScreen) 12.sp else 14.sp,
                             fontFamily = FontFamily(Font(R.font.urbanist_medium)),
-                            color = Color.White
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     Button(
                         onClick = { navController.navigate("screen_not_found") },
                         modifier = Modifier
                             .weight(1.2f)
-                            .height(48.dp),
+                            .height(if (isSmallScreen) 40.dp else 48.dp),
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A44CB))
                     ) {
                         Text(
-                            text = "Explore Communities",
-                            fontSize = 13.sp,
+                            text = if (isVerySmallScreen) "Communities" else "Explore Communities",
+                            fontSize = if (isVerySmallScreen) 10.sp else if (isSmallScreen) 11.sp else 13.sp,
                             fontFamily = FontFamily(Font(R.font.urbanist_medium)),
                             color = Color.White,
                             maxLines = 1,
-                            overflow = TextOverflow.Visible
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -432,23 +464,33 @@ fun BannerSection(navController: NavController) {
 
 @Composable
 fun CategoryTitle(title: String) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     Text(
         text = title,
         style = TextStyle(
-            fontSize = 20.sp,
+            fontSize = if (isSmallScreen) 16.sp else 20.sp,
             fontFamily = FontFamily(Font(R.font.urbanist_bold)),
             fontWeight = FontWeight.Bold,
             color = Color.White
         ),
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = if (isSmallScreen) 12.dp else 16.dp),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
     )
 }
 
 @Composable
 fun EventRow(events: List<com.example.talkeys_new.dataModels.EventResponse>, navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
     ) {
         items(events) { event ->
             EventCard(
@@ -464,9 +506,13 @@ fun EventRow(events: List<com.example.talkeys_new.dataModels.EventResponse>, nav
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoadingEventRow() {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
     ) {
         items(4) { index ->
             com.example.talkeys_new.screens.events.exploreEvents.SkeletonEventCard(
@@ -498,6 +544,10 @@ data class InfluencerItem(
 
 @Composable
 fun CommunityRow(navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     val communities = listOf(
         CommunityItem("Tech Enthusiasts", "Join fellow developers and tech lovers", R.drawable.community_banner, "1.2K"),
         CommunityItem("Gaming Community", "Connect with gamers worldwide", R.drawable.community_banner, "850"),
@@ -506,8 +556,8 @@ fun CommunityRow(navController: NavController) {
     )
 
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
     ) {
         items(communities) { community ->
             CommunityCard(
@@ -522,20 +572,24 @@ fun CommunityRow(navController: NavController) {
 
 @Composable
 fun CommunityCard(name: String, imageRes: Int, description: String, navController: NavController) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     // ✅ Wrapper Box with Background and Shadows
     Box(
         modifier = Modifier
             .shadow(elevation = 4.dp,
                 ambientColor = Color(0xFF20201F)
             )
-            .width(148.dp)
+            .width(if (isSmallScreen) 130.dp else 148.dp)
             .clickable { navController.navigate("screen_not_found") }
-            .height(200.dp) // Slightly increased height to accommodate extra text
-            .background(color = Color(0xFF212020), shape = RoundedCornerShape(size = 15.dp))
-            .padding(start = 6.dp, top = 7.dp, end = 6.dp, bottom = 7.dp)
+            .height(if (isSmallScreen) 170.dp else 200.dp)
+            .background(color = Color(0xFF212020), shape = RoundedCornerShape(size = if (isSmallScreen) 12.dp else 15.dp))
+            .padding(if (isSmallScreen) 4.dp else 6.dp)
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Top),
+            verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 3.dp else 4.dp, Alignment.Top),
             horizontalAlignment = Alignment.Start
         ) {
             // ✅ Community Image
@@ -544,24 +598,26 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
                 contentDescription = "Community Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .width(136.dp)
-                    .height(136.dp)
+                    .width(if (isSmallScreen) 122.dp else 136.dp)
+                    .height(if (isSmallScreen) 120.dp else 136.dp)
                     .background(
                         color = Color(0xFFD9D9D9),
-                        shape = RoundedCornerShape(topStart = 20.dp, bottomEnd = 20.dp)
+                        shape = RoundedCornerShape(topStart = if (isSmallScreen) 16.dp else 20.dp, bottomEnd = if (isSmallScreen) 16.dp else 20.dp)
                     )
-                    .clip(RoundedCornerShape(topStart = 20.dp, bottomEnd = 20.dp))
+                    .clip(RoundedCornerShape(topStart = if (isSmallScreen) 16.dp else 20.dp, bottomEnd = if (isSmallScreen) 16.dp else 20.dp))
             )
 
             // ✅ Community Name - Changed to "Coming Soon"
             Text(
                 text = "Coming Soon",
                 style = TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = if (isSmallScreen) 14.sp else 16.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_bold)),
                     color = Color.White
                 ),
-                modifier = Modifier.padding(start = 6.dp, top = 4.dp)
+                modifier = Modifier.padding(start = if (isSmallScreen) 4.dp else 6.dp, top = if (isSmallScreen) 2.dp else 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -569,16 +625,20 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
 
 @Composable
 fun InfluencerRow() {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     val influencers = listOf(
-        InfluencerItem("Coming Soom", "", R.drawable.ic_influencer_banner, "125K"),
+        InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "125K"),
         InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "89K"),
         InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "234K"),
         InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "156K")
     )
 
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
     ) {
         items(influencers) { influencer ->
             InfluencerCard(
@@ -592,20 +652,24 @@ fun InfluencerRow() {
 
 @Composable
 fun InfluencerCard(name: String, profession: String, imageRes: Int) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
+    
     Box(
         modifier = Modifier
             .shadow(elevation = 4.dp, spotColor = Color(0xFF000000), ambientColor = Color(0xFF000000))
             .shadow(elevation = 27.dp, spotColor = Color(0x40FFFFFF), ambientColor = Color(0x40FFFFFF))
-            .width(131.dp)
-            .height(158.dp)
-            .background(color = Color(0x1AFFFFFF), shape = RoundedCornerShape(size = 15.dp)),
+            .width(if (isSmallScreen) 115.dp else 131.dp)
+            .height(if (isSmallScreen) 140.dp else 158.dp)
+            .background(color = Color(0x1AFFFFFF), shape = RoundedCornerShape(size = if (isSmallScreen) 12.dp else 15.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.Start, // Changed alignment to Start for left alignment
+            horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top,
             modifier = Modifier
-                .padding(horizontal = 8.dp) // Optional: Adjust padding for better alignment
+                .padding(horizontal = if (isSmallScreen) 6.dp else 8.dp)
         ) {
             // Influencer Image
             Image(
@@ -613,43 +677,49 @@ fun InfluencerCard(name: String, profession: String, imageRes: Int) {
                 contentDescription = "Influencer Image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .width(120.dp)
-                    .height(103.dp)
+                    .width(if (isSmallScreen) 103.dp else 120.dp)
+                    .height(if (isSmallScreen) 90.dp else 103.dp)
                     .background(
                         color = Color(0xFFD9D9D9),
-                        shape = RoundedCornerShape(topStart = 20.dp, bottomEnd = 20.dp)
+                        shape = RoundedCornerShape(topStart = if (isSmallScreen) 16.dp else 20.dp, bottomEnd = if (isSmallScreen) 16.dp else 20.dp)
                     )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(if (isSmallScreen) 6.dp else 8.dp))
 
             // Influencer Name
             Text(
                 text = name,
                 style = TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = if (isSmallScreen) 14.sp else 16.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                     fontWeight = FontWeight(400),
                     color = Color.White
-                )
+                ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            if (profession.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(if (isSmallScreen) 2.dp else 4.dp))
 
-            // Influencer Profession
-            Text(
-                text = profession,
-                modifier = Modifier
-                    .fillMaxWidth() // Ensures proper alignment within the Column
-                    .padding(start = 4.dp), // Adds padding for consistent left alignment
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                    fontWeight = FontWeight(400),
-                    color = Color(0xFFFFFFFF),
-                    textAlign = TextAlign.Start
+                // Influencer Profession
+                Text(
+                    text = profession,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = if (isSmallScreen) 2.dp else 4.dp),
+                    style = TextStyle(
+                        fontSize = if (isSmallScreen) 12.sp else 14.sp,
+                        fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Start
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-            )
+            }
         }
     }
 }
