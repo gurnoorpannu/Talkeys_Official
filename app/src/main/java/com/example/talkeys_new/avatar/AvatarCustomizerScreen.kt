@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.talkeys_new.R
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
 
 // Helper function to generate refreshed avatar URL
 private fun generateRefreshedAvatarUrl(avatarConfig: AvatarConfig, refreshKey: Int): String {
@@ -48,6 +50,11 @@ fun AvatarCustomizerScreen(navController: NavController) {
     val context = LocalContext.current
     val avatarManager = remember { AvatarManager.getInstance(context) }
     val avatarConfig by avatarManager.avatarConfig.collectAsState()
+    
+    // Get screen dimensions for responsive design
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isSmallScreen = screenWidth < 360.dp
 
     // Refresh state to trigger avatar regeneration
     var refreshKey by remember { mutableStateOf(0) }
@@ -65,7 +72,7 @@ fun AvatarCustomizerScreen(navController: NavController) {
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(300, easing = LinearEasing), // Faster rotation: 500ms instead of 800ms
+            animation = tween(300, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "rotation_y"
@@ -74,7 +81,7 @@ fun AvatarCustomizerScreen(navController: NavController) {
     // Jumping/bouncing effect animation
     val jumpOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = -12f, // Jump up by 12dp
+        targetValue = -12f,
         animationSpec = infiniteRepeatable(
             animation = tween(400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -125,11 +132,13 @@ fun AvatarCustomizerScreen(navController: NavController) {
                     Text(
                         text = "Customize Avatar",
                         style = TextStyle(
-                            fontSize = 20.sp,
+                            fontSize = if (isSmallScreen) 16.sp else 20.sp,
                             fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
                             fontWeight = FontWeight.Medium,
                             color = Color.White
-                        )
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -164,39 +173,42 @@ fun AvatarCustomizerScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(horizontal = if (isSmallScreen) 12.dp else 16.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Avatar Preview with 3D Loading Animation
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                        .padding(vertical = if (isSmallScreen) 8.dp else 16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFF171717).copy(alpha = 0.9f)
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(if (isSmallScreen) 12.dp else 16.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
+                        modifier = Modifier.padding(if (isSmallScreen) 16.dp else 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Your Avatar",
                             style = TextStyle(
-                                fontSize = 18.sp,
+                                fontSize = if (isSmallScreen) 16.sp else 18.sp,
                                 fontFamily = FontFamily(Font(R.font.urbanist_bold)),
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             ),
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            modifier = Modifier.padding(bottom = if (isSmallScreen) 12.dp else 16.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         // Avatar with 3D rotation, jumping, and scaling effects
+                        val avatarSize = if (isSmallScreen) 100.dp else 120.dp
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .size(120.dp)
+                                .size(avatarSize)
                                 .offset(y = if (isAvatarLoading) jumpOffset.dp else 0.dp)
                                 .graphicsLayer {
                                     if (isAvatarLoading) {
@@ -210,35 +222,32 @@ fun AvatarCustomizerScreen(navController: NavController) {
                             // Show loading placeholder during loading
                             if (isAvatarLoading) {
                                 // Empty rotating placeholder - just the border and background
+                                val borderWidth = if (isSmallScreen) 2.dp else 3.dp
                                 Box(
                                     modifier = Modifier
-                                        .size(120.dp)
+                                        .size(avatarSize)
                                         .background(
                                             Color(android.graphics.Color.parseColor("#${avatarConfig.backgroundColor}")),
-                                            RoundedCornerShape(60.dp)
+                                            RoundedCornerShape(avatarSize / 2)
                                         )
-                                        .then(
-                                            if (3.dp > 0.dp) {
-                                                Modifier.padding(3.dp)
-                                            } else Modifier
-                                        )
+                                        .padding(borderWidth)
                                         .background(
                                             Color(0xFF8A44CB),
-                                            RoundedCornerShape(57.dp)
+                                            RoundedCornerShape((avatarSize - borderWidth) / 2)
                                         )
-                                        .padding(3.dp)
+                                        .padding(borderWidth)
                                         .background(
                                             Color(android.graphics.Color.parseColor("#${avatarConfig.backgroundColor}")),
-                                            RoundedCornerShape(54.dp)
+                                            RoundedCornerShape((avatarSize - borderWidth * 2) / 2)
                                         )
                                 )
                             } else {
                                 // Show actual avatar when not loading
                                 AvatarImageWithFallback(
                                     avatarUrl = generateRefreshedAvatarUrl(avatarConfig, refreshKey),
-                                    size = 120.dp,
+                                    size = avatarSize,
                                     borderColor = Color(0xFF8A44CB),
-                                    borderWidth = 3.dp,
+                                    borderWidth = if (isSmallScreen) 2.dp else 3.dp,
                                     backgroundColor = Color(android.graphics.Color.parseColor("#${avatarConfig.backgroundColor}")),
                                     showLoadingIndicator = false,
                                     onLoadingStateChange = { loadingState ->
@@ -257,14 +266,14 @@ fun AvatarCustomizerScreen(navController: NavController) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = if (isSmallScreen) 4.dp else 8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFF171717).copy(alpha = 0.9f)
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(if (isSmallScreen) 12.dp else 16.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(if (isSmallScreen) 12.dp else 16.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -274,21 +283,23 @@ fun AvatarCustomizerScreen(navController: NavController) {
                             Text(
                                 text = "Avatar Style",
                                 style = TextStyle(
-                                    fontSize = 16.sp,
+                                    fontSize = if (isSmallScreen) 14.sp else 16.sp,
                                     fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
                                     fontWeight = FontWeight.SemiBold,
                                     color = Color.White
-                                )
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
 
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 8.dp else 12.dp)
                             ) {
                                 Text(
                                     text = "Random",
                                     style = TextStyle(
-                                        fontSize = 14.sp,
+                                        fontSize = if (isSmallScreen) 12.sp else 14.sp,
                                         fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFF8A44CB)
@@ -309,9 +320,14 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                         }
                                         .background(
                                             Color(0xFF8A44CB).copy(alpha = 0.1f),
-                                            RoundedCornerShape(8.dp)
+                                            RoundedCornerShape(if (isSmallScreen) 6.dp else 8.dp)
                                         )
-                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        .padding(
+                                            horizontal = if (isSmallScreen) 8.dp else 12.dp,
+                                            vertical = if (isSmallScreen) 4.dp else 6.dp
+                                        ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
 
                                 IconButton(
@@ -320,6 +336,7 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                         refreshKey++
                                     },
                                     modifier = Modifier
+                                        .size(if (isSmallScreen) 36.dp else 40.dp)
                                         .background(
                                             Color(0xFF8A44CB).copy(alpha = 0.1f),
                                             RoundedCornerShape(50)
@@ -332,19 +349,22 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                         imageVector = Icons.Default.Refresh,
                                         contentDescription = "Refresh Current Avatar",
                                         tint = Color(0xFF8A44CB),
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(if (isSmallScreen) 16.dp else 20.dp)
                                     )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(if (isSmallScreen) 8.dp else 12.dp))
 
+                        val gridColumns = if (isSmallScreen) 4 else 5
+                        val gridHeight = if (isSmallScreen) 120.dp else 160.dp
+                        
                         LazyVerticalGrid(
-                            columns = GridCells.Fixed(5),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.height(160.dp)
+                            columns = GridCells.Fixed(gridColumns),
+                            horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 6.dp else 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 6.dp else 8.dp),
+                            modifier = Modifier.height(gridHeight)
                         ) {
                             items(AvatarConstants.AVATAR_STYLES) { style ->
                                 AvatarPreview(
@@ -366,24 +386,26 @@ fun AvatarCustomizerScreen(navController: NavController) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = if (isSmallScreen) 4.dp else 8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color(0xFF171717).copy(alpha = 0.9f)
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(if (isSmallScreen) 12.dp else 16.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(if (isSmallScreen) 12.dp else 16.dp)
                     ) {
                         Text(
                             text = "Background Color",
                             style = TextStyle(
-                                fontSize = 16.sp,
+                                fontSize = if (isSmallScreen) 14.sp else 16.sp,
                                 fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
                             ),
-                            modifier = Modifier.padding(bottom = 12.dp)
+                            modifier = Modifier.padding(bottom = if (isSmallScreen) 8.dp else 12.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         var expanded by remember { mutableStateOf(false) }
@@ -410,7 +432,8 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                 ),
                                 modifier = Modifier
                                     .menuAnchor()
-                                    .fillMaxWidth()
+                                    .fillMaxWidth(),
+                                textStyle = TextStyle(fontSize = if (isSmallScreen) 14.sp else 16.sp)
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -425,16 +448,17 @@ fun AvatarCustomizerScreen(navController: NavController) {
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .size(20.dp)
+                                                        .size(if (isSmallScreen) 16.dp else 20.dp)
                                                         .background(
                                                             Color(android.graphics.Color.parseColor("#${color.value}")),
                                                             RoundedCornerShape(4.dp)
                                                         )
                                                 )
-                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Spacer(modifier = Modifier.width(if (isSmallScreen) 8.dp else 12.dp))
                                                 Text(
                                                     text = color.name,
-                                                    color = Color.White
+                                                    color = Color.White,
+                                                    fontSize = if (isSmallScreen) 14.sp else 16.sp
                                                 )
                                             }
                                         },
@@ -453,20 +477,27 @@ fun AvatarCustomizerScreen(navController: NavController) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(vertical = if (isSmallScreen) 12.dp else 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 8.dp else 12.dp)
                 ) {
                     OutlinedButton(
                         onClick = {
                             avatarManager.resetToDefaults()
                             refreshKey = 0 // Reset the refresh key as well
                         },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(if (isSmallScreen) 40.dp else 48.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("Reset")
+                        Text(
+                            "Reset",
+                            fontSize = if (isSmallScreen) 14.sp else 16.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
 
                     Button(
@@ -479,16 +510,24 @@ fun AvatarCustomizerScreen(navController: NavController) {
                             }
                             navController.popBackStack()
                         },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(if (isSmallScreen) 40.dp else 48.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF8A44CB)
                         )
                     ) {
-                        Text("Save", color = Color.White)
+                        Text(
+                            "Save", 
+                            color = Color.White,
+                            fontSize = if (isSmallScreen) 14.sp else 16.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(if (isSmallScreen) 16.dp else 32.dp))
             }
         }
     }
