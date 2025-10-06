@@ -20,12 +20,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.platform.LocalConfiguration
 import com.example.talkeys_new.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: Modifier = Modifier) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    
+    // Get screen dimensions for responsive design
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // Responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
+    val isVerySmallScreen = screenWidth < 340.dp
 
     val backgroundColor by animateColorAsState(
         targetValue = when (currentRoute) {
@@ -51,15 +61,15 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(60.dp)
-            .padding(bottom = 10.dp),
+            .height(if (isVerySmallScreen) 55.dp else 60.dp)
+            .padding(bottom = if (isVerySmallScreen) 8.dp else 10.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         // Background layer 
         Box(
             modifier = Modifier
-                .width(330.dp)
-                .height(45.dp)
+                .width(if (isVerySmallScreen) 300.dp else if (isSmallScreen) 315.dp else 330.dp)
+                .height(if (isVerySmallScreen) 40.dp else 45.dp)
                 .shadow(
                     elevation = 20.dp,
                     spotColor = Color.Black.copy(alpha = 0.15f),
@@ -67,12 +77,12 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
                 )
                 .graphicsLayer {
                     shadowElevation = 10f
-                    shape = RoundedCornerShape(25.dp)
+                    shape = RoundedCornerShape(if (isVerySmallScreen) 20.dp else 25.dp)
                     clip = true
                 }
                 .background(
                     color = backgroundColor.copy(alpha = 0.75f),
-                    shape = RoundedCornerShape(25.dp)
+                    shape = RoundedCornerShape(if (isVerySmallScreen) 20.dp else 25.dp)
                 )
                 .blur(radius = 45.dp)
         )
@@ -82,9 +92,9 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .width(340.dp)
-                .height(40.dp)
-                .padding(horizontal = 28.dp)
+                .width(if (isVerySmallScreen) 310.dp else if (isSmallScreen) 325.dp else 340.dp)
+                .height(if (isVerySmallScreen) 35.dp else 40.dp)
+                .padding(horizontal = if (isVerySmallScreen) 20.dp else if (isSmallScreen) 24.dp else 28.dp)
         ) {
             val navigationItems = listOf(
                 NavigationItem(
@@ -127,7 +137,7 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
                     painter = painterResource(id = iconToDisplay),
                     contentDescription = navItem.contentDescription,
                     modifier = Modifier
-                        .size(30.dp)
+                        .size(if (isVerySmallScreen) 24.dp else if (isSmallScreen) 28.dp else 30.dp)
                         .clickable {
                             navController.navigate(navItem.route) {
                                 popUpTo(navController.graph.startDestinationId)
