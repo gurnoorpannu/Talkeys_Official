@@ -41,6 +41,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.compose.ui.platform.LocalConfiguration
 import com.example.talkeys_new.screens.events.EventViewModel
 import com.example.talkeys_new.screens.events.provideEventApiService
 import com.example.talkeys_new.screens.events.EventsRepository
@@ -58,6 +59,15 @@ import kotlinx.coroutines.delay
 @Composable
 fun ExploreEventsScreen(navController: NavController) {
     val context = LocalContext.current
+    
+    // Get screen dimensions for responsive design
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // Responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
+    val isVerySmallScreen = screenWidth < 340.dp
 
     // Create ViewModel with proper error handling
     val viewModel: EventViewModel = viewModel(
@@ -139,7 +149,9 @@ fun ExploreEventsScreen(navController: NavController) {
                     handleEventClick(event, navController)
                 },
                 onClearError = { viewModel.clearErrors() },
-                navController = navController
+                navController = navController,
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
             )
 
             // Bottom navigation
@@ -168,7 +180,9 @@ private fun ExploreEventsContent(
     onRefresh: () -> Unit,
     onEventClick: (EventResponse) -> Unit,
     onClearError: () -> Unit,
-    navController: NavController
+    navController: NavController,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     // Pull to refresh state
     var isRefreshing by remember { mutableStateOf(false) }
@@ -291,7 +305,7 @@ private fun ExploreEventsContent(
                         if (isRefreshing || pullOffset >= pullThreshold) {
                             CircularProgressIndicator(
                                 color = Color(0xFF8A44CB),
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(if (isVerySmallScreen) 28.dp else 32.dp)
                             )
                         } else {
                             // Show pull indicator
@@ -299,7 +313,7 @@ private fun ExploreEventsContent(
                             CircularProgressIndicator(
                                 progress = { alpha },
                                 color = Color(0xFF8A44CB).copy(alpha = alpha),
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(if (isVerySmallScreen) 28.dp else 32.dp)
                             )
                         }
                     }
@@ -309,25 +323,34 @@ private fun ExploreEventsContent(
                     modifier = Modifier
                         .fillMaxSize()
                         .offset(y = animatedPullOffset.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 100.dp)
+                    verticalArrangement = Arrangement.spacedBy(if (isVerySmallScreen) 12.dp else 16.dp),
+                    contentPadding = PaddingValues(bottom = if (isVerySmallScreen) 90.dp else 100.dp)
                 ) {
                 // Header section
                 item {
                     HeaderSection(
                         showLiveEvents = showLiveEvents,
-                        onToggleFilter = onToggleFilter
+                        onToggleFilter = onToggleFilter,
+                        isSmallScreen = isSmallScreen,
+                        isVerySmallScreen = isVerySmallScreen
                     )
                 }
 
                 // Content based on loading state
                 if (isLoading) {
                     items(3) {
-                        LoadingCategorySection()
+                        LoadingCategorySection(
+                            isSmallScreen = isSmallScreen,
+                            isVerySmallScreen = isVerySmallScreen
+                        )
                     }
                 } else if (groupedEvents.isEmpty()) {
                     item {
-                        EmptyStateContent(showLiveEvents = showLiveEvents)
+                        EmptyStateContent(
+                            showLiveEvents = showLiveEvents,
+                            isSmallScreen = isSmallScreen,
+                            isVerySmallScreen = isVerySmallScreen
+                        )
                     }
                 } else {
                     // Display categorized events
@@ -336,7 +359,9 @@ private fun ExploreEventsContent(
                             CategorySection(
                                 category = category,
                                 events = events,
-                                onEventClick = onEventClick
+                                onEventClick = onEventClick,
+                                isSmallScreen = isSmallScreen,
+                                isVerySmallScreen = isVerySmallScreen
                             )
                         }
                     }
@@ -344,7 +369,7 @@ private fun ExploreEventsContent(
 
                     // Footer
                     item {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(if (isVerySmallScreen) 6.dp else 8.dp))
                         Footer(navController = navController)
                     }
                 }
@@ -359,41 +384,50 @@ private fun ExploreEventsContent(
 @Composable
 private fun HeaderSection(
     showLiveEvents: Boolean,
-    onToggleFilter: () -> Unit
+    onToggleFilter: () -> Unit,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     Column {
         Text(
             text = "Explore Events",
             style = TextStyle(
-                fontSize = 22.sp,
+                fontSize = if (isVerySmallScreen) 18.sp else if (isSmallScreen) 20.sp else 22.sp,
                 fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
                 color = Color.White,
                 textAlign = TextAlign.Center
             ),
-            modifier = Modifier.padding(top = 12.dp, start = 19.dp)
+            modifier = Modifier.padding(
+                top = if (isVerySmallScreen) 8.dp else 12.dp, 
+                start = if (isVerySmallScreen) 16.dp else 19.dp
+            )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(if (isVerySmallScreen) 12.dp else 16.dp))
 
         // Filter buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = if (isVerySmallScreen) 12.dp else 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (isVerySmallScreen) 8.dp else 12.dp)
         ) {
             FilterButton(
                 text = "Live Events",
                 isSelected = showLiveEvents,
                 onClick = { if (!showLiveEvents) onToggleFilter() },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
             )
 
             FilterButton(
                 text = "Past Events",
                 isSelected = !showLiveEvents,
                 onClick = { if (showLiveEvents) onToggleFilter() },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
             )
         }
     }
@@ -407,14 +441,16 @@ private fun FilterButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     Box(
         modifier = modifier
-            .height(40.dp)
+            .height(if (isVerySmallScreen) 36.dp else 40.dp)
             .background(
                 color = if (isSelected) Color(0xFF8A44CB) else Color(0x40FFFFFF),
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(if (isVerySmallScreen) 18.dp else 20.dp)
             )
             .clickable { onClick() },
         contentAlignment = Alignment.Center
@@ -423,7 +459,7 @@ private fun FilterButton(
             text = text,
             color = Color.White,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            fontSize = 14.sp
+            fontSize = if (isVerySmallScreen) 12.sp else 14.sp
         )
     }
 }
@@ -491,26 +527,34 @@ private fun ErrorContent(
  * Empty state content
  */
 @Composable
-private fun EmptyStateContent(showLiveEvents: Boolean) {
+private fun EmptyStateContent(
+    showLiveEvents: Boolean,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
+            .padding(if (isVerySmallScreen) 24.dp else 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = if (showLiveEvents) "No live events available" else "No past events available",
             color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = if (isVerySmallScreen) 14.sp else 16.sp
+            ),
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(if (isVerySmallScreen) 6.dp else 8.dp))
 
         Text(
             text = "Check back later for new events",
             color = Color.White.copy(alpha = 0.7f),
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = if (isVerySmallScreen) 12.sp else 14.sp
+            ),
             textAlign = TextAlign.Center
         )
     }
@@ -524,25 +568,27 @@ private fun EmptyStateContent(showLiveEvents: Boolean) {
 fun CategorySection(
     category: String,
     events: List<EventResponse>,
-    onEventClick: (EventResponse) -> Unit
+    onEventClick: (EventResponse) -> Unit,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     if (events.isEmpty()) return
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = if (isVerySmallScreen) 12.dp else 16.dp)
     ) {
         // Category header
         Text(
             text = category,
             style = TextStyle(
-                fontSize = 18.sp,
+                fontSize = if (isVerySmallScreen) 16.sp else 18.sp,
                 fontFamily = FontFamily(Font(R.font.urbanist_semibold)),
                 color = Color.White,
                 fontWeight = FontWeight.SemiBold
             ),
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = if (isVerySmallScreen) 8.dp else 12.dp)
         )
 
         // Horizontal scrollable list
@@ -550,8 +596,8 @@ fun CategorySection(
 
         LazyRow(
             state = lazyListState,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(start = 0.dp, end = 80.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (isVerySmallScreen) 8.dp else 12.dp),
+            contentPadding = PaddingValues(start = 0.dp, end = if (isVerySmallScreen) 60.dp else 80.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             itemsIndexed(
@@ -574,29 +620,32 @@ fun CategorySection(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LoadingCategorySection() {
+fun LoadingCategorySection(
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = if (isVerySmallScreen) 12.dp else 16.dp)
     ) {
         // Loading category title
         Box(
             modifier = Modifier
-                .width(120.dp)
-                .height(20.dp)
+                .width(if (isVerySmallScreen) 100.dp else 120.dp)
+                .height(if (isVerySmallScreen) 16.dp else 20.dp)
                 .background(
                     Color(0xFF404040).copy(alpha = 0.6f),
                     RoundedCornerShape(4.dp)
                 )
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(if (isVerySmallScreen) 8.dp else 12.dp))
 
         // Loading cards row
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(start = 0.dp, end = 80.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (isVerySmallScreen) 8.dp else 12.dp),
+            contentPadding = PaddingValues(start = 0.dp, end = if (isVerySmallScreen) 60.dp else 80.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(3) { index ->
