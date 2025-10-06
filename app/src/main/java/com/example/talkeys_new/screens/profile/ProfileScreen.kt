@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import androidx.compose.ui.platform.LocalConfiguration
 import coil.request.ImageRequest
 import com.example.talkeys_new.R
 import com.example.talkeys_new.api.UserProfileResponse
@@ -55,6 +56,15 @@ fun ProfileScreen(navController: NavController) {
     val googleSignInManager = remember { GoogleSignInManager(context) }
     val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
+
+    // Get screen dimensions for responsive design
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
+    val isVerySmallScreen = screenWidth < 340.dp
 
     // User profile state with proper error handling
     val userProfile by googleSignInManager.userProfile.collectAsState(initial = UserProfile())
@@ -115,11 +125,13 @@ fun ProfileScreen(navController: NavController) {
                         Text(
                             text = "Dashboard",
                             style = TextStyle(
-                                fontSize = 20.sp,
+                                fontSize = if (isSmallScreen) 18.sp else 20.sp,
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                                 fontWeight = FontWeight.Medium,
                                 color = Color.White,
-                            )
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -157,7 +169,7 @@ fun ProfileScreen(navController: NavController) {
                 .background(Color.Black)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(if (isVerySmallScreen) 8.dp else 12.dp))
             // Enhanced Profile Section with rounded corners (removed spacing above)
             ProfileSection(
                 userProfile = userProfile,
@@ -166,25 +178,33 @@ fun ProfileScreen(navController: NavController) {
                 isLoading = isLoading,
                 error = error,
                 clipboardManager = clipboardManager,
-                navController = navController
+                navController = navController,
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(if (isVerySmallScreen) 24.dp else 32.dp))
 
             // Menu Items Section
-            MenuItemsSection(navController = navController)
+            MenuItemsSection(
+                navController = navController,
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
+            )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(if (isVerySmallScreen) 24.dp else 32.dp))
 
             // Logout Section
             LogoutSection(
                 tokenManager = tokenManager,
                 googleSignInManager = googleSignInManager,
                 navController = navController,
-                scope = scope
+                scope = scope,
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(if (isVerySmallScreen) 24.dp else 40.dp))
         }
     }
 }
@@ -197,14 +217,16 @@ private fun ProfileSection(
     isLoading: Boolean,
     error: String?,
     clipboardManager: androidx.compose.ui.platform.ClipboardManager,
-    navController: NavController
+    navController: NavController,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = if (isVerySmallScreen) 12.dp else if (isSmallScreen) 16.dp else 20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171717)),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(if (isSmallScreen) 12.dp else 16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Box(
@@ -220,7 +242,9 @@ private fun ProfileSection(
                     userBio = userBio,
                     mutualCommunities = mutualCommunities,
                     clipboardManager = clipboardManager,
-                    navController = navController
+                    navController = navController,
+                    isSmallScreen = isSmallScreen,
+                    isVerySmallScreen = isVerySmallScreen
                 )
             }
         }
@@ -280,26 +304,31 @@ private fun ProfileContent(
     userBio: String,
     mutualCommunities: Int,
     clipboardManager: androidx.compose.ui.platform.ClipboardManager,
-    navController: NavController
+    navController: NavController,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            // Purple Strip at top - Increased height for larger avatar
+            // Purple Strip at top - Responsive height for avatar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(53.dp) // Increased from 43.dp to 53.dp for larger avatar
+                    .height(if (isVerySmallScreen) 45.dp else if (isSmallScreen) 48.dp else 53.dp)
                     .background(
                         color = Color(0xFF6A4C93), // Purple color
-                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                        shape = RoundedCornerShape(
+                            topStart = if (isSmallScreen) 12.dp else 16.dp,
+                            topEnd = if (isSmallScreen) 12.dp else 16.dp
+                        )
                     )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(end = 15.dp),
+                        .padding(end = if (isVerySmallScreen) 10.dp else 15.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -308,17 +337,17 @@ private fun ProfileContent(
                         imageVector = Icons.Default.PersonAdd,
                         contentDescription = "Friend Request",
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(if (isSmallScreen) 18.dp else 20.dp)
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(if (isVerySmallScreen) 6.dp else 8.dp))
 
                     // Three dots icon
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "More Options",
                         tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(if (isSmallScreen) 18.dp else 20.dp)
                     )
                 }
             }
@@ -329,91 +358,118 @@ private fun ProfileContent(
                     .fillMaxWidth()
                     .background(
                         color = Color(0xFF171717),
-                        shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                        shape = RoundedCornerShape(
+                            bottomStart = if (isSmallScreen) 12.dp else 16.dp,
+                            bottomEnd = if (isSmallScreen) 12.dp else 16.dp
+                        )
                     )
-                    .padding(20.dp)
+                    .padding(if (isVerySmallScreen) 12.dp else if (isSmallScreen) 16.dp else 20.dp)
             ) {
                 Column {
-                    Spacer(modifier = Modifier.height(40.dp)) // Increased space for larger profile image overlap (100.dp avatar)
+                    // Space for avatar overlap - increased to accommodate avatar
+                    Spacer(modifier = Modifier.height(if (isVerySmallScreen) 50.dp else if (isSmallScreen) 55.dp else 60.dp))
 
-                    // User Name with Copy Icon (right next to name)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                    // User info section - now properly below the avatar
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = if (isVerySmallScreen) 4.dp else 8.dp)
                     ) {
-                        Text(
-                            text = getUserDisplayName(userProfile),
-                            style = TextStyle(
-                                fontSize = 24.sp,
-                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
+                        // User Name with Copy Icon
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = getUserDisplayName(userProfile),
+                                style = TextStyle(
+                                    fontSize = if (isVerySmallScreen) 20.sp else if (isSmallScreen) 22.sp else 24.sp,
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
                             )
-                        )
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(if (isVerySmallScreen) 6.dp else 8.dp))
 
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "Copy Username",
-                            tint = Color.White,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clickable {
-                                    val username = getUserDisplayName(userProfile)
-                                    clipboardManager.setText(AnnotatedString(username))
-                                }
-                        )
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy Username",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .size(if (isSmallScreen) 14.dp else 16.dp)
+                                    .clickable {
+                                        val username = getUserDisplayName(userProfile)
+                                        clipboardManager.setText(AnnotatedString(username))
+                                    }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(if (isVerySmallScreen) 6.dp else 8.dp))
+
+                        // Email with Pronouns
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = getUserEmail(userProfile),
+                                style = TextStyle(
+                                    fontSize = if (isVerySmallScreen) 12.sp else 14.sp,
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color(0xFFA3A3A3),
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+
+                            Spacer(modifier = Modifier.width(if (isVerySmallScreen) 6.dp else 8.dp))
+
+                            Text(
+                                text = "•",
+                                style = TextStyle(
+                                    fontSize = if (isVerySmallScreen) 12.sp else 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.width(if (isVerySmallScreen) 6.dp else 8.dp))
+
+                            Text(
+                                text = "he/him",
+                                style = TextStyle(
+                                    fontSize = if (isVerySmallScreen) 12.sp else 14.sp,
+                                    fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                                    fontWeight = FontWeight.Normal,
+                                    color = Color(0xFFA3A3A3),
+                                )
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Email with Pronouns (right next to email)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = getUserEmail(userProfile),
-                            style = TextStyle(
-                                fontSize = 14.sp,
-                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                fontWeight = FontWeight.Normal,
-                                color = Color(0xFFA3A3A3),
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "•",
-                            style = TextStyle(
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "he/him",
-                            style = TextStyle(
-                                fontSize = 14.sp,
-                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                fontWeight = FontWeight.Normal,
-                                color = Color(0xFFA3A3A3),
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(if (isVerySmallScreen) 12.dp else 16.dp))
 
                     // Communities Information
-                    CommunitiesInfo(mutualCommunities = mutualCommunities)
+                    CommunitiesInfo(
+                        mutualCommunities = mutualCommunities,
+                        isSmallScreen = isSmallScreen,
+                        isVerySmallScreen = isVerySmallScreen
+                    )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(if (isVerySmallScreen) 12.dp else 16.dp))
 
                     // Bio Section with responsive sizing
-                    BioSection(userBio = userBio)
+                    BioSection(
+                        userBio = userBio,
+                        isSmallScreen = isSmallScreen,
+                        isVerySmallScreen = isVerySmallScreen
+                    )
                 }
             }
         }
@@ -422,7 +478,10 @@ private fun ProfileContent(
         ProfileAvatarSection(
             userProfile = userProfile,
             navController = navController,
-            modifier = Modifier.offset(x = 20.dp, y = 20.dp), // Adjusted from y = 15.dp to y = 20.dp for better positioning with larger avatar
+            modifier = Modifier.offset(
+                x = if (isVerySmallScreen) 12.dp else if (isSmallScreen) 16.dp else 20.dp,
+                y = if (isVerySmallScreen) 15.dp else if (isSmallScreen) 18.dp else 20.dp
+            ),
             avatarUrl = userProfile.profileImageUrl
         )
     }
@@ -548,7 +607,11 @@ private fun UserInformation(
 }
 
 @Composable
-private fun CommunitiesInfo(mutualCommunities: Int) {
+private fun CommunitiesInfo(
+    mutualCommunities: Int,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -556,58 +619,68 @@ private fun CommunitiesInfo(mutualCommunities: Int) {
             imageVector = Icons.Default.Group,
             contentDescription = "Communities",
             tint = Color.White,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(if (isSmallScreen) 18.dp else 20.dp)
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(if (isVerySmallScreen) 8.dp else 12.dp))
 
         Text(
             text = "$mutualCommunities mutual communities joined",
             style = TextStyle(
-                fontSize = 16.sp,
+                fontSize = if (isVerySmallScreen) 14.sp else 16.sp,
                 fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                 fontWeight = FontWeight.Normal,
                 color = Color.White,
-            )
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
 @Composable
-private fun BioSection(userBio: String) {
+private fun BioSection(
+    userBio: String,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp) // Add horizontal padding to make it wider within the container
-            .wrapContentHeight(), // Responsive height
+            .padding(horizontal = if (isVerySmallScreen) 4.dp else 8.dp)
+            .wrapContentHeight(),
         colors = CardDefaults.cardColors(containerColor = Color.Black),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(if (isSmallScreen) 8.dp else 12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         SelectionContainer {
             Text(
                 text = userBio,
                 style = TextStyle(
-                    fontSize = 14.sp,
+                    fontSize = if (isVerySmallScreen) 12.sp else 14.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                     fontWeight = FontWeight.Normal,
                     color = Color(0xFFA3A3A3),
-                    lineHeight = 20.sp
+                    lineHeight = if (isVerySmallScreen) 16.sp else 20.sp
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp) // Increased padding for better readability and more width
+                    .padding(if (isVerySmallScreen) 12.dp else if (isSmallScreen) 16.dp else 20.dp)
             )
         }
     }
 }
 
 @Composable
-private fun MenuItemsSection(navController: NavController) {
+private fun MenuItemsSection(
+    navController: NavController,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = if (isVerySmallScreen) 12.dp else if (isSmallScreen) 16.dp else 20.dp)
     ) {
         // Menu items with icons
         val menuItemsWithIcons = listOf(
@@ -636,7 +709,9 @@ private fun MenuItemsSection(navController: NavController) {
             EnhancedMenuItem(
                 iconRes = iconRes,
                 title = title,
-                onClick = onClick
+                onClick = onClick,
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
             )
             Spacer(modifier = Modifier.height(2.dp))
         }
@@ -654,7 +729,9 @@ private fun MenuItemsSection(navController: NavController) {
         menuItemsNoIcons.forEach { (title, onClick) ->
             EnhancedMenuItemNoIcon(
                 title = title,
-                onClick = onClick
+                onClick = onClick,
+                isSmallScreen = isSmallScreen,
+                isVerySmallScreen = isVerySmallScreen
             )
             Spacer(modifier = Modifier.height(2.dp))
         }
@@ -666,7 +743,9 @@ private fun LogoutSection(
     tokenManager: TokenManager,
     googleSignInManager: GoogleSignInManager,
     navController: NavController,
-    scope: kotlinx.coroutines.CoroutineScope
+    scope: kotlinx.coroutines.CoroutineScope,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     val context = LocalContext.current
     var isLoggingOut by remember { mutableStateOf(false) }
@@ -680,13 +759,13 @@ private fun LogoutSection(
                         // Clear app tokens and user profile
                         tokenManager.clearToken()
                         googleSignInManager.clearUserProfile()
-                        
+
                         // Sign out from Google to force account picker on next login
                         val googleAuthClient = com.example.talkeys_new.screens.authentication.GoogleAuthClient(
                             context = context,
                             clientId = "563385258779-75kq583ov98fk7h3dqp5em0639769a61.apps.googleusercontent.com"
                         )
-                        
+
                         // Revoke access to force account selection on next login
                         googleAuthClient.revokeAccess().addOnCompleteListener {
                             Log.d("ProfileScreen", "Google access revoked successfully")
@@ -697,7 +776,7 @@ private fun LogoutSection(
                                 Log.d("ProfileScreen", "Google sign out completed")
                             }
                         }
-                        
+
                         navController.navigate("landingpage") {
                             popUpTo(0) { inclusive = true }
                         }
@@ -712,24 +791,24 @@ private fun LogoutSection(
         enabled = !isLoggingOut,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .height(50.dp),
+            .padding(horizontal = if (isVerySmallScreen) 12.dp else if (isSmallScreen) 16.dp else 20.dp)
+            .height(if (isVerySmallScreen) 44.dp else 50.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFF4C4C4C),
             contentColor = Color.White
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(if (isSmallScreen) 8.dp else 12.dp)
     ) {
         if (isLoggingOut) {
             CircularProgressIndicator(
                 color = Color.White,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(if (isSmallScreen) 18.dp else 20.dp)
             )
         } else {
             Text(
                 text = "Logout",
                 style = TextStyle(
-                    fontSize = 18.sp,
+                    fontSize = if (isVerySmallScreen) 16.sp else 18.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White
@@ -743,47 +822,51 @@ private fun LogoutSection(
 private fun EnhancedMenuItem(
     iconRes: Int,
     title: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(if (isVerySmallScreen) 48.dp else 56.dp)
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171717)),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(if (isSmallScreen) 8.dp else 12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = if (isVerySmallScreen) 12.dp else 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = title,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(if (isVerySmallScreen) 12.dp else 16.dp))
 
             Text(
                 text = title,
                 style = TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = if (isVerySmallScreen) 14.sp else 16.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                     fontWeight = FontWeight.Normal,
                     color = Color.White,
                 ),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "Navigate",
                 tint = Color.White,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(if (isSmallScreen) 18.dp else 20.dp)
             )
         }
     }
@@ -792,39 +875,43 @@ private fun EnhancedMenuItem(
 @Composable
 private fun EnhancedMenuItemNoIcon(
     title: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isSmallScreen: Boolean = false,
+    isVerySmallScreen: Boolean = false
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(if (isVerySmallScreen) 48.dp else 56.dp)
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color(0xFF171717)),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(if (isSmallScreen) 8.dp else 12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = if (isVerySmallScreen) 12.dp else 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
                 style = TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = if (isVerySmallScreen) 14.sp else 16.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
                     fontWeight = FontWeight.Normal,
                     color = Color.White,
                 ),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "Navigate",
                 tint = Color.White,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(if (isSmallScreen) 18.dp else 20.dp)
             )
         }
     }
