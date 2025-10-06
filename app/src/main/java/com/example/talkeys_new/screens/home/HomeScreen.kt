@@ -284,7 +284,11 @@ fun HomeScreen(navController: NavController) {
 fun HostYourOwnEvent(navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
+    val isVerySmallScreen = screenWidth < 340.dp
     
     Row(
         modifier = Modifier
@@ -297,9 +301,9 @@ fun HostYourOwnEvent(navController: NavController) {
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = "Host your own EVENT!!!",
+                text = if (isVerySmallScreen) "Host your own EVENT!" else "Host your own EVENT!!!",
                 style = TextStyle(
-                    fontSize = if (isSmallScreen) 18.sp else 22.sp,
+                    fontSize = if (isVerySmallScreen) 16.sp else if (isSmallScreen) 18.sp else 22.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_bold)),
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFFFCFCFC),
@@ -311,16 +315,21 @@ fun HostYourOwnEvent(navController: NavController) {
             Spacer(modifier = Modifier.height(if (isSmallScreen) 12.dp else 16.dp))
 
             Text(
-                text = "Create an event, invite your community, and manage everything in one place.",
+                text = if (isVerySmallScreen) 
+                    "Create events, invite your community, manage everything easily." 
+                else if (isSmallScreen)
+                    "Create an event, invite your community, and manage everything in one place."
+                else 
+                    "Create an event, invite your community, and manage everything in one place.",
                 style = TextStyle(
-                    fontSize = if (isSmallScreen) 14.sp else 16.sp,
+                    fontSize = if (isVerySmallScreen) 12.sp else if (isSmallScreen) 14.sp else 16.sp,
                     fontFamily = FontFamily(Font(R.font.urbanist_medium)),
                     fontWeight = FontWeight.Normal,
                     color = Color.White,
                     textAlign = TextAlign.Start,
                 ),
-                modifier = Modifier.fillMaxWidth(if (isSmallScreen) 0.9f else 0.8f),
-                maxLines = 3,
+                modifier = Modifier.fillMaxWidth(if (isVerySmallScreen) 0.95f else if (isSmallScreen) 0.9f else 0.8f),
+                maxLines = if (isVerySmallScreen) 3 else 3,
                 overflow = TextOverflow.Ellipsis
             )
 
@@ -466,7 +475,10 @@ fun BannerSection(navController: NavController) {
 fun CategoryTitle(title: String) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     
     Text(
         text = title,
@@ -486,7 +498,10 @@ fun CategoryTitle(title: String) {
 fun EventRow(events: List<com.example.talkeys_new.dataModels.EventResponse>, navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     
     LazyRow(
         contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
@@ -508,7 +523,10 @@ fun EventRow(events: List<com.example.talkeys_new.dataModels.EventResponse>, nav
 fun LoadingEventRow() {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     
     LazyRow(
         contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
@@ -546,7 +564,10 @@ data class InfluencerItem(
 fun CommunityRow(navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     
     val communities = listOf(
         CommunityItem("Tech Enthusiasts", "Join fellow developers and tech lovers", R.drawable.community_banner, "1.2K"),
@@ -574,7 +595,10 @@ fun CommunityRow(navController: NavController) {
 fun CommunityCard(name: String, imageRes: Int, description: String, navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     
     // ✅ Wrapper Box with Background and Shadows
     Box(
@@ -627,7 +651,10 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
 fun InfluencerRow() {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     
     val influencers = listOf(
         InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "125K"),
@@ -654,7 +681,10 @@ fun InfluencerRow() {
 fun InfluencerCard(name: String, profession: String, imageRes: Int) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val isSmallScreen = screenWidth < 360.dp
+    val screenHeight = configuration.screenHeightDp.dp
+    
+    // More conservative responsive detection
+    val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     
     Box(
         modifier = Modifier
