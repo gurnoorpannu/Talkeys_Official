@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-https://api.talkeys.xyz/
+ask admin for apikey
 ```
 
 ## Required API Endpoints
