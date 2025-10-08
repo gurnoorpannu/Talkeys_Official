@@ -290,24 +290,6 @@ fun MissionVisionValuesCard(cardWidth: Dp) {
                 .animateContentSize()
         ) {
             Column {
-                // Title with Icon
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Image(
-                        painter = painterResource(id = getTabIcon(selectedTab)),
-                        contentDescription = selectedTab,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Our $selectedTab",
-                        color = white,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Content text
                 Text(
                     text = getTabContent(selectedTab),
