@@ -66,7 +66,54 @@ object FCMTokenManager {
         return getStoredToken(context) != null
     }
 
+    /**
+     * Get token generation timestamp
+     */
+    fun getTokenTimestamp(context: Context): String? {
+        val sharedPref = getSharedPreferences(context)
+        return sharedPref.getString("fcm_token_timestamp", null)
+    }
+
+    /**
+     * Get token generation count
+     */
+    fun getTokenGenerationCount(context: Context): Int {
+        val sharedPref = getSharedPreferences(context)
+        return sharedPref.getInt("fcm_token_generation_count", 0)
+    }
+
+    /**
+     * Get comprehensive token info for debugging
+     */
+    fun getTokenInfo(context: Context): TokenInfo {
+        val sharedPref = getSharedPreferences(context)
+        return TokenInfo(
+            token = sharedPref.getString(TOKEN_KEY, null),
+            timestamp = sharedPref.getString("fcm_token_timestamp", null),
+            generationCount = sharedPref.getInt("fcm_token_generation_count", 0)
+        )
+    }
+
+    /**
+     * Log current token status for debugging
+     */
+    fun logTokenStatus(context: Context) {
+        val tokenInfo = getTokenInfo(context)
+        Log.d(TAG, "=== FCM Token Status ===")
+        Log.d(TAG, "Has Token: ${tokenInfo.token != null}")
+        Log.d(TAG, "Token: ${tokenInfo.token ?: "Not available"}")
+        Log.d(TAG, "Last Generated: ${tokenInfo.timestamp ?: "Never"}")
+        Log.d(TAG, "Generation Count: ${tokenInfo.generationCount}")
+        Log.d(TAG, "========================")
+    }
+
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
+
+    data class TokenInfo(
+        val token: String?,
+        val timestamp: String?,
+        val generationCount: Int
+    )
 }

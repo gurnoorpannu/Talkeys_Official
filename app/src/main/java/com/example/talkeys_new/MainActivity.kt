@@ -51,6 +51,9 @@ class MainActivity : ComponentActivity() {
         // Ask for notification permission
         askNotificationPermission()
         
+        // Log current token status
+        FCMTokenManager.logTokenStatus(this)
+        
         // Retrieve FCM registration token
         retrieveFCMToken()
         
