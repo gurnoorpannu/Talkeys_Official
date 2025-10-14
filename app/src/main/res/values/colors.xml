@@ -10,4 +10,7 @@
     
     <!-- Splash Screen Colors -->
     <color name="splash_background">#FF000000</color>
+    
+    <!-- FCM Notification Color -->
+    <color name="colorAccent">#FF6200EE</color>
 </resources>
