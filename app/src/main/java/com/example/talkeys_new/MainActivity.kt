@@ -156,7 +156,11 @@ class MainActivity : ComponentActivity() {
     private fun retrieveFCMToken() {
         FCMTokenManager.getCurrentToken { token ->
             if (token != null) {
-                Log.d(TAG, "FCM Registration Token: $token")
+                Log.d(TAG, "🔑 FCM Registration Token: $token")
+                Log.d(TAG, "📋 COPY THIS TOKEN FOR FIREBASE CONSOLE TESTING:")
+                Log.d(TAG, "📋 ================================")
+                Log.d(TAG, "📋 $token")
+                Log.d(TAG, "📋 ================================")
                 
                 // Store token locally
                 FCMTokenManager.storeToken(this, token)
@@ -197,8 +201,15 @@ class MainActivity : ComponentActivity() {
             }
             ConsentStatus.NOT_SET -> {
                 Log.d(TAG, "❓ User hasn't made a choice yet")
-                // For now, we'll enable FCM (you can show a dialog here instead)
-                showConsentDialog()
+                
+                // TESTING MODE: Auto-enable FCM for testing
+                // TODO: Replace with showConsentDialog() for production
+                Log.d(TAG, "🧪 TESTING: Auto-enabling FCM for notification testing")
+                enableFCMForUser()
+                saveUserConsentPreference(ConsentStatus.GRANTED)
+                
+                // For production, uncomment this instead:
+                // showConsentDialog()
             }
         }
     }
@@ -292,6 +303,17 @@ class MainActivity : ComponentActivity() {
         } else {
             disableFCMForUser()
         }
+    }
+
+    /**
+     * Force enable FCM for testing purposes
+     * Call this method to quickly enable FCM without going through consent flow
+     */
+    private fun forceEnableFCMForTesting() {
+        Log.d(TAG, "🧪 TESTING MODE: Force enabling FCM")
+        FCMInitializationManager.enableAll(this)
+        initializeFCMFeatures()
+        Log.d(TAG, "🧪 FCM enabled for testing - check logs for token")
     }
     
     enum class ConsentStatus(val value: Int) {
