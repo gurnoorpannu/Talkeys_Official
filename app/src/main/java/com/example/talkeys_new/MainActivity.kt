@@ -17,6 +17,8 @@ import androidx.core.content.ContextCompat
 import com.example.talkeys_new.navigation.AppNavigation
 import com.example.talkeys_new.screens.authentication.TokenManager
 import com.example.talkeys_new.ui.theme.Talkeys_NewTheme
+import com.example.talkeys_new.utils.FCMTokenManager
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.first
 import com.talkeys.shared.Greeting
 import com.talkeys.shared.initKoin
@@ -48,6 +50,9 @@ class MainActivity : ComponentActivity() {
         
         // Ask for notification permission
         askNotificationPermission()
+        
+        // Retrieve FCM registration token
+        retrieveFCMToken()
         
         setContent {
             Talkeys_NewTheme {
@@ -84,5 +89,32 @@ class MainActivity : ComponentActivity() {
             // For Android 12L and below, permission is handled automatically
             Log.d("FCM_PERMISSION", "Android version < 33, no runtime permission needed")
         }
+    }
+    
+    private fun retrieveFCMToken() {
+        FCMTokenManager.getCurrentToken { token ->
+            if (token != null) {
+                Log.d(TAG, "FCM Registration Token: $token")
+                
+                // Store token locally
+                FCMTokenManager.storeToken(this, token)
+                
+                // Send token to your app server for targeting this device
+                sendTokenToServer(token)
+            } else {
+                Log.e(TAG, "Failed to retrieve FCM token")
+            }
+        }
+    }
+    
+    private fun sendTokenToServer(token: String) {
+        // TODO: Implement this method to send token to your app server
+        // This is where you would typically make an API call to your backend
+        // to associate this token with the current user
+        Log.d(TAG, "TODO: Send token to server: $token")
+    }
+    
+    companion object {
+        private const val TAG = "MainActivity"
     }
 }

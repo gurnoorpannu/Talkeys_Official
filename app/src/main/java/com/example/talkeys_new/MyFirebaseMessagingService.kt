@@ -37,12 +37,15 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
+        Log.d(TAG, "Refreshed FCM token: $token")
         
         // If you want to send messages to this application instance or
         // manage this apps subscriptions on the server side, send the
         // FCM registration token to your app server.
         sendRegistrationToServer(token)
+        
+        // Store token locally if needed
+        storeTokenLocally(token)
     }
 
     private fun handleDataMessage(data: Map<String, String>) {
@@ -53,7 +56,19 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     private fun sendRegistrationToServer(token: String?) {
         // TODO: Implement this method to send token to your app server
+        // This should make an API call to your backend to update the token
+        // for the current user
         Log.d(TAG, "sendTokenToServer($token)")
+    }
+    
+    private fun storeTokenLocally(token: String) {
+        // Store token in SharedPreferences or DataStore for local access
+        val sharedPref = getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString("fcm_token", token)
+            apply()
+        }
+        Log.d(TAG, "Token stored locally")
     }
 
     private fun sendNotification(title: String?, messageBody: String?) {
