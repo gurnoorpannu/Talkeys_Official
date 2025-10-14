@@ -135,20 +135,20 @@ class MainActivity : ComponentActivity() {
                     googleApiAvailability.makeGooglePlayServicesAvailable(this)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                Log.d(TAG, "✅ Google Play Services resolved successfully")
+                                Log.d(TAG, " Google Play Services resolved successfully")
                                 // Retry FCM initialization
                                 retrieveFCMToken()
                             } else {
-                                Log.e(TAG, "❌ Failed to resolve Google Play Services")
+                                Log.e(TAG, " Failed to resolve Google Play Services")
                             }
                         }
                 } else {
-                    Log.e(TAG, "❌ Google Play Services error cannot be resolved")
+                    Log.e(TAG, " Google Play Services error cannot be resolved")
                 }
                 false
             }
             else -> {
-                Log.e(TAG, "❌ Unknown Google Play Services error: $resultCode")
+                Log.e(TAG, " Unknown Google Play Services error: $resultCode")
                 false
             }
         }
@@ -157,11 +157,11 @@ class MainActivity : ComponentActivity() {
     private fun retrieveFCMToken() {
         FCMTokenManager.getCurrentToken { token ->
             if (token != null) {
-                Log.d(TAG, "🔑 FCM Registration Token: $token")
-                Log.d(TAG, "📋 COPY THIS TOKEN FOR FIREBASE CONSOLE TESTING:")
-                Log.d(TAG, "📋 ================================")
-                Log.d(TAG, "📋 $token")
-                Log.d(TAG, "📋 ================================")
+                Log.d(TAG, " FCM Registration Token: $token")
+                Log.d(TAG, " COPY THIS TOKEN FOR FIREBASE CONSOLE TESTING:")
+                Log.d(TAG, " ================================")
+                Log.d(TAG, " $token")
+                Log.d(TAG, " ================================")
                 
                 // Store token locally
                 FCMTokenManager.storeToken(this, token)
@@ -186,27 +186,27 @@ class MainActivity : ComponentActivity() {
      * This is where you would show a consent dialog to the user
      */
     private fun handleFCMConsent() {
-        Log.d(TAG, "🤔 Determining FCM consent strategy...")
+        Log.d(TAG, " Determining FCM consent strategy...")
         
         // Option 1: Check if user has previously made a choice
         val userConsent = getUserConsentPreference()
         
         when (userConsent) {
             ConsentStatus.GRANTED -> {
-                Log.d(TAG, "✅ User previously consented to notifications")
+                Log.d(TAG, " User previously consented to notifications")
                 enableFCMForUser()
             }
             ConsentStatus.DENIED -> {
-                Log.d(TAG, "❌ User previously denied notifications")
+                Log.d(TAG, " User previously denied notifications")
                 // Keep FCM disabled
             }
             ConsentStatus.NOT_SET -> {
-                Log.d(TAG, "❓ User hasn't made a choice yet")
+                Log.d(TAG, " User hasn't made a choice yet")
                 
                 // TESTING MODE: Auto-enable FCM for testing
                 // TODO: Replace with showConsentDialog() for production
-                Log.d(TAG, "🧪 TESTING: Auto-enabling FCM for notification testing")
-                Log.d(TAG, "🧪 This will generate your FCM registration token")
+                Log.d(TAG, " TESTING: Auto-enabling FCM for notification testing")
+                Log.d(TAG, " This will generate your FCM registration token")
                 enableFCMForUser()
                 saveUserConsentPreference(ConsentStatus.GRANTED)
                 
