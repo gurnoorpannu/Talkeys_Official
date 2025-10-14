@@ -25,8 +25,16 @@ object FCMInitializationManager {
      */
     fun enableAutoInit() {
         Log.d(TAG, "🔄 Enabling FCM auto-initialization...")
+        val wasEnabled = FirebaseMessaging.getInstance().isAutoInitEnabled
+        
         FirebaseMessaging.getInstance().isAutoInitEnabled = true
-        Log.d(TAG, "✅ FCM auto-initialization enabled")
+        
+        if (!wasEnabled) {
+            Log.d(TAG, "✅ FCM auto-initialization enabled (was previously disabled)")
+            Log.d(TAG, "🔑 Token generation will now begin automatically")
+        } else {
+            Log.d(TAG, "ℹ️ FCM auto-initialization was already enabled")
+        }
     }
 
     /**
@@ -98,7 +106,26 @@ object FCMInitializationManager {
         Log.d(TAG, "=== FCM Initialization Status ===")
         Log.d(TAG, "FCM Auto-Init: ${if (status.fcmAutoInitEnabled) "✅ Enabled" else "❌ Disabled"}")
         Log.d(TAG, "Analytics: ${if (status.analyticsEnabled) "✅ Enabled" else "❌ Disabled"}")
+        
+        if (!status.fcmAutoInitEnabled) {
+            Log.d(TAG, "🔒 FCM is disabled - no tokens will be generated")
+            Log.d(TAG, "📋 User consent required to enable notifications")
+        }
+        
+        if (!status.analyticsEnabled) {
+            Log.d(TAG, "🔒 Analytics disabled - no usage data collected")
+        }
+        
         Log.d(TAG, "================================")
+    }
+
+    /**
+     * Check if FCM was disabled by manifest configuration
+     */
+    fun wasDisabledByManifest(): Boolean {
+        // If auto-init is disabled and we haven't explicitly enabled it,
+        // it was likely disabled by manifest
+        return !isAutoInitEnabled()
     }
 
     /**
@@ -106,9 +133,15 @@ object FCMInitializationManager {
      */
     fun enableAll(context: Context) {
         Log.d(TAG, "🚀 Enabling all Firebase services...")
+        
+        if (wasDisabledByManifest()) {
+            Log.d(TAG, "🔓 Overriding manifest settings - enabling FCM")
+        }
+        
         enableAutoInit()
         enableAnalytics(context)
         Log.d(TAG, "✅ All Firebase services enabled")
+        Log.d(TAG, "💡 These settings persist across app restarts")
     }
 
     /**

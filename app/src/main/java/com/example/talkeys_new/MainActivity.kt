@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import com.example.talkeys_new.navigation.AppNavigation
 import com.example.talkeys_new.screens.authentication.TokenManager
 import com.example.talkeys_new.ui.theme.Talkeys_NewTheme
+import com.example.talkeys_new.utils.ConsentDialogHelper
 import com.example.talkeys_new.utils.FCMInitializationManager
 import com.example.talkeys_new.utils.FCMTokenManager
 import com.google.android.gms.common.ConnectionResult
@@ -56,20 +57,17 @@ class MainActivity : ComponentActivity() {
             // Log FCM initialization status
             FCMInitializationManager.logInitializationStatus(this)
             
-            // Ensure FCM is enabled (you can modify this based on your needs)
+            // Check if FCM is disabled by default (due to manifest settings)
             if (!FCMInitializationManager.isAutoInitEnabled()) {
-                Log.d(TAG, "FCM auto-init is disabled, enabling it...")
-                FCMInitializationManager.enableAutoInit()
+                Log.d(TAG, "🔒 FCM auto-init is disabled by default (privacy-first approach)")
+                Log.d(TAG, "📋 User consent required before enabling notifications")
+                
+                // Show user consent dialog or enable based on your app's logic
+                handleFCMConsent()
+            } else {
+                Log.d(TAG, "✅ FCM auto-init is already enabled")
+                initializeFCMFeatures()
             }
-            
-            // Ask for notification permission
-            askNotificationPermission()
-            
-            // Log current token status
-            FCMTokenManager.logTokenStatus(this)
-            
-            // Retrieve FCM registration token
-            retrieveFCMToken()
         } else {
             Log.e(TAG, "Google Play Services not available - FCM will not work")
         }
@@ -178,26 +176,134 @@ class MainActivity : ComponentActivity() {
         Log.d(TAG, "TODO: Send token to server: $token")
     }
     
+    /**
+     * Handle FCM consent - called when FCM is disabled by default
+     * This is where you would show a consent dialog to the user
+     */
+    private fun handleFCMConsent() {
+        Log.d(TAG, "🤔 Determining FCM consent strategy...")
+        
+        // Option 1: Check if user has previously made a choice
+        val userConsent = getUserConsentPreference()
+        
+        when (userConsent) {
+            ConsentStatus.GRANTED -> {
+                Log.d(TAG, "✅ User previously consented to notifications")
+                enableFCMForUser()
+            }
+            ConsentStatus.DENIED -> {
+                Log.d(TAG, "❌ User previously denied notifications")
+                // Keep FCM disabled
+            }
+            ConsentStatus.NOT_SET -> {
+                Log.d(TAG, "❓ User hasn't made a choice yet")
+                // For now, we'll enable FCM (you can show a dialog here instead)
+                showConsentDialog()
+            }
+        }
+    }
+    
+    /**
+     * Show consent dialog to user
+     */
+    private fun showConsentDialog() {
+        Log.d(TAG, "📋 Showing FCM consent dialog to user")
+        
+        ConsentDialogHelper.showFCMConsentDialog(this) { granted ->
+            if (granted) {
+                Log.d(TAG, "✅ User granted consent for notifications")
+                enableFCMForUser()
+                saveUserConsentPreference(ConsentStatus.GRANTED)
+            } else {
+                Log.d(TAG, "❌ User denied consent for notifications")
+                saveUserConsentPreference(ConsentStatus.DENIED)
+                // Keep FCM disabled
+            }
+        }
+    }
+    
+    /**
+     * Initialize FCM features after consent is granted
+     */
+    private fun initializeFCMFeatures() {
+        Log.d(TAG, "🚀 Initializing FCM features...")
+        
+        // Ask for notification permission
+        askNotificationPermission()
+        
+        // Log current token status
+        FCMTokenManager.logTokenStatus(this)
+        
+        // Retrieve FCM registration token
+        retrieveFCMToken()
+    }
+    
+    /**
+     * Get user's consent preference from storage
+     */
+    private fun getUserConsentPreference(): ConsentStatus {
+        val sharedPref = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+        val consentValue = sharedPref.getInt("fcm_consent", ConsentStatus.NOT_SET.value)
+        return ConsentStatus.fromValue(consentValue)
+    }
+    
+    /**
+     * Save user's consent preference
+     */
+    private fun saveUserConsentPreference(consent: ConsentStatus) {
+        val sharedPref = getSharedPreferences("user_preferences", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putInt("fcm_consent", consent.value)
+            apply()
+        }
+        Log.d(TAG, "💾 Saved user consent: $consent")
+    }
+    
     // Example methods for controlling FCM initialization
     // Call these based on user preferences or app requirements
     
     private fun enableFCMForUser() {
-        Log.d(TAG, "User opted in to notifications")
+        Log.d(TAG, "🔓 User opted in to notifications")
         FCMInitializationManager.enableAll(this)
-        retrieveFCMToken()
+        initializeFCMFeatures()
     }
     
     private fun disableFCMForUser() {
-        Log.d(TAG, "User opted out of notifications")
+        Log.d(TAG, "🔒 User opted out of notifications")
         FCMInitializationManager.disableAll(this)
         FCMTokenManager.clearToken(this)
+        saveUserConsentPreference(ConsentStatus.DENIED)
     }
     
     private fun enableOnlyFCM() {
-        Log.d(TAG, "Enabling FCM without Analytics")
+        Log.d(TAG, "📱 Enabling FCM without Analytics")
         FCMInitializationManager.enableAutoInit()
         FCMInitializationManager.disableAnalytics(this)
-        retrieveFCMToken()
+        initializeFCMFeatures()
+    }
+    
+    /**
+     * Public methods for user settings screen
+     */
+    fun toggleNotifications(enable: Boolean) {
+        if (enable) {
+            enableFCMForUser()
+            saveUserConsentPreference(ConsentStatus.GRANTED)
+        } else {
+            disableFCMForUser()
+        }
+    }
+    
+    enum class ConsentStatus(val value: Int) {
+        NOT_SET(0),
+        GRANTED(1), 
+        DENIED(2);
+        
+        companion object {
+            fun fromValue(value: Int): ConsentStatus {
+                return values().find { it.value == value } ?: NOT_SET
+            }
+        }
     }
 
     companion object {
