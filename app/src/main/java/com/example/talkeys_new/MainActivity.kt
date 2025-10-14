@@ -1,6 +1,7 @@
 package com.example.talkeys_new
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -205,6 +206,7 @@ class MainActivity : ComponentActivity() {
                 // TESTING MODE: Auto-enable FCM for testing
                 // TODO: Replace with showConsentDialog() for production
                 Log.d(TAG, "🧪 TESTING: Auto-enabling FCM for notification testing")
+                Log.d(TAG, "🧪 This will generate your FCM registration token")
                 enableFCMForUser()
                 saveUserConsentPreference(ConsentStatus.GRANTED)
                 
@@ -314,6 +316,37 @@ class MainActivity : ComponentActivity() {
         FCMInitializationManager.enableAll(this)
         initializeFCMFeatures()
         Log.d(TAG, "🧪 FCM enabled for testing - check logs for token")
+    }
+
+    /**
+     * Debug method to get current token status
+     * Call this to see if token exists and what it is
+     */
+    private fun debugTokenStatus() {
+        Log.d(TAG, "🔍 DEBUG: Checking current token status...")
+        
+        // Check if FCM is enabled
+        val isEnabled = FCMInitializationManager.isAutoInitEnabled()
+        Log.d(TAG, "🔍 FCM Auto-Init Enabled: $isEnabled")
+        
+        // Check stored token
+        val storedToken = FCMTokenManager.getStoredToken(this)
+        if (storedToken != null) {
+            Log.d(TAG, "🔍 Stored Token Found:")
+            Log.d(TAG, "🔍 ================================")
+            Log.d(TAG, "🔍 $storedToken")
+            Log.d(TAG, "🔍 ================================")
+        } else {
+            Log.d(TAG, "🔍 No stored token found")
+        }
+        
+        // Try to get fresh token
+        if (isEnabled) {
+            Log.d(TAG, "🔍 Attempting to get fresh token...")
+            retrieveFCMToken()
+        } else {
+            Log.d(TAG, "🔍 FCM disabled - enable it first to get token")
+        }
     }
     
     enum class ConsentStatus(val value: Int) {
