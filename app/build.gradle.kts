@@ -76,7 +76,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
 
     //phonepe payment integration
-    implementation ("phonepe.intentsdk.android.release:IntentSDK:5.1.0")
+    implementation("phonepe.intentsdk.android.release:IntentSDK:5.2.0")
 
 
     implementation(libs.androidx.core.ktx)
