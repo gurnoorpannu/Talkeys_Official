@@ -383,23 +383,30 @@ class MainActivity : ComponentActivity() {
      */
     private fun handlePhonePePaymentResult(paymentResult: PhonePePaymentManager.PaymentResult) {
         when (paymentResult) {
+            is PhonePePaymentManager.PaymentResult.Success -> {
+                Log.d(TAG, "Payment successful: ${paymentResult.message}")
+                Log.d(TAG, "Pass ID: ${paymentResult.passId}, Pass UUID: ${paymentResult.passUUID}")
+                navigateToRegistrationSuccess()
+            }
+            is PhonePePaymentManager.PaymentResult.Failed -> {
+                Log.d(TAG, "Payment failed: ${paymentResult.message}")
+                showPaymentFailedMessage(paymentResult.message)
+            }
+            is PhonePePaymentManager.PaymentResult.Pending -> {
+                Log.d(TAG, "Payment pending: ${paymentResult.message}")
+                showPaymentPendingMessage(paymentResult.message)
+            }
             is PhonePePaymentManager.PaymentResult.Completed -> {
                 Log.d(TAG, "Payment completed: ${paymentResult.message}")
-                // TODO: Call Order Status API to fetch the actual payment status
-                // This is crucial - the payment might still be pending or failed
-                
-                // For now, navigate to success screen
-                // In production, you should verify payment status with your backend first
+                // Legacy support - this should now be handled by automatic verification
                 navigateToRegistrationSuccess()
             }
             is PhonePePaymentManager.PaymentResult.Cancelled -> {
                 Log.d(TAG, "Payment cancelled: ${paymentResult.message}")
-                // Handle payment cancellation
                 showPaymentCancelledMessage()
             }
             is PhonePePaymentManager.PaymentResult.Error -> {
                 Log.e(TAG, "Payment error: ${paymentResult.message}")
-                // Handle payment error
                 showPaymentErrorMessage(paymentResult.message)
             }
         }
@@ -418,8 +425,32 @@ class MainActivity : ComponentActivity() {
     }
     
     /**
-     * Initiate PhonePe payment
-     * Call this method when user wants to make a payment
+     * Initiate integrated payment flow (book ticket + PhonePe payment)
+     * This is the recommended method that handles the complete flow
+     */
+    fun initiateIntegratedPayment(
+        eventId: String,
+        passType: String,
+        friends: List<com.talkeys.shared.data.payment.Friend>,
+        authToken: String? = null,
+        onResult: (PhonePePaymentManager.PaymentResult) -> Unit
+    ) {
+        Log.d(TAG, "Initiating integrated payment for event: $eventId")
+        
+        PhonePePaymentManager.bookTicketAndPay(
+            activity = this,
+            eventId = eventId,
+            passType = passType,
+            friends = friends,
+            activityResultLauncher = phonePePaymentLauncher,
+            authToken = authToken,
+            onResult = onResult
+        )
+    }
+    
+    /**
+     * Legacy method: Initiate PhonePe payment with pre-obtained token
+     * Use initiateIntegratedPayment() for the complete flow
      * 
      * @param token Payment token from your backend (Create Order API response)
      * @param orderId Order ID from your backend (Create Order API response)
@@ -456,6 +487,22 @@ class MainActivity : ComponentActivity() {
     private fun showPaymentCancelledMessage() {
         Log.d(TAG, "TODO: Show payment cancelled UI to user")
         // TODO: Implement UI to show payment was cancelled
+    }
+    
+    /**
+     * Show payment failed message to user
+     */
+    private fun showPaymentFailedMessage(errorMessage: String) {
+        Log.e(TAG, "TODO: Show payment failed UI to user: $errorMessage")
+        // TODO: Implement UI to show payment failed
+    }
+    
+    /**
+     * Show payment pending message to user
+     */
+    private fun showPaymentPendingMessage(message: String) {
+        Log.d(TAG, "TODO: Show payment pending UI to user: $message")
+        // TODO: Implement UI to show payment is pending
     }
     
     /**

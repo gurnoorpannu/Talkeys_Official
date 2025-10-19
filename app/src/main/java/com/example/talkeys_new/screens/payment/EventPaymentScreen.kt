@@ -23,6 +23,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.talkeys_new.MainActivity
 import com.example.talkeys_new.R
+import com.example.talkeys_new.utils.PhonePePaymentManager
+import android.util.Log
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -235,6 +241,7 @@ private fun PhonePePaymentSection(
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
+    var paymentStatus by remember { mutableStateOf<String?>(null) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -252,6 +259,30 @@ private fun PhonePePaymentSection(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
+            
+            // Payment Status Display
+            paymentStatus?.let { status ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = when {
+                            status.contains("success", ignoreCase = true) -> Color.Green.copy(alpha = 0.2f)
+                            status.contains("failed", ignoreCase = true) -> Color.Red.copy(alpha = 0.2f)
+                            status.contains("pending", ignoreCase = true) -> Color.Yellow.copy(alpha = 0.2f)
+                            else -> Color.Gray.copy(alpha = 0.2f)
+                        }
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = status,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(12.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
             
             // PhonePe Payment Option
             Card(
@@ -289,7 +320,7 @@ private fun PhonePePaymentSection(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = "UPI, Cards, Wallets & More",
+                            text = "UPI • Cards • Net Banking • Wallets",
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 12.sp
                         )
@@ -299,7 +330,7 @@ private fun PhonePePaymentSection(
             
             // Payment Instructions
             Text(
-                text = "• Secure payment powered by PhonePe\n• Supports UPI, Cards, and Wallets\n• Instant confirmation",
+                text = "• All UPI apps (GPay, Paytm, BHIM, etc.)\n• Credit/Debit Cards (Visa, Mastercard, RuPay)\n• Net Banking (All major banks)\n• Digital Wallets & BNPL options",
                 color = Color.White.copy(alpha = 0.8f),
                 fontSize = 14.sp,
                 textAlign = TextAlign.Start,
@@ -310,22 +341,79 @@ private fun PhonePePaymentSection(
             Button(
                 onClick = {
                     isLoading = true
+                    paymentStatus = null
                     onPaymentInitiated()
                     
-                    // TODO: Replace with actual backend API call to create order
-                    // For now, using dummy values for testing
-                    val dummyToken = "DUMMY_TOKEN_${System.currentTimeMillis()}"
-                    val dummyOrderId = "ORDER_${eventId}_${System.currentTimeMillis()}"
+                    // Production: Prepare payment data
+                    val passType = determinePassType(amount)
+                    val friends = getUserSelectedFriends()
                     
-                    // Important: In production, you need to:
-                    // 1. Call your backend API to create an order
-                    // 2. Get the actual token and orderId from the response
-                    // 3. Then call PhonePe payment with real values
-                    
-                    // Call PhonePe payment
-                    (context as? MainActivity)?.initiatePhonePePayment(dummyToken, dummyOrderId)
-                    
-                    isLoading = false
+                    // Get auth token using the same method as other APIs
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        try {
+                            // Use the same TokenManager approach as AuthInterceptor
+                            val tokenManager = com.example.talkeys_new.screens.authentication.TokenManager(context)
+                            val tokenResult = tokenManager.getToken()
+                            
+                            val authToken = when (tokenResult) {
+                                is com.example.talkeys_new.utils.Result.Success -> {
+                                    val token = tokenResult.data?.takeIf { it.isNotEmpty() }
+                                    if (token != null) {
+                                        Log.d("PaymentAuth", "Token retrieved - length: ${token.length}")
+                                        Log.d("PaymentAuth", "Token preview: ${token.take(20)}...")
+                                    } else {
+                                        Log.e("PaymentAuth", "Token is null or empty!")
+                                    }
+                                    token
+                                }
+                                is com.example.talkeys_new.utils.Result.Error -> {
+                                    Log.e("PaymentAuth", "Authentication failed: ${tokenResult.message}")
+                                    null
+                                }
+                                is com.example.talkeys_new.utils.Result.Loading -> {
+                                    Log.w("PaymentAuth", "Token still loading")
+                                    null
+                                }
+                            }
+                            
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                (context as? MainActivity)?.initiateIntegratedPayment(
+                                    eventId = eventId,
+                                    passType = passType,
+                                    friends = friends,
+                                    authToken = authToken
+                                ) { result ->
+                                    isLoading = false
+                                    when (result) {
+                                        is PhonePePaymentManager.PaymentResult.Success -> {
+                                            paymentStatus = "Payment successful! Pass ID: ${result.passId}"
+                                        }
+                                        is PhonePePaymentManager.PaymentResult.Failed -> {
+                                            paymentStatus = "Payment failed: ${result.message}"
+                                        }
+                                        is PhonePePaymentManager.PaymentResult.Pending -> {
+                                            paymentStatus = "Payment pending: ${result.message}"
+                                        }
+                                        is PhonePePaymentManager.PaymentResult.Cancelled -> {
+                                            paymentStatus = "Payment cancelled: ${result.message}"
+                                        }
+                                        is PhonePePaymentManager.PaymentResult.Error -> {
+                                            paymentStatus = "Error: ${result.message}"
+                                        }
+                                        is PhonePePaymentManager.PaymentResult.Completed -> {
+                                            paymentStatus = "${result.message}"
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("PaymentAuth", "Authentication error: ${e.message}")
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                isLoading = false
+                                paymentStatus = "Authentication error occurred"
+                            }
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -351,6 +439,42 @@ private fun PhonePePaymentSection(
         }
     }
 }
+
+/**
+ * PRODUCTION HELPER FUNCTIONS
+ */
+
+/**
+ * Determine pass type based on amount or user selection
+ * Backend accepts: "VIP", "General", "Staff" (default: "General")
+ */
+private fun determinePassType(amount: Double): String {
+    return when {
+        amount >= 500 -> "VIP"      // Higher amounts get VIP
+        amount > 0 -> "General"     // Regular paid events get General
+        else -> "General"           // Default to General
+    }
+}
+
+/**
+ * Get user selected friends for the event
+ * For now, returns empty list - user can register alone
+ */
+private fun getUserSelectedFriends(): List<com.talkeys.shared.data.payment.Friend> {
+    // PRODUCTION: Return empty list for solo registration
+    // You can add friend selection UI later if needed
+    return emptyList()
+    
+    // FUTURE: Implement friend selection UI
+    // return friendSelectionViewModel.getSelectedFriends().map { friend ->
+    //     com.talkeys.shared.data.payment.Friend(
+    //         name = friend.name,
+    //         email = friend.email
+    //     )
+    // }
+}
+
+
 
 @Composable
 private fun PaymentSecurityInfo() {
