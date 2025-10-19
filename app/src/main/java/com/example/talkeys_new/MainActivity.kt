@@ -2,12 +2,14 @@ package com.example.talkeys_new
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import com.example.talkeys_new.ui.theme.Talkeys_NewTheme
 import com.example.talkeys_new.utils.ConsentDialogHelper
 import com.example.talkeys_new.utils.FCMInitializationManager
 import com.example.talkeys_new.utils.FCMTokenManager
+import com.example.talkeys_new.utils.PhonePePaymentManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.FirebaseMessaging
@@ -40,6 +43,19 @@ class MainActivity : ComponentActivity() {
         } else {
             // Inform user that your app will not show notifications.
             Log.d("FCM_PERMISSION", "Notification permission denied")
+        }
+    }
+    
+    // PhonePe payment result launcher
+    private val phonePePaymentLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        // Handle PhonePe payment result
+        PhonePePaymentManager.handlePaymentResult(
+            resultCode = result.resultCode,
+            data = result.data
+        ) { paymentResult ->
+            handlePhonePePaymentResult(paymentResult)
         }
     }
     
@@ -359,6 +375,142 @@ class MainActivity : ComponentActivity() {
                 return values().find { it.value == value } ?: NOT_SET
             }
         }
+    }
+
+    /**
+     * Handle PhonePe payment result
+     * This method is called after the payment flow completes
+     */
+    private fun handlePhonePePaymentResult(paymentResult: PhonePePaymentManager.PaymentResult) {
+        when (paymentResult) {
+            is PhonePePaymentManager.PaymentResult.Success -> {
+                Log.d(TAG, "Payment successful: ${paymentResult.message}")
+                Log.d(TAG, "Pass ID: ${paymentResult.passId}, Pass UUID: ${paymentResult.passUUID}")
+                navigateToRegistrationSuccess()
+            }
+            is PhonePePaymentManager.PaymentResult.Failed -> {
+                Log.d(TAG, "Payment failed: ${paymentResult.message}")
+                showPaymentFailedMessage(paymentResult.message)
+            }
+            is PhonePePaymentManager.PaymentResult.Pending -> {
+                Log.d(TAG, "Payment pending: ${paymentResult.message}")
+                showPaymentPendingMessage(paymentResult.message)
+            }
+            is PhonePePaymentManager.PaymentResult.Completed -> {
+                Log.d(TAG, "Payment completed: ${paymentResult.message}")
+                // Legacy support - this should now be handled by automatic verification
+                navigateToRegistrationSuccess()
+            }
+            is PhonePePaymentManager.PaymentResult.Cancelled -> {
+                Log.d(TAG, "Payment cancelled: ${paymentResult.message}")
+                showPaymentCancelledMessage()
+            }
+            is PhonePePaymentManager.PaymentResult.Error -> {
+                Log.e(TAG, "Payment error: ${paymentResult.message}")
+                showPaymentErrorMessage(paymentResult.message)
+            }
+        }
+    }
+    
+    /**
+     * Navigate to registration success screen
+     */
+    private fun navigateToRegistrationSuccess() {
+        // Since we can't directly navigate from MainActivity, we'll use a different approach
+        // You might want to use a shared ViewModel or event bus for this
+        Log.d(TAG, "Payment successful - user should be navigated to success screen")
+        
+        // For now, just log the success
+        // The actual navigation should be handled in the payment screen or through a callback
+    }
+    
+    /**
+     * Initiate integrated payment flow (book ticket + PhonePe payment)
+     * This is the recommended method that handles the complete flow
+     */
+    fun initiateIntegratedPayment(
+        eventId: String,
+        passType: String,
+        friends: List<com.talkeys.shared.data.payment.Friend>,
+        authToken: String? = null,
+        onResult: (PhonePePaymentManager.PaymentResult) -> Unit
+    ) {
+        Log.d(TAG, "Initiating integrated payment for event: $eventId")
+        
+        PhonePePaymentManager.bookTicketAndPay(
+            activity = this,
+            eventId = eventId,
+            passType = passType,
+            friends = friends,
+            activityResultLauncher = phonePePaymentLauncher,
+            authToken = authToken,
+            onResult = onResult
+        )
+    }
+    
+    /**
+     * Legacy method: Initiate PhonePe payment with pre-obtained token
+     * Use initiateIntegratedPayment() for the complete flow
+     * 
+     * @param token Payment token from your backend (Create Order API response)
+     * @param orderId Order ID from your backend (Create Order API response)
+     */
+    fun initiatePhonePePayment(token: String, orderId: String) {
+        Log.d(TAG, "Initiating PhonePe payment for order: $orderId")
+        
+        PhonePePaymentManager.startCheckout(
+            activity = this,
+            token = token,
+            orderId = orderId,
+            activityResultLauncher = phonePePaymentLauncher
+        )
+    }
+    
+    /**
+     * Check order status after payment completion
+     * This should call your backend's Order Status API
+     */
+    private fun checkOrderStatus() {
+        Log.d(TAG, "TODO: Implement Order Status API call")
+        // TODO: Implement API call to check the actual payment status
+        // This is mandatory as per PhonePe documentation
+        
+        // Example implementation:
+        // 1. Call your backend's order status endpoint
+        // 2. Backend calls PhonePe's Order Status API
+        // 3. Handle the actual payment status (SUCCESS, FAILED, PENDING)
+    }
+    
+    /**
+     * Show payment cancelled message to user
+     */
+    private fun showPaymentCancelledMessage() {
+        Log.d(TAG, "TODO: Show payment cancelled UI to user")
+        // TODO: Implement UI to show payment was cancelled
+    }
+    
+    /**
+     * Show payment failed message to user
+     */
+    private fun showPaymentFailedMessage(errorMessage: String) {
+        Log.e(TAG, "TODO: Show payment failed UI to user: $errorMessage")
+        // TODO: Implement UI to show payment failed
+    }
+    
+    /**
+     * Show payment pending message to user
+     */
+    private fun showPaymentPendingMessage(message: String) {
+        Log.d(TAG, "TODO: Show payment pending UI to user: $message")
+        // TODO: Implement UI to show payment is pending
+    }
+    
+    /**
+     * Show payment error message to user
+     */
+    private fun showPaymentErrorMessage(errorMessage: String) {
+        Log.e(TAG, "TODO: Show payment error UI to user: $errorMessage")
+        // TODO: Implement UI to show payment error
     }
 
     companion object {
