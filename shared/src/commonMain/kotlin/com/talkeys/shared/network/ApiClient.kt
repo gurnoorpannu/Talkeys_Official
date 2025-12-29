@@ -32,8 +32,15 @@ class ApiClient {
         
         // Validation
         init {
-            require(BASE_URL.isNotBlank()) { "API Base URL cannot be blank in production" }
-            require(BASE_URL.startsWith("https://")) { "API Base URL must use HTTPS in production" }
+            require(BASE_URL.isNotBlank()) { "API Base URL cannot be blank" }
+            // Allow HTTP for local development, require HTTPS for production
+            if (ProductionConfig.IS_PRODUCTION) {
+                require(BASE_URL.startsWith("https://")) { "API Base URL must use HTTPS in production" }
+            } else {
+                require(BASE_URL.startsWith("http://") || BASE_URL.startsWith("https://")) { 
+                    "API Base URL must use HTTP or HTTPS" 
+                }
+            }
         }
     }
 }
