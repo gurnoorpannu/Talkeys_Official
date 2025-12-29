@@ -74,16 +74,46 @@ class PaymentRepository(private val paymentApiService: PaymentApiService) {
             result.fold(
                 onSuccess = { response ->
                     if (response.success && response.data != null) {
-                        logger.d { "Payment status: ${response.status} for order: $merchantOrderId" }
-                        Result.success(response.data)
+                        // ✅ Log both response status and actual payment status for debugging
+                        logger.d { "Response status: ${response.status} for order: $merchantOrderId" }
+                        logger.d { "Payment data status: ${response.data.paymentStatus} for order: $merchantOrderId" }
+                        
+                        // ✅ Additional validation for payment status data
+                        val paymentData = response.data
+                        if (paymentData.passId.isBlank()) {
+                            logger.e { "Invalid payment data: passId is blank" }
+                            return Result.failure(Exception("Invalid payment data: passId is missing"))
+                        }
+                        
+                        if (paymentData.paymentStatus.isBlank()) {
+                            logger.e { "Invalid payment data: paymentStatus is blank" }
+                            return Result.failure(Exception("Invalid payment data: paymentStatus is missing"))
+                        }
+                        
+                        // ✅ Log passUUID status for debugging
+                        if (paymentData.passUUID != null) {
+                            logger.d { "Payment data includes passUUID: ${paymentData.passUUID}" }
+                        } else {
+                            logger.d { "Payment data does not include passUUID (this is now optional)" }
+                        }
+                        
+                        Result.success(paymentData)
                     } else {
-                        val error = "Payment verification failed for order: $merchantOrderId"
+                        val error = "Payment verification failed for order: $merchantOrderId - Response: success=${response.success}, data=${response.data}"
                         logger.e { error }
                         Result.failure(Exception(error))
                     }
                 },
                 onFailure = { exception ->
                     logger.e(exception) { "Network error during payment verification" }
+                    
+                    // ✅ Enhanced error logging for serialization issues
+                    if (exception.message?.contains("passUUID") == true) {
+                        logger.e { "SERIALIZATION ERROR: Backend response missing passUUID field" }
+                        logger.e { "SOLUTION: This should now be fixed with optional passUUID" }
+                        logger.e { "If this error persists, check backend response format" }
+                    }
+                    
                     Result.failure(exception)
                 }
             )

@@ -28,6 +28,10 @@ class PaymentApiService(private val apiClient: ApiClient) {
                     println("PaymentAPI: ERROR - No auth token provided!")
                 }
                 
+                // Debug: Log the full request details
+                println("PaymentAPI: POST ${ApiClient.BASE_URL}/api/book-ticket-app")
+                println("PaymentAPI: Request body: $request")
+                
                 // Request timeout (30 seconds)
                 timeout {
                     requestTimeoutMillis = 30000
@@ -38,8 +42,18 @@ class PaymentApiService(private val apiClient: ApiClient) {
             
             if (response.status.isSuccess()) {
                 val bookTicketResponse = response.body<BookTicketResponse>()
+                println("PaymentAPI: Success response received")
                 Result.success(bookTicketResponse)
             } else {
+                println("PaymentAPI: Error response - Status: ${response.status.value}")
+                println("PaymentAPI: Error description: ${response.status.description}")
+                // Try to get error body for more details
+                try {
+                    val errorBody = response.body<String>()
+                    println("PaymentAPI: Error body: $errorBody")
+                } catch (e: Exception) {
+                    println("PaymentAPI: Could not read error body: ${e.message}")
+                }
                 Result.failure(Exception("HTTP ${response.status.value}: ${response.status.description}"))
             }
         } catch (e: Exception) {
