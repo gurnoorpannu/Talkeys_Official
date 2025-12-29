@@ -55,7 +55,7 @@ fun CreateEvent5Screen(navController: NavController) {
                 Brush.radialGradient(
                     colors = listOf(
                         Color.Black,        // Black at top left
-                        Color(0xFF4A0E4E)   // Purple at bottom right
+                        Color(0xFF120227)   // Purple at bottom right
                     ),
                     center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
                     radius = 1200f
@@ -94,7 +94,7 @@ fun CreateEvent5Screen(navController: NavController) {
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily(Font(R.font.urbanist_bold)),
-                            color = Color(0xFFE91E63), // Pink color matching the image
+                            color = Color(0xFF7A2EC0), // Pink color matching the image
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -156,7 +156,7 @@ fun CreateEvent5Screen(navController: NavController) {
                                     )
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFE91E63),
+                                    focusedBorderColor = Color(0xFF7A2EC0),
                                     unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
@@ -229,7 +229,7 @@ fun CreateEvent5Screen(navController: NavController) {
                                     )
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFE91E63),
+                                    focusedBorderColor = Color(0xFF7A2EC0),
                                     unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
@@ -290,13 +290,13 @@ fun CreateEvent5Screen(navController: NavController) {
                                 )
                             },
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
+                                focusedBorderColor = Color(0xFF7A2EC0),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
-                                cursorColor = Color(0xFFE91E63)
+                                cursorColor = Color(0xFF7A2EC0)
                             ),
                             textStyle = androidx.compose.ui.text.TextStyle(
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular))
@@ -323,7 +323,7 @@ fun CreateEvent5Screen(navController: NavController) {
                                 selectedFileName = "sample_deck.pdf" // Placeholder
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE91E63),
+                                containerColor = Color(0xFF7A2EC0),
                                 contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(8.dp),
@@ -352,7 +352,7 @@ fun CreateEvent5Screen(navController: NavController) {
                                 text = selectedFileName,
                                 fontSize = 14.sp,
                                 fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                color = Color(0xFFE91E63),
+                                color = Color(0xFF7A2EC0),
                                 modifier = Modifier.padding(start = 4.dp)
                             )
                         } else {
@@ -418,7 +418,7 @@ fun CreateEvent5Screen(navController: NavController) {
                                 enabled = areRequiredFieldsFilled,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (areRequiredFieldsFilled)
-                                        Color(0xFFE91E63) else Color.Gray.copy(alpha = 0.3f),
+                                        Color(0xFF7A2EC0) else Color.Gray.copy(alpha = 0.3f),
                                     contentColor = Color.White,
                                     disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
                                     disabledContentColor = Color.White.copy(alpha = 0.4f)
