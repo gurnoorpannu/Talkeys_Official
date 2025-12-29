@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <!-- PhonePe domains -->
+        <domain includeSubdomains="true">phonepe.com</domain>
+        <domain includeSubdomains="true">mercury.phonepe.com</domain>
+        <domain includeSubdomains="true">mercury-t2.phonepe.com</domain>
+        <domain includeSubdomains="true">api.phonepe.com</domain>
+        <domain includeSubdomains="true">api-preprod.phonepe.com</domain>
+        
+        <!-- Your backend domain -->
+        <domain includeSubdomains="true">api.talkeys.xyz</domain>
+        <domain includeSubdomains="true">talkeys.xyz</domain>
+    </domain-config>
+    
+    <!-- Allow cleartext traffic for development -->
     <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">192.168.1.1</domain>
     </domain-config>
 </network-security-config>

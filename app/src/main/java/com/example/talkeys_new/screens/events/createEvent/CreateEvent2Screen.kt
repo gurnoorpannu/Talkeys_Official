@@ -165,7 +165,7 @@ fun CreateEvent2Screen(navController: NavController) {
                 Brush.radialGradient(
                     colors = listOf(
                         Color.Black,        // Black at top left
-                        Color(0xFF4A0E4E)   // Purple at bottom right
+                        Color(0xFF120227)   // Purple at bottom right
                     ),
                     center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
                     radius = 1200f
@@ -203,7 +203,7 @@ fun CreateEvent2Screen(navController: NavController) {
                             text = "Create Your Event",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE91E63),
+                            color = Color(0xFF7A2EC0),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -253,12 +253,12 @@ fun CreateEvent2Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = eventNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (eventNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (eventNameError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (eventNameError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -311,7 +311,7 @@ fun CreateEvent2Screen(navController: NavController) {
                                 },
                                 isError = eventTypeError.isNotEmpty(),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = if (eventTypeError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                    focusedBorderColor = if (eventTypeError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                     unfocusedBorderColor = if (eventTypeError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                     errorBorderColor = Color.Red,
                                     focusedTextColor = Color.White,
@@ -380,12 +380,12 @@ fun CreateEvent2Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = eventCategoryError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (eventCategoryError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (eventCategoryError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (eventCategoryError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -426,12 +426,12 @@ fun CreateEvent2Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = eventDescriptionError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (eventDescriptionError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (eventDescriptionError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (eventDescriptionError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -560,7 +560,7 @@ fun CreateEvent2Screen(navController: NavController) {
                                 },
                                 enabled = true, // Always enabled, validation happens on click
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFE91E63),
+                                    containerColor = Color(0xFF7A2EC0),
                                     contentColor = Color.White,
                                     disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
                                     disabledContentColor = Color.White.copy(alpha = 0.4f)

@@ -178,7 +178,7 @@ fun CreateEvent3Screen(navController: NavController) {
                 Brush.radialGradient(
                     colors = listOf(
                         Color.Black,
-                        Color(0xFF4A0E4E)
+                        Color(0xFF120227)
                     ),
                     center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
                     radius = 1200f
@@ -217,7 +217,7 @@ fun CreateEvent3Screen(navController: NavController) {
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Normal,
                             fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                            color = Color(0xFFE91E63),
+                            color = Color(0xFF7A2EC0),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -270,7 +270,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
                                     contentDescription = "Select Date",
-                                    tint = Color(0xFFE91E63),
+                                    tint = Color(0xFF7A2EC0),
                                     modifier = Modifier.clickable {
                                         eventDatePicker.show()
                                     }
@@ -278,12 +278,12 @@ fun CreateEvent3Screen(navController: NavController) {
                             },
                             isError = eventDateError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
+                                focusedBorderColor = Color(0xFF7A2EC0),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -333,7 +333,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                 Icon(
                                     imageVector = Icons.Default.Schedule,
                                     contentDescription = "Select Time",
-                                    tint = Color(0xFFE91E63),
+                                    tint = Color(0xFF7A2EC0),
                                     modifier = Modifier.clickable {
                                         startTimePicker.show()
                                     }
@@ -341,12 +341,12 @@ fun CreateEvent3Screen(navController: NavController) {
                             },
                             isError = startTimeError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
+                                focusedBorderColor = Color(0xFF7A2EC0),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -396,7 +396,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                 Icon(
                                     imageVector = Icons.Default.Schedule,
                                     contentDescription = "Select Time",
-                                    tint = Color(0xFFE91E63),
+                                    tint = Color(0xFF7A2EC0),
                                     modifier = Modifier.clickable {
                                         endTimePicker.show()
                                     }
@@ -404,12 +404,12 @@ fun CreateEvent3Screen(navController: NavController) {
                             },
                             isError = endTimeError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
+                                focusedBorderColor = Color(0xFF7A2EC0),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -459,7 +459,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
                                     contentDescription = "Select Date",
-                                    tint = Color(0xFFE91E63),
+                                    tint = Color(0xFF7A2EC0),
                                     modifier = Modifier.clickable {
                                         registrationDatePicker.show()
                                     }
@@ -467,12 +467,12 @@ fun CreateEvent3Screen(navController: NavController) {
                             },
                             isError = registrationDeadlineError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
+                                focusedBorderColor = Color(0xFF7A2EC0),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -525,12 +525,12 @@ fun CreateEvent3Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             isError = maxAttendeesError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
+                                focusedBorderColor = Color(0xFF7A2EC0),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -584,11 +584,11 @@ fun CreateEvent3Screen(navController: NavController) {
                                 )
                             },
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFFE91E63),
+                                focusedBorderColor = Color(0xFF7A2EC0),
                                 unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -633,7 +633,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                     )
                                 },
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFE91E63),
+                                    focusedBorderColor = Color(0xFF7A2EC0),
                                     unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White,
@@ -724,7 +724,7 @@ fun CreateEvent3Screen(navController: NavController) {
                                 enabled = areAllFieldsFilled,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (areAllFieldsFilled)
-                                        Color(0xFFE91E63) else Color.Gray.copy(alpha = 0.3f),
+                                        Color(0xFF7A2EC0) else Color.Gray.copy(alpha = 0.3f),
                                     contentColor = Color.White,
                                     disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
                                     disabledContentColor = Color.White.copy(alpha = 0.4f)

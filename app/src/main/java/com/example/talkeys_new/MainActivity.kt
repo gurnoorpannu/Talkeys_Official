@@ -46,15 +46,21 @@ class MainActivity : ComponentActivity() {
         }
     }
     
-    // PhonePe payment result launcher
+    // PhonePe payment result launcher with enhanced handling
     private val phonePePaymentLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        // Handle PhonePe payment result
+        Log.d(TAG, "🔍 PhonePe payment result received")
+        Log.d(TAG, "📋 Result code: ${result.resultCode}")
+        Log.d(TAG, "📋 Data: ${result.data}")
+        
+        // ✅ CRITICAL: Always verify payment status regardless of result code
+        // WebView JavaScript errors can cause wrong result codes even when payment succeeds
         PhonePePaymentManager.handlePaymentResult(
             resultCode = result.resultCode,
             data = result.data
         ) { paymentResult ->
+            Log.d(TAG, "💳 Payment result processed: $paymentResult")
             handlePhonePePaymentResult(paymentResult)
         }
     }
@@ -471,14 +477,139 @@ class MainActivity : ComponentActivity() {
      * This should call your backend's Order Status API
      */
     private fun checkOrderStatus() {
-        Log.d(TAG, "TODO: Implement Order Status API call")
-        // TODO: Implement API call to check the actual payment status
-        // This is mandatory as per PhonePe documentation
+        Log.d(TAG, "Checking order status via backend API")
+        
+        // Get the current merchant order ID (you'll need to store this during payment)
+        val merchantOrderId = getCurrentMerchantOrderId()
+        
+        if (merchantOrderId != null) {
+            // Use PhonePePaymentManager to verify payment status
+            PhonePePaymentManager.verifyPaymentStatusOnServer(
+                merchantOrderId = merchantOrderId,
+                authToken = getCurrentAuthToken()
+            ) { result ->
+                when (result) {
+                    is PhonePePaymentManager.PaymentResult.Success -> {
+                        Log.d(TAG, "✅ Payment verified as successful: ${result.message}")
+                        handlePaymentSuccess(result.passId, result.passUUID)
+                    }
+                    is PhonePePaymentManager.PaymentResult.Failed -> {
+                        Log.d(TAG, "❌ Payment verified as failed: ${result.message}")
+                        handlePaymentFailure(result.message)
+                    }
+                    is PhonePePaymentManager.PaymentResult.Pending -> {
+                        Log.d(TAG, "⏳ Payment still pending: ${result.message}")
+                        handlePaymentPending(result.message)
+                    }
+                    is PhonePePaymentManager.PaymentResult.Error -> {
+                        Log.e(TAG, "🚨 Error checking payment status: ${result.message}")
+                        handlePaymentError(result.message)
+                    }
+                    else -> {
+                        Log.w(TAG, "⚠️ Unknown payment result: $result")
+                        handlePaymentError("Unknown payment status")
+                    }
+                }
+            }
+        } else {
+            Log.e(TAG, "No merchant order ID found for status check")
+            handlePaymentError("No order ID available for verification")
+        }
+    }
+    
+    /**
+     * Get current merchant order ID (implement based on how you store it)
+     */
+    private fun getCurrentMerchantOrderId(): String? {
+        // TODO: Implement based on how you store the merchant order ID
+        // This could be from SharedPreferences, ViewModel, or passed as parameter
         
         // Example implementation:
-        // 1. Call your backend's order status endpoint
-        // 2. Backend calls PhonePe's Order Status API
-        // 3. Handle the actual payment status (SUCCESS, FAILED, PENDING)
+        // return getSharedPreferences("payment", Context.MODE_PRIVATE)
+        //     .getString("current_merchant_order_id", null)
+        
+        // For testing, you can use your recent order ID:
+        return "TKT_1760870435366_hz7wihgz7" // Replace with actual implementation
+    }
+    
+    /**
+     * Get current auth token (implement based on your auth system)
+     */
+    private fun getCurrentAuthToken(): String? {
+        // TODO: Implement based on your authentication system
+        // This could be from TokenManager, SharedPreferences, etc.
+        
+        // Example implementation:
+        // return TokenManager.getCurrentToken()
+        
+        return null // Replace with actual token retrieval
+    }
+    
+    /**
+     * Handle successful payment verification
+     */
+    private fun handlePaymentSuccess(passId: String, passUUID: String?) {
+        Log.d(TAG, "Payment success confirmed - PassID: $passId")
+        
+        if (passUUID != null) {
+            Log.d(TAG, "Pass UUID: $passUUID")
+        } else {
+            Log.d(TAG, "Pass UUID not provided by backend (this is optional)")
+        }
+        
+        // Navigate to success screen or show success message
+        // Example: navigateToRegistrationSuccess(passId, passUUID)
+        
+        // Clear stored order ID
+        clearCurrentMerchantOrderId()
+    }
+    
+    /**
+     * Handle failed payment verification
+     */
+    private fun handlePaymentFailure(message: String) {
+        Log.d(TAG, "Payment failure confirmed: $message")
+        
+        // Show failure message to user
+        // Example: showPaymentFailedDialog(message)
+        
+        // Clear stored order ID
+        clearCurrentMerchantOrderId()
+    }
+    
+    /**
+     * Handle pending payment verification
+     */
+    private fun handlePaymentPending(message: String) {
+        Log.d(TAG, "Payment still pending: $message")
+        
+        // Show pending message and maybe retry after delay
+        // Example: showPaymentPendingDialog(message)
+    }
+    
+    /**
+     * Handle payment verification error
+     */
+    private fun handlePaymentError(message: String) {
+        Log.e(TAG, "Payment verification error: $message")
+        
+        // Show error message to user
+        // Example: showPaymentErrorDialog(message)
+        
+        // Clear stored order ID
+        clearCurrentMerchantOrderId()
+    }
+    
+    /**
+     * Clear stored merchant order ID
+     */
+    private fun clearCurrentMerchantOrderId() {
+        // TODO: Implement based on how you store the merchant order ID
+        // Example:
+        // getSharedPreferences("payment", Context.MODE_PRIVATE)
+        //     .edit()
+        //     .remove("current_merchant_order_id")
+        //     .apply()
     }
     
     /**

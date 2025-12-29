@@ -106,9 +106,9 @@ fun EventPaymentScreen(
                         eventId = eventId,
                         eventName = eventName,
                         amount = priceAmount,
+                        navController = navController,
                         onPaymentInitiated = {
                             // This will be called when payment is initiated
-                            // The actual payment result will be handled in MainActivity
                         }
                     )
                 }
@@ -237,11 +237,12 @@ private fun PhonePePaymentSection(
     eventId: String,
     eventName: String,
     amount: Double,
+    navController: NavController,
     onPaymentInitiated: () -> Unit
 ) {
     val context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
-    var paymentStatus by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -260,22 +261,17 @@ private fun PhonePePaymentSection(
                 color = Color.White
             )
             
-            // Payment Status Display
-            paymentStatus?.let { status ->
+            // Error message display
+            errorMessage?.let { error ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = when {
-                            status.contains("success", ignoreCase = true) -> Color.Green.copy(alpha = 0.2f)
-                            status.contains("failed", ignoreCase = true) -> Color.Red.copy(alpha = 0.2f)
-                            status.contains("pending", ignoreCase = true) -> Color.Yellow.copy(alpha = 0.2f)
-                            else -> Color.Gray.copy(alpha = 0.2f)
-                        }
+                        containerColor = Color.Red.copy(alpha = 0.2f)
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = status,
+                        text = error,
                         color = Color.White,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(12.dp),
@@ -337,80 +333,110 @@ private fun PhonePePaymentSection(
                 modifier = Modifier.fillMaxWidth()
             )
             
-            // Pay Now Button
+            // Pay Now Button - Opens WebView
             Button(
                 onClick = {
                     isLoading = true
-                    paymentStatus = null
+                    errorMessage = null
                     onPaymentInitiated()
                     
-                    // Production: Prepare payment data
+                    // Prepare payment data
                     val passType = determinePassType(amount)
                     val friends = getUserSelectedFriends()
                     
-                    // Get auth token using the same method as other APIs
+                    // Create payment order and open WebView
                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                         try {
-                            // Use the same TokenManager approach as AuthInterceptor
+                            // Get auth token
                             val tokenManager = com.example.talkeys_new.screens.authentication.TokenManager(context)
                             val tokenResult = tokenManager.getToken()
                             
                             val authToken = when (tokenResult) {
                                 is com.example.talkeys_new.utils.Result.Success -> {
-                                    val token = tokenResult.data?.takeIf { it.isNotEmpty() }
-                                    if (token != null) {
-                                        Log.d("PaymentAuth", "Token retrieved - length: ${token.length}")
-                                        Log.d("PaymentAuth", "Token preview: ${token.take(20)}...")
-                                    } else {
-                                        Log.e("PaymentAuth", "Token is null or empty!")
-                                    }
-                                    token
+                                    tokenResult.data?.takeIf { it.isNotEmpty() }
                                 }
-                                is com.example.talkeys_new.utils.Result.Error -> {
-                                    Log.e("PaymentAuth", "Authentication failed: ${tokenResult.message}")
-                                    null
-                                }
-                                is com.example.talkeys_new.utils.Result.Loading -> {
-                                    Log.w("PaymentAuth", "Token still loading")
-                                    null
-                                }
+                                else -> null
                             }
                             
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                (context as? MainActivity)?.initiateIntegratedPayment(
-                                    eventId = eventId,
-                                    passType = passType,
-                                    friends = friends,
-                                    authToken = authToken
-                                ) { result ->
+                            if (authToken == null) {
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                     isLoading = false
-                                    when (result) {
-                                        is PhonePePaymentManager.PaymentResult.Success -> {
-                                            paymentStatus = "Payment successful! Pass ID: ${result.passId}"
+                                    errorMessage = "Please login to continue"
+                                }
+                                return@launch
+                            }
+                            
+                            // 🔍 DEBUG: Decode JWT token to inspect role
+                            try {
+                                val parts = authToken.split(".")
+                                if (parts.size >= 2) {
+                                    // Decode the payload (second part of JWT)
+                                    val payload = String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING))
+                                    Log.d("WebViewPayment", "🔍 JWT Token Payload: $payload")
+                                    Log.d("WebViewPayment", "🔍 Check the 'role' field in the payload above")
+                                } else {
+                                    Log.e("WebViewPayment", "❌ Invalid JWT token format")
+                                }
+                            } catch (e: Exception) {
+                                Log.e("WebViewPayment", "❌ Failed to decode JWT token: ${e.message}")
+                            }
+                            
+                            // Call backend to create payment order
+                            val paymentRepository = org.koin.core.context.GlobalContext.get().get<com.talkeys.shared.data.payment.PaymentRepository>()
+                            val result = paymentRepository.bookTicket(eventId, passType, friends, authToken)
+                            
+                            result.fold(
+                                onSuccess = { paymentData ->
+                                    Log.d("WebViewPayment", "Payment order created: ${paymentData.merchantOrderId}")
+                                    Log.d("WebViewPayment", "Token: ${paymentData.token}")
+                                    Log.d("WebViewPayment", "Pass ID: ${paymentData.passId}")
+                                    
+                                    // Decode and log token details for debugging
+                                    try {
+                                        val decodedToken = String(android.util.Base64.decode(paymentData.token, android.util.Base64.DEFAULT))
+                                        Log.d("WebViewPayment", "Decoded token: $decodedToken")
+                                    } catch (e: Exception) {
+                                        Log.e("WebViewPayment", "Failed to decode token: ${e.message}")
+                                    }
+                                    
+                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                        isLoading = false
+                                        
+                                        // Construct PhonePe payment URL from token
+                                        // Backend sends token, we need to construct the full URL
+                                        val paymentUrl = if (paymentData.token.startsWith("http")) {
+                                            // Token is already a full URL
+                                            paymentData.token
+                                        } else {
+                                            // Construct URL from token (UAT/Sandbox environment)
+                                            // URL-encode the token to preserve + characters (they become %2B)
+                                            val encodedToken = java.net.URLEncoder.encode(paymentData.token, "UTF-8")
+                                            "https://mercury-t2.phonepe.com/transact/pg?token=$encodedToken"
                                         }
-                                        is PhonePePaymentManager.PaymentResult.Failed -> {
-                                            paymentStatus = "Payment failed: ${result.message}"
-                                        }
-                                        is PhonePePaymentManager.PaymentResult.Pending -> {
-                                            paymentStatus = "Payment pending: ${result.message}"
-                                        }
-                                        is PhonePePaymentManager.PaymentResult.Cancelled -> {
-                                            paymentStatus = "Payment cancelled: ${result.message}"
-                                        }
-                                        is PhonePePaymentManager.PaymentResult.Error -> {
-                                            paymentStatus = "Error: ${result.message}"
-                                        }
-                                        is PhonePePaymentManager.PaymentResult.Completed -> {
-                                            paymentStatus = "${result.message}"
-                                        }
+                                        
+                                        Log.d("WebViewPayment", "Payment URL: $paymentUrl")
+                                        
+                                        // Navigate to WebView payment screen
+                                        // Use Uri.encode() which preserves the already-encoded characters
+                                        val encodedUrl = android.net.Uri.encode(paymentUrl)
+                                        navController.navigate(
+                                            "webview_payment/$encodedUrl/${paymentData.merchantOrderId}/${paymentData.passId}"
+                                        )
+                                    }
+                                },
+                                onFailure = { exception ->
+                                    Log.e("WebViewPayment", "Failed to create payment order: ${exception.message}")
+                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                        isLoading = false
+                                        errorMessage = "Failed to create payment: ${exception.message}"
                                     }
                                 }
-                            }
+                            )
                         } catch (e: Exception) {
-                            Log.e("PaymentAuth", "Authentication error: ${e.message}")
+                            Log.e("WebViewPayment", "Error: ${e.message}")
                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                 isLoading = false
-                                paymentStatus = "Authentication error occurred"
+                                errorMessage = "Error: ${e.message}"
                             }
                         }
                     }

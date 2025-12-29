@@ -56,6 +56,6 @@ data class PaymentStatusResponse(
 @Serializable
 data class PaymentStatusData(
     val passId: String,
-    val passUUID: String,
+    val passUUID: String? = null, // Make optional since backend may not always include it
     val paymentStatus: String
 )

@@ -47,7 +47,7 @@ fun CreateEvent6Screen(navController: NavController) {
                 Brush.radialGradient(
                     colors = listOf(
                         Color.Black,        // Black at top left
-                        Color(0xFF4A0E4E)   // Purple at bottom right
+                        Color(0xFF120227)   // Purple at bottom right
                     ),
                     center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
                     radius = 1200f
@@ -86,7 +86,7 @@ fun CreateEvent6Screen(navController: NavController) {
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily(Font(R.font.urbanist_bold)),
-                            color = Color(0xFFE91E63), // Pink color matching the image
+                            color = Color(0xFF7A2EC0), // Pink color matching the image
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -130,7 +130,7 @@ fun CreateEvent6Screen(navController: NavController) {
                                     .size(24.dp)
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(
-                                        if (isInfoAccurate) Color(0xFFE91E63)
+                                        if (isInfoAccurate) Color(0xFF7A2EC0)
                                         else Color.Transparent
                                     ),
                                 contentAlignment = Alignment.Center
@@ -184,7 +184,7 @@ fun CreateEvent6Screen(navController: NavController) {
                                     .size(24.dp)
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(
-                                        if (agreeToTerms) Color(0xFFE91E63)
+                                        if (agreeToTerms) Color(0xFF7A2EC0)
                                         else Color.Transparent
                                     ),
                                 contentAlignment = Alignment.Center
@@ -228,7 +228,7 @@ fun CreateEvent6Screen(navController: NavController) {
                                     text = "terms and privacy policy",
                                     fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                    color = Color(0xFFE91E63),
+                                    color = Color(0xFF7A2EC0),
                                     textDecoration = TextDecoration.Underline,
                                     modifier = Modifier.clickable {
                                         // TODO: Navigate to terms and privacy policy
@@ -254,7 +254,7 @@ fun CreateEvent6Screen(navController: NavController) {
                             enabled = canSubmit,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (canSubmit)
-                                    Color(0xFFE91E63) else Color.Gray.copy(alpha = 0.3f),
+                                    Color(0xFF7A2EC0) else Color.Gray.copy(alpha = 0.3f),
                                 contentColor = Color.White,
                                 disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
                                 disabledContentColor = Color.White.copy(alpha = 0.4f)

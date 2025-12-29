@@ -204,7 +204,7 @@ fun CreateEvent1Screen(navController: NavController) {
                 Brush.radialGradient(
                     colors = listOf(
                         Color.Black,        // Black at top left
-                        Color(0xFF4A0E4E)   // Purple at bottom right
+                        Color(0xFF120227)   // Dark purple matching About Us screen
                     ),
                     center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
                     radius = 1200f
@@ -242,7 +242,7 @@ fun CreateEvent1Screen(navController: NavController) {
                             text = "Create Your Event",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE91E63),
+                            color = Color(0xFF7A2EC0),
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -292,12 +292,12 @@ fun CreateEvent1Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = organizerNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (organizerNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (organizerNameError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (organizerNameError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -318,7 +318,7 @@ fun CreateEvent1Screen(navController: NavController) {
 
                         // Email Address Field
                         Text(
-                            text = "📧 Email Address *",
+                            text = " Email Address *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -338,12 +338,12 @@ fun CreateEvent1Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             isError = emailError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (emailError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (emailError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (emailError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -364,7 +364,7 @@ fun CreateEvent1Screen(navController: NavController) {
 
                         // Contact Number Field
                         Text(
-                            text = "📞 Contact Number *",
+                            text = " Contact Number *",
                             fontSize = 16.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -388,12 +388,12 @@ fun CreateEvent1Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             isError = contactNumberError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (contactNumberError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (contactNumberError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (contactNumberError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -434,12 +434,12 @@ fun CreateEvent1Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = organizationNameError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (organizationNameError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (organizationNameError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (organizationNameError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -480,12 +480,12 @@ fun CreateEvent1Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             isError = cityStateError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (cityStateError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (cityStateError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (cityStateError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -526,12 +526,12 @@ fun CreateEvent1Screen(navController: NavController) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                             isError = socialMediaError.isNotEmpty(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = if (socialMediaError.isNotEmpty()) Color.Red else Color(0xFFE91E63),
+                                focusedBorderColor = if (socialMediaError.isNotEmpty()) Color.Red else Color(0xFF7A2EC0),
                                 unfocusedBorderColor = if (socialMediaError.isNotEmpty()) Color.Red else Color.White.copy(alpha = 0.3f),
                                 errorBorderColor = Color.Red,
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
-                                cursorColor = Color(0xFFE91E63),
+                                cursorColor = Color(0xFF7A2EC0),
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent
                             ),
@@ -612,7 +612,7 @@ fun CreateEvent1Screen(navController: NavController) {
                             },
                             enabled = true, // Always enabled, validation happens on click
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE91E63),
+                                containerColor = Color(0xFF7A2EC0),
                                 contentColor = Color.White,
                                 disabledContainerColor = Color.Gray.copy(alpha = 0.2f),
                                 disabledContentColor = Color.White.copy(alpha = 0.4f)
