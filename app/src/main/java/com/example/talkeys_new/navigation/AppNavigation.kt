@@ -59,7 +59,7 @@ fun AppNavigation(modifier: Modifier) {
         composable("tas") { TermsAndConditionsScreen(navController) }
         composable("avatar_customizer") { AvatarCustomizerScreen(navController) }
         composable("screen_not_found"){ScreenNotFound(navController)}
-        
+
         // Create Event Flow
         composable("create_event_1") { CreateEvent1Screen(navController) }
         composable("create_event_2") { CreateEvent2Screen(navController) }
@@ -108,11 +108,70 @@ fun AppNavigation(modifier: Modifier) {
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             val eventName = backStackEntry.arguments?.getString("eventName") ?: ""
             val eventPrice = backStackEntry.arguments?.getString("eventPrice") ?: "0"
-            
+
             com.example.talkeys_new.screens.payment.EventPaymentScreen(
                 eventId = eventId,
                 eventName = eventName,
                 eventPrice = eventPrice,
+                navController = navController
+            )
+        }
+
+        // WebView Payment Screen
+        composable(
+            route = "webview_payment/{paymentUrl}/{merchantOrderId}/{passId}",
+            arguments = listOf(
+                navArgument("paymentUrl") { type = NavType.StringType },
+                navArgument("merchantOrderId") { type = NavType.StringType },
+                navArgument("passId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val encodedPaymentUrl = backStackEntry.arguments?.getString("paymentUrl") ?: ""
+            val merchantOrderId = backStackEntry.arguments?.getString("merchantOrderId") ?: ""
+            val passId = backStackEntry.arguments?.getString("passId") ?: ""
+
+            // Decode the URL structure but preserve the token encoding
+            // Split at "token=" to handle the token separately
+            val paymentUrl = if (encodedPaymentUrl.contains("token%3D")) {
+                val parts = encodedPaymentUrl.split("token%3D", limit = 2)
+                if (parts.size == 2) {
+                    // Decode the URL part before token
+                    val urlPart = parts[0]
+                        .replace("%3A", ":")
+                        .replace("%2F", "/")
+                        .replace("%3F", "?")
+                    // Keep the token part as-is (already properly encoded)
+                    urlPart + "token=" + parts[1]
+                } else {
+                    encodedPaymentUrl
+                }
+            } else {
+                // Fallback: decode everything
+                android.net.Uri.decode(encodedPaymentUrl)
+            }
+
+            com.example.talkeys_new.screens.payment.WebViewPaymentScreen(
+                paymentUrl = paymentUrl,
+                merchantOrderId = merchantOrderId,
+                passId = passId,
+                navController = navController
+            )
+        }
+
+        // Payment Verification Screen
+        composable(
+            route = "payment_verification/{merchantOrderId}/{passId}",
+            arguments = listOf(
+                navArgument("merchantOrderId") { type = NavType.StringType },
+                navArgument("passId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val merchantOrderId = backStackEntry.arguments?.getString("merchantOrderId") ?: ""
+            val passId = backStackEntry.arguments?.getString("passId") ?: ""
+
+            com.example.talkeys_new.screens.payment.PaymentVerificationScreen(
+                merchantOrderId = merchantOrderId,
+                passId = passId,
                 navController = navController
             )
         }
