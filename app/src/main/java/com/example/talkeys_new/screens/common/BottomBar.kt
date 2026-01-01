@@ -130,7 +130,11 @@ fun BottomBar(navController: NavController, scrollState: ScrollState, modifier: 
             )
 
             navigationItems.forEach { navItem ->
-                val isSelected = navItem.route == currentRoute
+                // For events, also highlight when on eventDetail or eventPayment screens
+                val isSelected = when (navItem.route) {
+                    "events" -> currentRoute?.startsWith("event") == true
+                    else -> navItem.route == currentRoute
+                }
                 val iconToDisplay = if (isSelected) navItem.selectedIcon else navItem.normalIcon
 
                 Icon(
