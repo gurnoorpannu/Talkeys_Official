@@ -55,14 +55,14 @@ fun RegisteredEventsScreen(
             .background(Color.Black)
     ) {
         // Top Bar
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
             IconButton(
-                onClick = { navController.popBackStack() }
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
@@ -71,13 +71,12 @@ fun RegisteredEventsScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
             Text(
                 text = "Registered Events",
                 color = Color.White,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
 
