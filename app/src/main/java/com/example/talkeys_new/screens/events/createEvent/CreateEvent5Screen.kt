@@ -52,13 +52,11 @@ fun CreateEvent5Screen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.radialGradient(
+                Brush.verticalGradient(
                     colors = listOf(
-                        Color.Black,        // Black at top left
-                        Color(0xFF120227)   // Purple at bottom right
-                    ),
-                    center = androidx.compose.ui.geometry.Offset(0.2f, 0.2f),
-                    radius = 1200f
+                        Color(0xFF1A0B2E),  // Deep purple at top
+                        Color.Black         // Black at bottom
+                    )
                 )
             )
     ) {
