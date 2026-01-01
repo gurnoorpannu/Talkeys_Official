@@ -1,9 +1,11 @@
 package com.example.talkeys_new.screens.events
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkeys_new.dataModels.EventResponse
+import com.example.talkeys_new.utils.LikedEventsManager
 import com.example.talkeys_new.utils.Result
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,11 +16,20 @@ import java.util.concurrent.CancellationException
 /**
  * ViewModel for managing event-related state and business logic
  */
-class EventViewModel(private val repository: EventsRepository) : ViewModel() {
+class EventViewModel(
+    private val repository: EventsRepository,
+    private val context: Context
+) : ViewModel() {
 
     companion object {
         private const val TAG = "EventViewModel"
     }
+
+    // Liked events manager
+    private val likedEventsManager = LikedEventsManager.getInstance(context)
+    
+    // Expose liked event IDs as StateFlow
+    val likedEventIds: StateFlow<Set<String>> = likedEventsManager.likedEventIds
 
     // Selected event state
     private val _selectedEvent = MutableStateFlow<EventResponse?>(null)
@@ -258,5 +269,54 @@ class EventViewModel(private val repository: EventsRepository) : ViewModel() {
      */
     fun hasEvents(): Boolean {
         return _allEvents.value.isNotEmpty()
+    }
+
+    // ========== Liked Events Methods ==========
+
+    /**
+     * Like an event
+     * @param eventId The ID of the event to like
+     */
+    fun likeEvent(eventId: String) {
+        likedEventsManager.likeEvent(eventId)
+        Log.d(TAG, "Event liked: $eventId")
+    }
+
+    /**
+     * Unlike an event
+     * @param eventId The ID of the event to unlike
+     */
+    fun unlikeEvent(eventId: String) {
+        likedEventsManager.unlikeEvent(eventId)
+        Log.d(TAG, "Event unliked: $eventId")
+    }
+
+    /**
+     * Toggle like state for an event
+     * @param eventId The ID of the event to toggle
+     * @return true if event is now liked, false if unliked
+     */
+    fun toggleLike(eventId: String): Boolean {
+        val isNowLiked = likedEventsManager.toggleLike(eventId)
+        Log.d(TAG, "Event $eventId like toggled: $isNowLiked")
+        return isNowLiked
+    }
+
+    /**
+     * Check if an event is liked
+     * @param eventId The ID of the event to check
+     * @return true if the event is liked, false otherwise
+     */
+    fun isEventLiked(eventId: String): Boolean {
+        return likedEventsManager.isEventLiked(eventId)
+    }
+
+    /**
+     * Get all liked events from the current events list
+     * @return List of liked EventResponse objects
+     */
+    fun getLikedEvents(): List<EventResponse> {
+        val likedIds = likedEventsManager.getLikedEventIds()
+        return _allEvents.value.filter { event -> likedIds.contains(event._id) }
     }
 }

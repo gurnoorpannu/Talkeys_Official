@@ -76,7 +76,7 @@ fun ExploreEventsScreen(navController: NavController) {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return try {
                     val api = provideEventApiService(context)
-                    EventViewModel(EventsRepository(api)) as T
+                    EventViewModel(EventsRepository(api), context) as T
                 } catch (e: Exception) {
                     Log.e("ExploreEventsScreen", "Error creating ViewModel", e)
                     throw e
