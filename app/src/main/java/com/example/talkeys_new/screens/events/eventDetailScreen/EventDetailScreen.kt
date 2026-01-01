@@ -18,6 +18,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -719,12 +722,10 @@ private fun ActionButtons(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Like button
-        ActionButton(
-            iconRes = R.drawable.ic_like,
-            contentDescription = "Like event",
-            tint = if (uiState.isLiked) Color.Red else Color.White,
-            onClick = {
+        // Like button - use filled heart when liked, outlined when not
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.clickable {
                 // Toggle like state and persist to storage
                 if (uiState.isLiked) {
                     viewModel.unlikeEvent(event._id)
@@ -734,7 +735,14 @@ private fun ActionButtons(
                 // Update UI state (will be synced by LaunchedEffect)
                 onUiStateChange(uiState.copy(isLiked = !uiState.isLiked))
             }
-        )
+        ) {
+            Icon(
+                imageVector = if (uiState.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = "Like event",
+                modifier = Modifier.size(EventDetailConstants.DEFAULT_ICON_SIZE),
+                tint = if (uiState.isLiked) Color.Red else Color.White
+            )
+        }
 
         // Comment button
         ActionButton(
