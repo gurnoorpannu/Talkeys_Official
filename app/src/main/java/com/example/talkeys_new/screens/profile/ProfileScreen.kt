@@ -116,49 +116,48 @@ fun ProfileScreen(navController: NavController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Dashboard",
-                            style = TextStyle(
-                                fontSize = if (isSmallScreen) 18.sp else 20.sp,
-                                fontFamily = FontFamily(Font(R.font.urbanist_regular)),
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White,
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            try {
-                                navController.popBackStack()
-                            } catch (e: Exception) {
-                                Log.e("ProfileScreen", "Navigation error", e)
-                            }
+            // Custom top bar with properly centered title
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .background(Color(0xFF262626))
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                // Back button on the left
+                IconButton(
+                    onClick = {
+                        try {
+                            navController.popBackStack()
+                        } catch (e: Exception) {
+                            Log.e("ProfileScreen", "Navigation error", e)
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF262626),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Centered title
+                Text(
+                    text = "Dashboard",
+                    style = TextStyle(
+                        fontSize = if (isSmallScreen) 18.sp else 20.sp,
+                        fontFamily = FontFamily(Font(R.font.urbanist_regular)),
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White,
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-            )
+            }
         },
         containerColor = Color.Black
     ) { paddingValues ->
