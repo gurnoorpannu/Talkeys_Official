@@ -39,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -46,6 +47,9 @@ dependencies {
     // Shared KMP module
     implementation(project(":shared"))
     implementation(libs.koin.androidx.compose)
+
+    // Security - Encrypted SharedPreferences
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Import the Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))

@@ -1,9 +1,6 @@
 package com.example.talkeys_new.api
 
-import android.content.Context
-import com.example.talkeys_new.screens.authentication.TokenManager
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
+import com.example.talkeys_new.network.NetworkConfig
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -11,13 +8,10 @@ object RetrofitClient {
     private const val BASE_URL = "https://api.talkeys.xyz/"
     
     private fun getRetrofit(): Retrofit {
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-        
-        val client = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .build()
+        // Use centralized network configuration with security settings
+        val client = NetworkConfig.createOkHttpClient(
+            enableCertificatePinning = false // Enable in production
+        )
         
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
