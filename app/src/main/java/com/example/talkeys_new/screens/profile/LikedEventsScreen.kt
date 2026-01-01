@@ -3,6 +3,11 @@ package com.example.talkeys_new.screens.profile
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -72,6 +77,7 @@ fun LikedEventsScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(16.dp)
         ) {
             IconButton(
@@ -101,7 +107,7 @@ fun LikedEventsScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 ) {
                     items(3) {
                         LoadingCategorySection()
@@ -164,7 +170,7 @@ fun LikedEventsScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 ) {
                     // Display each category
                     groupedLikedEvents.forEach { (category, events) ->

@@ -8,6 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -243,7 +246,7 @@ fun HomeScreen(navController: NavController) {
                         .fillMaxSize()
                         .offset(y = animatedPullOffset.dp),
                     verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp),
-                    contentPadding = PaddingValues(bottom = if (isSmallScreen) 80.dp else 100.dp) // Padding for BottomBar
+                    contentPadding = WindowInsets.navigationBars.asPaddingValues() // Padding for system navigation bar
                 ) {
                         item { BannerSection(navController) }
                         item { CategoryTitle("Live Events") }

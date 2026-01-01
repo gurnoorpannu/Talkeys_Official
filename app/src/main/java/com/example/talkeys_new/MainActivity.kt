@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.example.talkeys_new.navigation.AppNavigation
 import com.example.talkeys_new.screens.authentication.TokenManager
 import com.example.talkeys_new.ui.theme.Talkeys_NewTheme
@@ -67,6 +68,9 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Enable edge-to-edge display
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         
         // Initialize KMP shared module
         initKoin()

@@ -6,6 +6,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -324,7 +327,7 @@ private fun ExploreEventsContent(
                         .fillMaxSize()
                         .offset(y = animatedPullOffset.dp),
                     verticalArrangement = Arrangement.spacedBy(if (isVerySmallScreen) 12.dp else 16.dp),
-                    contentPadding = PaddingValues(bottom = if (isVerySmallScreen) 90.dp else 100.dp)
+                    contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 ) {
                 // Header section
                 item {
