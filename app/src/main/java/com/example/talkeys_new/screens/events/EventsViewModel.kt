@@ -43,10 +43,11 @@ class EventViewModel(
     private val _eventError = MutableStateFlow<String?>(null)
     val eventError: StateFlow<String?> = _eventError.asStateFlow()
 
-    // All events storage (private, not exposed)
+    // All events storage (exposed for screens that need unfiltered events like LikedEventsScreen)
     private val _allEvents = MutableStateFlow<List<EventResponse>>(emptyList())
+    val allEvents: StateFlow<List<EventResponse>> = _allEvents.asStateFlow()
 
-    // Filtered events list
+    // Filtered events list (for ExploreEvents screen with live/past filter)
     private val _eventList = MutableStateFlow<List<EventResponse>>(emptyList())
     val eventList: StateFlow<List<EventResponse>> = _eventList.asStateFlow()
 

@@ -46,12 +46,12 @@ fun LikedEventsScreen(
     val viewModel = remember { EventViewModel(repository, context) }
     
     // State collection
-    val allEvents by viewModel.eventList.collectAsState()
+    val allEvents by viewModel.allEvents.collectAsState()  // Use allEvents instead of eventList to get both live and past
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.errorMessage.collectAsState()
     val likedEventIds by viewModel.likedEventIds.collectAsState()
     
-    // Filter liked events
+    // Filter liked events (from all events, not just live ones)
     val likedEvents = remember(allEvents, likedEventIds) {
         allEvents.filter { event -> likedEventIds.contains(event._id) }
     }
