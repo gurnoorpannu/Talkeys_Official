@@ -59,12 +59,12 @@ import com.example.talkeys_new.R
 @Composable
 fun HomeScreen(navController: NavController) {
     val context = LocalContext.current
-    
+
     // Get screen dimensions for responsive design with better detection
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection to handle different device densities and font scales
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     val isVerySmallScreen = screenWidth < 340.dp
@@ -76,7 +76,7 @@ fun HomeScreen(navController: NavController) {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val apiService = provideEventApiService(context)
                 val repository = EventsRepository(apiService)
-                return EventViewModel(repository) as T
+                return EventViewModel(repository, context) as T
             }
         }
     )
@@ -84,12 +84,12 @@ fun HomeScreen(navController: NavController) {
     // Collect events state
     val events by eventViewModel.eventList.collectAsState()
     val isLoading by eventViewModel.isLoading.collectAsState()
-    
+
     // Pull to refresh state
     var isRefreshing by remember { mutableStateOf(false) }
     var pullOffset by remember { mutableStateOf(0f) }
     val pullThreshold = 120f
-    
+
     // Animation for pull offset (reduced for subtler effect)
     val animatedPullOffset by animateFloatAsState(
         targetValue = if (isRefreshing) pullThreshold * 0.4f else pullOffset * 0.4f,
@@ -101,7 +101,7 @@ fun HomeScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         eventViewModel.fetchAllEvents()
     }
-    
+
     // Handle refresh function
     val onRefresh = {
         Log.d("HomeScreen", "onRefresh called - isRefreshing: $isRefreshing, isLoading: $isLoading")
@@ -113,7 +113,7 @@ fun HomeScreen(navController: NavController) {
             Log.d("HomeScreen", "Refresh blocked - already refreshing or loading")
         }
     }
-    
+
     // Reset refresh state when loading completes
     LaunchedEffect(isLoading) {
         Log.d("HomeScreen", "Loading state changed: $isLoading, isRefreshing: $isRefreshing")
@@ -123,7 +123,7 @@ fun HomeScreen(navController: NavController) {
             pullOffset = 0f
         }
     }
-    
+
     // Timeout mechanism to prevent stuck refresh state
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
@@ -136,18 +136,18 @@ fun HomeScreen(navController: NavController) {
             }
         }
     }
-    
+
     // Debug logging for states (only log significant changes)
     LaunchedEffect(isRefreshing, isLoading) {
         Log.d("HomeScreen", "State - isRefreshing: $isRefreshing, isLoading: $isLoading")
     }
-    
+
     // Nested scroll connection for pull to refresh
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
-                
+
                 // Only consume scroll when we're releasing (scrolling back up)
                 if (delta > 0 && pullOffset > 0 && source != NestedScrollSource.Drag) {
                     val consumed = pullOffset.coerceAtMost(delta)
@@ -156,10 +156,10 @@ fun HomeScreen(navController: NavController) {
                 }
                 return Offset.Zero
             }
-            
+
             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
-                
+
                 // If we're at the top and trying to scroll up (pull down), start pull to refresh
                 if (delta > 0 && source == NestedScrollSource.Drag) {
                     val newOffset = (pullOffset + delta * 0.6f).coerceAtMost(pullThreshold * 1.2f)
@@ -169,7 +169,7 @@ fun HomeScreen(navController: NavController) {
                 }
                 return Offset.Zero
             }
-            
+
             override suspend fun onPreFling(available: Velocity): Velocity {
                 // Handle fling end - trigger refresh if threshold met
                 Log.d("HomeScreen", "onPreFling - pullOffset: $pullOffset, threshold: $pullThreshold, isRefreshing: $isRefreshing")
@@ -209,7 +209,7 @@ fun HomeScreen(navController: NavController) {
             ) {
                 // LazyColumn with LazyListState for scroll tracking
                 val lazyListState = rememberLazyListState()
-                
+
                 // Refresh indicator
                 if (animatedPullOffset > 0f || isRefreshing) {
                     Box(
@@ -285,11 +285,11 @@ fun HostYourOwnEvent(navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     val isVerySmallScreen = screenWidth < 340.dp
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -315,11 +315,11 @@ fun HostYourOwnEvent(navController: NavController) {
             Spacer(modifier = Modifier.height(if (isSmallScreen) 12.dp else 16.dp))
 
             Text(
-                text = if (isVerySmallScreen) 
-                    "Create events, invite your community, manage everything easily." 
+                text = if (isVerySmallScreen)
+                    "Create events, invite your community, manage everything easily."
                 else if (isSmallScreen)
                     "Create an event, invite your community, and manage everything in one place."
-                else 
+                else
                     "Create an event, invite your community, and manage everything in one place.",
                 style = TextStyle(
                     fontSize = if (isVerySmallScreen) 12.sp else if (isSmallScreen) 14.sp else 16.sp,
@@ -370,11 +370,11 @@ fun BannerSection(navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
     val isVerySmallScreen = screenWidth < 340.dp
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -476,10 +476,10 @@ fun CategoryTitle(title: String) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
-    
+
     Text(
         text = title,
         style = TextStyle(
@@ -499,10 +499,10 @@ fun EventRow(events: List<com.example.talkeys_new.dataModels.EventResponse>, nav
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
-    
+
     LazyRow(
         contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
         horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
@@ -524,10 +524,10 @@ fun LoadingEventRow() {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
-    
+
     LazyRow(
         contentPadding = PaddingValues(horizontal = if (isSmallScreen) 12.dp else 16.dp),
         horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
@@ -565,10 +565,10 @@ fun CommunityRow(navController: NavController) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
-    
+
     val communities = listOf(
         CommunityItem("Tech Enthusiasts", "Join fellow developers and tech lovers", R.drawable.community_banner, "1.2K"),
         CommunityItem("Gaming Community", "Connect with gamers worldwide", R.drawable.community_banner, "850"),
@@ -596,10 +596,10 @@ fun CommunityCard(name: String, imageRes: Int, description: String, navControlle
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
-    
+
     // ✅ Wrapper Box with Background and Shadows
     Box(
         modifier = Modifier
@@ -652,10 +652,10 @@ fun InfluencerRow() {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
-    
+
     val influencers = listOf(
         InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "125K"),
         InfluencerItem("Coming Soon", "", R.drawable.ic_influencer_banner, "89K"),
@@ -682,10 +682,10 @@ fun InfluencerCard(name: String, profession: String, imageRes: Int) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
-    
+
     // More conservative responsive detection
     val isSmallScreen = screenWidth < 380.dp || screenHeight < 700.dp
-    
+
     Box(
         modifier = Modifier
             .shadow(elevation = 4.dp, spotColor = Color(0xFF000000), ambientColor = Color(0xFF000000))

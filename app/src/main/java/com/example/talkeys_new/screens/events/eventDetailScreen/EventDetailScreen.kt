@@ -97,14 +97,21 @@ fun EventDetailScreen(
 
     val context = LocalContext.current
     val repository = remember { EventsRepository(provideEventApiService(context)) }
-    val viewModel = remember { EventViewModel(repository) }
+    val viewModel = remember { EventViewModel(repository, context) }
 
     // State management
     val eventState by viewModel.selectedEvent.collectAsState()
     val isLoading by viewModel.eventLoading.collectAsState()
     val errorMessage by viewModel.eventError.collectAsState()
+    val likedEventIds by viewModel.likedEventIds.collectAsState()
 
+    // Initialize UI state with liked status from storage
     var uiState by remember { mutableStateOf(EventDetailUiState()) }
+
+    // Update liked state when event or liked IDs change
+    LaunchedEffect(eventId, likedEventIds) {
+        uiState = uiState.copy(isLiked = likedEventIds.contains(eventId))
+    }
 
     // Fetch event details
     LaunchedEffect(eventId) {
@@ -141,7 +148,8 @@ fun EventDetailScreen(
                         event = eventState!!,
                         navController = navController,
                         uiState = uiState,
-                        onUiStateChange = { uiState = it }
+                        onUiStateChange = { uiState = it },
+                        viewModel = viewModel
                     )
                 }
 
@@ -212,7 +220,8 @@ private fun EventContent(
     event: EventResponse,
     navController: NavController,
     uiState: EventDetailUiState,
-    onUiStateChange: (EventDetailUiState) -> Unit
+    onUiStateChange: (EventDetailUiState) -> Unit,
+    viewModel: EventViewModel
 ) {
     val tabItems = listOf("Details", "Dates & Deadlines", "Prizes", "Link to Community")
     val reorderedItems = remember(uiState.selectedItem) {
@@ -238,7 +247,8 @@ private fun EventContent(
                 navController = navController,
                 event = event,
                 uiState = uiState,
-                onUiStateChange = onUiStateChange
+                onUiStateChange = onUiStateChange,
+                viewModel = viewModel
             )
         }
 
@@ -584,6 +594,7 @@ private fun EventInfoBox(
     event: EventResponse,
     uiState: EventDetailUiState,
     onUiStateChange: (EventDetailUiState) -> Unit,
+    viewModel: EventViewModel,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -610,7 +621,8 @@ private fun EventInfoBox(
                     event = event,
                     context = context,
                     uiState = uiState,
-                    onUiStateChange = onUiStateChange
+                    onUiStateChange = onUiStateChange,
+                    viewModel = viewModel
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -649,7 +661,8 @@ private fun CostAndActionsRow(
     event: EventResponse,
     context: Context,
     uiState: EventDetailUiState,
-    onUiStateChange: (EventDetailUiState) -> Unit
+    onUiStateChange: (EventDetailUiState) -> Unit,
+    viewModel: EventViewModel
 ) {
     Row(
         modifier = Modifier
@@ -685,7 +698,8 @@ private fun CostAndActionsRow(
             event = event,
             context = context,
             uiState = uiState,
-            onUiStateChange = onUiStateChange
+            onUiStateChange = onUiStateChange,
+            viewModel = viewModel
         )
     }
 }
@@ -695,7 +709,8 @@ private fun ActionButtons(
     event: EventResponse,
     context: Context,
     uiState: EventDetailUiState,
-    onUiStateChange: (EventDetailUiState) -> Unit
+    onUiStateChange: (EventDetailUiState) -> Unit,
+    viewModel: EventViewModel
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -704,16 +719,17 @@ private fun ActionButtons(
         // Like button
         ActionButton(
             iconRes = R.drawable.ic_like,
-            text = "${uiState.likeCount} likes",
             contentDescription = "Like event",
             tint = if (uiState.isLiked) Color.Red else Color.White,
             onClick = {
-                onUiStateChange(
-                    uiState.copy(
-                        isLiked = !uiState.isLiked,
-                        likeCount = if (uiState.isLiked) uiState.likeCount - 1 else uiState.likeCount + 1
-                    )
-                )
+                // Toggle like state and persist to storage
+                if (uiState.isLiked) {
+                    viewModel.unlikeEvent(event._id)
+                } else {
+                    viewModel.likeEvent(event._id)
+                }
+                // Update UI state (will be synced by LaunchedEffect)
+                onUiStateChange(uiState.copy(isLiked = !uiState.isLiked))
             }
         )
 

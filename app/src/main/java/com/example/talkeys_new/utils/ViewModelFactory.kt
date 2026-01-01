@@ -31,7 +31,7 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
                 modelClass.isAssignableFrom(EventViewModel::class.java) -> {
                     val eventApiService = provideEventApiService(context)
                     val eventsRepository = EventsRepository(eventApiService)
-                    EventViewModel(eventsRepository) as T
+                    EventViewModel(eventsRepository, context) as T
                 }
                 
                 modelClass.isAssignableFrom(DashboardViewModel::class.java) -> {
