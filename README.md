@@ -7,13 +7,13 @@
   <img src="https://img.shields.io/badge/Material%20Design%203-757575?style=for-the-badge&logo=material-design&logoColor=white" alt="Material Design 3">
 </div>
 
-## 📱 Overview
+##  Overview
 
 Talkeys is a comprehensive event management Android application built with modern Android development practices. The app allows users to discover, create, manage, and participate in events with integrated payment processing and social features.
 
-## ✨ Key Features
+##  Key Features
 
-### 🎯 **Core Functionality**
+###  **Core Functionality**
 - **Event Discovery**: Browse and search events with advanced filtering
 - **Event Creation**: Multi-step event creation wizard with validation
 - **User Authentication**: Google Sign-In integration with secure token management
@@ -21,7 +21,7 @@ Talkeys is a comprehensive event management Android application built with moder
 - **Profile Management**: Customizable user profiles with avatar system
 - **Event Management**: Track hosted, registered, and liked events
 
-### 🚀 **Advanced Features**
+###  **Advanced Features**
 - **Event Mediator Pattern**: Centralized event coordination and state management
 - **LRU Caching System**: Comprehensive caching for optimal performance
 - **Offline Support**: Cached data availability when offline
@@ -32,42 +32,42 @@ Talkeys is a comprehensive event management Android application built with moder
 - **Event Actions**: Like, share, and register functionality with optimistic updates
 - **Multi-step Event Creation**: Coordinated wizard flow with draft saving
 
-### 🎨 **UI/UX Features**
+###  **UI/UX Features**
 - **Material Design 3**: Modern, accessible design system
 - **Dark/Light Theme**: Automatic theme switching
 - **Responsive Layout**: Optimized for different screen sizes
 - **Custom Avatar System**: Personalized user avatars
 - **Smooth Animations**: Polished user interactions
-## 🏧 Architecture
+##  Architecture
 
 ### **Enhanced Clean Architecture with Mediator Pattern**
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        UI Layer                         │
-│        (Screens, Compose UI, Event Listeners)         │
+│                        UI Layer                                 │
+│        (Screens, Compose UI, Event Listeners)                   │
 ├─────────────────────────────────────────────────────────────────┤
-│                   Presentation Layer                    │
-│          (EventMediatedViewModel, StateFlow)          │
+│                   Presentation Layer                            │
+│          (EventMediatedViewModel, StateFlow)                    │
 ├─────────────────────────────────────────────────────────────────┤
-│                   🎯 Mediator Layer                  │
-│    (EventMediator, Coordination, State Management)    │
+│                    Mediator Layer                               │
+│    (EventMediator, Coordination, State Management)              │
 ├─────────────────────────────────────────────────────────────────┤
-│                    Domain Layer                      │
-│             (Use Cases, Repositories)               │
+│                    Domain Layer                                 │
+│             (Use Cases, Repositories)                           │
 ├─────────────────────────────────────────────────────────────────┤
-│                     Data Layer                       │
-│          (API Services, LRU Cache, DataStore)        │
+│                     Data Layer                                  │
+│          (API Services, LRU Cache, DataStore)                   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### **Event Mediator Architecture Benefits**
-- **🎯 Centralized Coordination**: All event operations flow through the mediator
-- **🔄 Reactive State**: StateFlow-based state management with automatic UI updates
-- **🔗 Loose Coupling**: Components communicate through the mediator, not directly
-- **🔍 Advanced Filtering**: Real-time search and category filtering
-- **🚀 Navigation Coordination**: Centralized navigation management
-- **⚙️ Error Handling**: Unified error processing with context awareness
-- **📊 Event Listeners**: Observer pattern for component communication
+- ** Centralized Coordination**: All event operations flow through the mediator
+- ** Reactive State**: StateFlow-based state management with automatic UI updates
+- ** Loose Coupling**: Components communicate through the mediator, not directly
+- ** Advanced Filtering**: Real-time search and category filtering
+- ** Navigation Coordination**: Centralized navigation management
+- ** Error Handling**: Unified error processing with context awareness
+- ** Event Listeners**: Observer pattern for component communication
 ```
 
 ### **Technology Stack**
@@ -83,7 +83,7 @@ Talkeys is a comprehensive event management Android application built with moder
 - **Payments**: PhonePe Intent SDK
 - **Security**: Android Keystore, AES-256-GCM Encryption
 
-## 🔒 Security Features
+##  Security Features
 
 ### **Production-Grade Security Implementation**
 
@@ -150,7 +150,7 @@ object NetworkConfig {
 > openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
 > ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### **Prerequisites**
 - Android Studio Hedgehog (2023.1.1) or newer
@@ -196,9 +196,9 @@ app/src/main/java/com/example/talkeys_new/
 │   ├── DashboardApiService.kt
 │   ├── DashboardRepository.kt
 │   └── RetrofitClient.kt
-├── security/                     # 🔒 Security module
+├── security/                     #  Security module
 │   └── SecureStorage.kt         # Encrypted storage wrapper
-├── network/                      # 🌐 Network configuration
+├── network/                      #  Network configuration
 │   └── NetworkConfig.kt         # Certificate pinning, timeouts
 ├── avatar/                       # Avatar customization system
 │   ├── AvatarCustomizerScreen.kt
@@ -209,10 +209,10 @@ app/src/main/java/com/example/talkeys_new/
 │   └── AppNavigation.kt
 ├── screens/                      # UI screens
 │   ├── authentication/          # Login/Signup screens
-│   │   ├── TokenManager.kt      # 🔒 Secure token management
+│   │   ├── TokenManager.kt      #  Secure token management
 │   │   └── GoogleSignInManager.kt
 │   ├── events/                  # Event-related screens
-│   │   ├── mediator/            # 🎯 Event Mediator Pattern
+│   │   ├── mediator/            #  Event Mediator Pattern
 │   │   │   ├── EventMediator.kt
 │   │   │   ├── EventMediatorImpl.kt
 │   │   │   └── EventMediatorProvider.kt
@@ -231,7 +231,7 @@ app/src/main/java/com/example/talkeys_new/
 └── MainActivity.kt              # Main activity
 ```
 
-## 🎯 Feature Implementation Guide
+##  Feature Implementation Guide
 
 ### **Authentication Flow**
 ```kotlin
@@ -358,7 +358,7 @@ fun `login screen should show error for invalid credentials`() {
 }
 ```
 
-## 📊 Performance Optimization
+##  Performance Optimization
 
 ### **Caching Strategy**
 - **Events**: 30-minute TTL, 100 items max
@@ -378,7 +378,7 @@ fun `login screen should show error for invalid credentials`() {
 - Connection pooling
 - Request/response logging (debug builds only)
 
-## 🔧 Configuration
+##  Configuration
 
 ### **Build Variants**
 ```kotlin
@@ -414,7 +414,7 @@ object Constants {
 }
 ```
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### **Common Issues**
 
@@ -480,7 +480,7 @@ POST /api/payment/create-order
 GET  /api/payment/order-status/{orderId}
 ```
 
-## 🚀 Deployment
+##  Deployment
 
 ### **Release Build**
 ```bash
@@ -498,7 +498,7 @@ GET  /api/payment/order-status/{orderId}
 4. Prepare store listing materials
 5. Upload to Play Console
 
-## 🤝 Contributing
+##  Contributing
 
 ### **Getting Started**
 1. Fork the repository
@@ -519,7 +519,7 @@ GET  /api/payment/order-status/{orderId}
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 📞 Support
+##  Support
 
 For technical support or questions:
 - **Email**: support@example.com
@@ -528,7 +528,7 @@ For technical support or questions:
 
 ---
 
-## 🔄 Recent Updates
+##  Recent Updates
 
 ### **v1.1.0** (Latest - January 2026)
 - ✅ **Production-Grade Security**: Encrypted storage, secure token management, certificate pinning
