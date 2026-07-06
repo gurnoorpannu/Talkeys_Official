@@ -2,9 +2,13 @@ package com.talkeys.shared.data.payment
 
 import com.talkeys.shared.network.PaymentApiService
 import com.talkeys.shared.config.ProductionConfig
+import com.talkeys.shared.auth.TokenStorage
 import co.touchlab.kermit.Logger
 
-class PaymentRepository(private val paymentApiService: PaymentApiService) {
+open class PaymentRepository(
+    private val paymentApiService: PaymentApiService,
+    private val tokenStorage: TokenStorage? = null
+) {
     
     private val logger = Logger.withTag("PaymentRepository")
     
@@ -18,10 +22,12 @@ class PaymentRepository(private val paymentApiService: PaymentApiService) {
     /**
      * Book ticket and get payment order details
      */
-    suspend fun bookTicket(
+    open suspend fun bookTicket(
         eventId: String,
         passType: String,
         friends: List<Friend>,
+        teamCode: String? = null,
+        clientPlatform: String? = null,
         authToken: String? = null
     ): Result<PaymentOrderData> {
         // Production validation
@@ -29,21 +35,26 @@ class PaymentRepository(private val paymentApiService: PaymentApiService) {
             return Result.failure(Exception("Maximum ${ProductionConfig.MAX_FRIENDS_PER_BOOKING} friends allowed per booking"))
         }
         
+        val resolvedAuthToken = resolveAuthToken(authToken)
+            ?: return Result.failure(Exception("Please login to continue"))
+
         logger.i { "Production: Booking ticket for event: $eventId, passType: $passType, friends: ${friends.size}" }
         
         val request = BookTicketRequest(
             eventId = eventId,
             passType = passType,
-            friends = friends
+            friends = friends,
+            teamCode = teamCode?.trim()?.takeIf { it.isNotEmpty() },
+            clientPlatform = clientPlatform?.trim()?.takeIf { it.isNotEmpty() }
         )
         
         return try {
-            val result = paymentApiService.bookTicketApp(request, authToken)
+            val result = paymentApiService.bookTicketApp(request, resolvedAuthToken)
             
             result.fold(
                 onSuccess = { response ->
                     if (response.success && response.data != null) {
-                        logger.d { "Ticket booking successful. Order ID: ${response.data.merchantOrderId}" }
+                        logger.d { "Ticket booking successful" }
                         Result.success(response.data)
                     } else {
                         val error = "Booking failed: ${response.message}"
@@ -65,18 +76,20 @@ class PaymentRepository(private val paymentApiService: PaymentApiService) {
     /**
      * Verify payment status after PhonePe payment completion
      */
-    suspend fun verifyPaymentStatus(merchantOrderId: String, authToken: String? = null): Result<PaymentStatusData> {
-        logger.d { "Verifying payment status for order: $merchantOrderId" }
+    open suspend fun verifyPaymentStatus(merchantOrderId: String, authToken: String? = null): Result<PaymentStatusData> {
+        val resolvedAuthToken = resolveAuthToken(authToken)
+            ?: return Result.failure(Exception("Please login to verify payment"))
+
+        logger.d { "Verifying payment status" }
         
         return try {
-            val result = paymentApiService.checkPaymentStatus(merchantOrderId, authToken)
+            val result = paymentApiService.checkPaymentStatus(merchantOrderId, resolvedAuthToken)
             
             result.fold(
                 onSuccess = { response ->
                     if (response.success && response.data != null) {
-                        // ✅ Log both response status and actual payment status for debugging
-                        logger.d { "Response status: ${response.status} for order: $merchantOrderId" }
-                        logger.d { "Payment data status: ${response.data.paymentStatus} for order: $merchantOrderId" }
+                        logger.d { "Payment response status: ${response.status}" }
+                        logger.d { "Payment data status: ${response.data.paymentStatus}" }
                         
                         // ✅ Additional validation for payment status data
                         val paymentData = response.data
@@ -90,16 +103,15 @@ class PaymentRepository(private val paymentApiService: PaymentApiService) {
                             return Result.failure(Exception("Invalid payment data: paymentStatus is missing"))
                         }
                         
-                        // ✅ Log passUUID status for debugging
                         if (paymentData.passUUID != null) {
-                            logger.d { "Payment data includes passUUID: ${paymentData.passUUID}" }
+                            logger.d { "Payment data includes a pass UUID" }
                         } else {
                             logger.d { "Payment data does not include passUUID (this is now optional)" }
                         }
                         
                         Result.success(paymentData)
                     } else {
-                        val error = "Payment verification failed for order: $merchantOrderId - Response: success=${response.success}, data=${response.data}"
+                        val error = "Payment verification failed: success=${response.success}"
                         logger.e { error }
                         Result.failure(Exception(error))
                     }
@@ -121,5 +133,10 @@ class PaymentRepository(private val paymentApiService: PaymentApiService) {
             logger.e(e) { "Unexpected error during payment verification" }
             Result.failure(e)
         }
+    }
+
+    private suspend fun resolveAuthToken(authToken: String?): String? {
+        return authToken?.trim()?.takeIf { it.isNotBlank() }
+            ?: tokenStorage?.getToken()?.trim()?.takeIf { it.isNotBlank() }
     }
 }

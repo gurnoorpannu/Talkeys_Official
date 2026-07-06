@@ -12,7 +12,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.talkeys_new"
+        applicationId = "com.talkeys.app"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -66,21 +66,13 @@ dependencies {
 
     //google sign in dependencies
     implementation("com.google.android.gms:play-services-auth:20.7.0") // for Google Sign-In
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     //coil dependency
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    //logging dependency
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
     //icon dependencies
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
-
-    //phonepe payment integration - Latest stable version
-    implementation("phonepe.intentsdk.android.release:IntentSDK:5.2.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -91,6 +83,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.browser:browser:1.8.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

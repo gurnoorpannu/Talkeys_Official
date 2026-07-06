@@ -1,34 +1,67 @@
 package com.example.talkeys_new.screens.payment
 
-import androidx.compose.foundation.Image
+import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.talkeys_new.MainActivity
-import com.example.talkeys_new.R
-import com.example.talkeys_new.utils.PhonePePaymentManager
-import android.util.Log
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.CoroutineScope
+
+private val ScreenBlack = Color(0xFF050507)
+private val CardBlack = Color(0xFF111115)
+private val Stroke = Color.White.copy(alpha = 0.09f)
+private val Muted = Color.White.copy(alpha = 0.68f)
+private val PrimaryPurple = Color(0xFF8D45D5)
+private val BrightPurple = Color(0xFFC084FC)
+private val PhonePePurple = Color(0xFF5F259F)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,27 +71,25 @@ fun EventPaymentScreen(
     eventPrice: String,
     navController: NavController
 ) {
-    val context = LocalContext.current
-    val scrollState = rememberScrollState()
-    
-    // Convert price to double for calculations
     val priceAmount = eventPrice.toDoubleOrNull() ?: 0.0
     val isEventFree = priceAmount <= 0
-    
+
     Scaffold(
+        containerColor = ScreenBlack,
         topBar = {
             TopAppBar(
-                title = { Text("Event Registration") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                title = {
+                    Column {
+                        Text("Register", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Complete your booking", color = Muted, fontSize = 12.sp)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF8A44CB),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = ScreenBlack)
             )
         }
     ) { paddingValues ->
@@ -66,116 +97,97 @@ fun EventPaymentScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(ScreenBlack)
         ) {
-            // Background image
-            Image(
-                painter = painterResource(id = R.drawable.background),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF1B1024),
+                                ScreenBlack,
+                                ScreenBlack
+                            )
+                        )
+                    )
             )
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Event Details Card
-                EventDetailsCard(
+                OrderSummaryCard(
                     eventName = eventName,
                     eventPrice = priceAmount,
                     isEventFree = isEventFree
                 )
-                
+
                 if (isEventFree) {
-                    // Free Event Registration
-                    FreeEventRegistration(
-                        eventName = eventName,
-                        onRegister = {
-                            // Handle free event registration
-                            // You can call your backend API here
-                            navController.navigate("registration_success")
-                        }
-                    )
+                    FreeEventRegistration(onRegister = {
+                        navController.navigate("registration_success")
+                    })
                 } else {
-                    // Paid Event - PhonePe Payment
                     PhonePePaymentSection(
                         eventId = eventId,
-                        eventName = eventName,
                         amount = priceAmount,
-                        navController = navController,
-                        onPaymentInitiated = {
-                            // This will be called when payment is initiated
-                        }
+                        navController = navController
                     )
                 }
-                
-                // Payment Security Info
+
                 PaymentSecurityInfo()
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
     }
 }
 
 @Composable
-private fun EventDetailsCard(
+private fun OrderSummaryCard(
     eventName: String,
     eventPrice: Double,
     isEventFree: Boolean
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171717)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+    SectionSurface {
+        Text(
+            text = "Order summary",
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            Text(
-                text = "Event Registration",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            
-            Divider(color = Color(0xFF333333))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Event", color = Muted, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Event:",
+                    text = eventName.ifBlank { "Selected event" },
                     color = Color.White,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = eventName,
-                    color = Color(0xFF8A44CB),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.End
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text("Total", color = Muted, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Registration Fee:",
-                    color = Color.White,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = if (isEventFree) "FREE" else "₹${eventPrice.toInt()}",
-                    color = if (isEventFree) Color.Green else Color(0xFF8A44CB),
-                    fontSize = 18.sp,
+                    text = if (isEventFree) "Free" else "₹${eventPrice.toInt()}",
+                    color = if (isEventFree) Color(0xFF51D88A) else BrightPurple,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -184,354 +196,309 @@ private fun EventDetailsCard(
 }
 
 @Composable
-private fun FreeEventRegistration(
-    eventName: String,
-    onRegister: () -> Unit
+private fun FreeEventRegistration(onRegister: () -> Unit) {
+    SectionSurface {
+        Text(
+            text = "Free registration",
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "No payment is needed for this event. Confirm once and your registration will be completed.",
+            color = Muted,
+            fontSize = 14.sp,
+            lineHeight = 20.sp
+        )
+        Spacer(modifier = Modifier.height(18.dp))
+        CheckoutButton(
+            text = "Confirm Registration",
+            isLoading = false,
+            onClick = onRegister
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PhonePePaymentSection(
+    eventId: String,
+    amount: Double,
+    navController: NavController
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171717)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    var isLoading by remember { mutableStateOf(false) }
+    val paymentViewModel = sharedPaymentCheckoutViewModel()
+    val checkoutState by paymentViewModel.checkoutState.collectAsState()
+    val errorMessage = checkoutState.errorMessage
+
+    LaunchedEffect(checkoutState.checkoutData) {
+        checkoutState.checkoutData?.let { checkout ->
+            isLoading = false
+            val encodedUrl = Uri.encode(checkout.paymentUrl)
+            navController.navigate(
+                "webview_payment/$encodedUrl/${checkout.merchantOrderId}/${checkout.passId}"
+            )
+            paymentViewModel.clearCheckout()
+        }
+    }
+
+    LaunchedEffect(checkoutState.isLoading) {
+        isLoading = checkoutState.isLoading
+    }
+
+    SectionSurface {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "🎉 Free Event Registration",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Green,
-                textAlign = TextAlign.Center
-            )
-            
-            Text(
-                text = "This is a free event! Click below to complete your registration.",
+                text = "Pay with",
                 color = Color.White,
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
             )
-            
-            Button(
-                onClick = onRegister,
+
+            Text(
+                text = "Fast checkout",
+                color = BrightPurple,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+                    .border(1.dp, BrightPurple.copy(alpha = 0.35f), RoundedCornerShape(50))
+                    .padding(horizontal = 10.dp, vertical = 5.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        errorMessage?.let { error ->
+            ErrorBanner(error)
+            Spacer(modifier = Modifier.height(14.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White.copy(alpha = 0.055f), RoundedCornerShape(10.dp))
+                .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                .padding(14.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(Color.White, RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Pe", color = PhonePePurple, fontWeight = FontWeight.Black, fontSize = 16.sp)
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("PhonePe", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text("UPI, cards, net banking, wallets", color = Muted, fontSize = 12.sp)
+                }
+
                 Text(
-                    text = "Register for Free",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    text = "Selected",
+                    color = BrightPurple,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White.copy(alpha = 0.035f), RoundedCornerShape(10.dp))
+                .padding(14.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                PaymentLine("Amount", "₹${amount.toInt()}")
+                PaymentLine("Convenience fee", "Included")
+                Divider(color = Stroke)
+                PaymentLine("Total", "₹${amount.toInt()}", highlight = true)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Supported methods",
+            color = Muted,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PaymentChip("UPI")
+            PaymentChip("Cards")
+            PaymentChip("Net banking")
+            PaymentChip("Wallets")
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        CheckoutButton(
+            text = "Pay ₹${amount.toInt()}",
+            isLoading = isLoading,
+            onClick = {
+                isLoading = true
+                paymentViewModel.startCheckout(
+                    eventId = eventId,
+                    passType = determinePassType(amount),
+                    friends = getUserSelectedFriends(),
+                    teamCode = null,
+                    clientPlatform = "android",
+                    authToken = null
+                )
+            }
+        )
     }
 }
 
 @Composable
-private fun PhonePePaymentSection(
-    eventId: String,
-    eventName: String,
-    amount: Double,
-    navController: NavController,
-    onPaymentInitiated: () -> Unit
-) {
-    val context = LocalContext.current
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    
-    Card(
+private fun PaymentLine(label: String, value: String, highlight: Boolean = false) {
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171717)),
-        shape = RoundedCornerShape(12.dp)
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Payment Method",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            
-            // Error message display
-            errorMessage?.let { error ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Red.copy(alpha = 0.2f)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = error,
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(12.dp),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-            
-            // PhonePe Payment Option
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF5F259F)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // PhonePe logo placeholder
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.White, RoundedCornerShape(8.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Pe",
-                            color = Color(0xFF5F259F),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                    }
-                    
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "PhonePe",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "UPI • Cards • Net Banking • Wallets",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-            
-            // Payment Instructions
-            Text(
-                text = "• All UPI apps (GPay, Paytm, BHIM, etc.)\n• Credit/Debit Cards (Visa, Mastercard, RuPay)\n• Net Banking (All major banks)\n• Digital Wallets & BNPL options",
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 14.sp,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            // Pay Now Button - Opens WebView
-            Button(
-                onClick = {
-                    isLoading = true
-                    errorMessage = null
-                    onPaymentInitiated()
-                    
-                    // Prepare payment data
-                    val passType = determinePassType(amount)
-                    val friends = getUserSelectedFriends()
-                    
-                    // Create payment order and open WebView
-                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                        try {
-                            // Get auth token
-                            val tokenManager = com.example.talkeys_new.screens.authentication.TokenManager(context)
-                            val tokenResult = tokenManager.getToken()
-                            
-                            val authToken = when (tokenResult) {
-                                is com.example.talkeys_new.utils.Result.Success -> {
-                                    tokenResult.data?.takeIf { it.isNotEmpty() }
-                                }
-                                else -> null
-                            }
-                            
-                            if (authToken == null) {
-                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                    isLoading = false
-                                    errorMessage = "Please login to continue"
-                                }
-                                return@launch
-                            }
-                            
-                            // 🔍 DEBUG: Decode JWT token to inspect role
-                            try {
-                                val parts = authToken.split(".")
-                                if (parts.size >= 2) {
-                                    // Decode the payload (second part of JWT)
-                                    val payload = String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING))
-                                    Log.d("WebViewPayment", "🔍 JWT Token Payload: $payload")
-                                    Log.d("WebViewPayment", "🔍 Check the 'role' field in the payload above")
-                                } else {
-                                    Log.e("WebViewPayment", "❌ Invalid JWT token format")
-                                }
-                            } catch (e: Exception) {
-                                Log.e("WebViewPayment", "❌ Failed to decode JWT token: ${e.message}")
-                            }
-                            
-                            // Call backend to create payment order
-                            val paymentRepository = org.koin.core.context.GlobalContext.get().get<com.talkeys.shared.data.payment.PaymentRepository>()
-                            val result = paymentRepository.bookTicket(eventId, passType, friends, authToken)
-                            
-                            result.fold(
-                                onSuccess = { paymentData ->
-                                    Log.d("WebViewPayment", "Payment order created: ${paymentData.merchantOrderId}")
-                                    Log.d("WebViewPayment", "Token: ${paymentData.token}")
-                                    Log.d("WebViewPayment", "Pass ID: ${paymentData.passId}")
-                                    
-                                    // Decode and log token details for debugging
-                                    try {
-                                        val decodedToken = String(android.util.Base64.decode(paymentData.token, android.util.Base64.DEFAULT))
-                                        Log.d("WebViewPayment", "Decoded token: $decodedToken")
-                                    } catch (e: Exception) {
-                                        Log.e("WebViewPayment", "Failed to decode token: ${e.message}")
-                                    }
-                                    
-                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                        isLoading = false
-                                        
-                                        // Construct PhonePe payment URL from token
-                                        // Backend sends token, we need to construct the full URL
-                                        val paymentUrl = if (paymentData.token.startsWith("http")) {
-                                            // Token is already a full URL
-                                            paymentData.token
-                                        } else {
-                                            // Construct URL from token (UAT/Sandbox environment)
-                                            // URL-encode the token to preserve + characters (they become %2B)
-                                            val encodedToken = java.net.URLEncoder.encode(paymentData.token, "UTF-8")
-                                            "https://mercury-t2.phonepe.com/transact/pg?token=$encodedToken"
-                                        }
-                                        
-                                        Log.d("WebViewPayment", "Payment URL: $paymentUrl")
-                                        
-                                        // Navigate to WebView payment screen
-                                        // Use Uri.encode() which preserves the already-encoded characters
-                                        val encodedUrl = android.net.Uri.encode(paymentUrl)
-                                        navController.navigate(
-                                            "webview_payment/$encodedUrl/${paymentData.merchantOrderId}/${paymentData.passId}"
-                                        )
-                                    }
-                                },
-                                onFailure = { exception ->
-                                    Log.e("WebViewPayment", "Failed to create payment order: ${exception.message}")
-                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                        isLoading = false
-                                        errorMessage = "Failed to create payment: ${exception.message}"
-                                    }
-                                }
-                            )
-                        } catch (e: Exception) {
-                            Log.e("WebViewPayment", "Error: ${e.message}")
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                isLoading = false
-                                errorMessage = "Error: ${e.message}"
-                            }
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8A44CB)),
-                shape = RoundedCornerShape(8.dp),
-                enabled = !isLoading
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = Color.White
-                    )
-                } else {
-                    Text(
-                        text = "Pay ₹${amount.toInt()} with PhonePe",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
+        Text(
+            text = label,
+            color = if (highlight) Color.White else Muted,
+            fontSize = if (highlight) 15.sp else 13.sp,
+            fontWeight = if (highlight) FontWeight.SemiBold else FontWeight.Normal
+        )
+        Text(
+            text = value,
+            color = if (highlight) Color.White else Color.White.copy(alpha = 0.82f),
+            fontSize = if (highlight) 17.sp else 13.sp,
+            fontWeight = if (highlight) FontWeight.Bold else FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun PaymentChip(text: String) {
+    Text(
+        text = text,
+        color = Color.White.copy(alpha = 0.86f),
+        fontSize = 12.sp,
+        modifier = Modifier
+            .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(50))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(50))
+            .padding(horizontal = 11.dp, vertical = 7.dp)
+    )
+}
+
+@Composable
+private fun ErrorBanner(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF3A161B), RoundedCornerShape(10.dp))
+            .border(1.dp, Color(0xFFFF667A).copy(alpha = 0.28f), RoundedCornerShape(10.dp))
+            .padding(12.dp)
+    ) {
+        Text(
+            text = message,
+            color = Color(0xFFFFCCD3),
+            fontSize = 13.sp,
+            lineHeight = 18.sp
+        )
+    }
+}
+
+@Composable
+private fun CheckoutButton(
+    text: String,
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        enabled = !isLoading,
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = PrimaryPurple,
+            disabledContainerColor = PrimaryPurple.copy(alpha = 0.55f)
+        )
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+        } else {
+            Text(text = text, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
-
-/**
- * PRODUCTION HELPER FUNCTIONS
- */
-
-/**
- * Determine pass type based on amount or user selection
- * Backend accepts: "VIP", "General", "Staff" (default: "General")
- */
-private fun determinePassType(amount: Double): String {
-    return when {
-        amount >= 500 -> "VIP"      // Higher amounts get VIP
-        amount > 0 -> "General"     // Regular paid events get General
-        else -> "General"           // Default to General
-    }
-}
-
-/**
- * Get user selected friends for the event
- * For now, returns empty list - user can register alone
- */
-private fun getUserSelectedFriends(): List<com.talkeys.shared.data.payment.Friend> {
-    // PRODUCTION: Return empty list for solo registration
-    // You can add friend selection UI later if needed
-    return emptyList()
-    
-    // FUTURE: Implement friend selection UI
-    // return friendSelectionViewModel.getSelectedFriends().map { friend ->
-    //     com.talkeys.shared.data.payment.Friend(
-    //         name = friend.name,
-    //         email = friend.email
-    //     )
-    // }
-}
-
-
 
 @Composable
 private fun PaymentSecurityInfo() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171717).copy(alpha = 0.8f)),
-        shape = RoundedCornerShape(12.dp)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF101014).copy(alpha = 0.86f)),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, Stroke)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "🔒 Secure Payment",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                text = "Secure checkout",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.White
             )
-            
+
             Text(
-                text = "Your payment is secured with industry-standard encryption. We don't store your payment information.",
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 14.sp
+                text = "Your payment is processed through PhonePe. Talkeys does not store card, UPI, or net banking details.",
+                color = Muted,
+                fontSize = 13.sp,
+                lineHeight = 19.sp
             )
-            
+
             Text(
-                text = "Note: After payment completion, please check the Order Status for final confirmation.",
-                color = Color.Yellow.copy(alpha = 0.9f),
+                text = "After payment, return to Talkeys for confirmation.",
+                color = BrightPurple,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium
             )
         }
     }
 }
+
+@Composable
+private fun SectionSurface(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = CardBlack.copy(alpha = 0.92f),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, Stroke),
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            content = content
+        )
+    }
+}
+
+private fun determinePassType(amount: Double): String = "General"
+
+private fun getUserSelectedFriends(): List<com.talkeys.shared.data.payment.Friend> = emptyList()

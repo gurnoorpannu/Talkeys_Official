@@ -1,6 +1,6 @@
 [versions]
 agp = "8.10.1"
-kotlin = "2.0.21"
+kotlin = "2.2.21"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
@@ -10,8 +10,8 @@ activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 navigationRuntimeAndroid = "2.9.0"
 navigationComposeJvmstubs = "2.9.0"
-kotlinStdlib = "2.0.21"
-kotlinTest = "2.0.21"
+kotlinStdlib = "2.2.21"
+kotlinTest = "2.2.21"
 runner = "1.7.0"
 core = "1.7.0"
 
@@ -24,6 +24,8 @@ sqldelight = "2.0.2"
 koin = "4.0.0"
 napier = "2.7.1"
 kermit = "2.0.4"
+skie = "0.10.12"
+androidx-viewmodel = "2.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +52,7 @@ androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 # KMP Libraries
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
@@ -60,6 +63,7 @@ ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serializatio
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 ktor-client-darwin = { group = "io.ktor", name = "ktor-client-darwin", version.ref = "ktor" }
+ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
 
 # SQLDelight
 sqldelight-runtime = { group = "app.cash.sqldelight", name = "runtime", version.ref = "sqldelight" }
@@ -76,8 +80,21 @@ koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compos
 kermit = { group = "co.touchlab", name = "kermit", version.ref = "kermit" }
 napier = { group = "io.github.aakira", name = "napier", version.ref = "napier" }
 
+# AndroidX Lifecycle (KMP)
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-viewmodel" }
+
 # DataStore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.0.0" }
+
+# Security — EncryptedSharedPreferences
+# Using 1.1.0-alpha06: the existing app-module SecureStorage already uses this
+# version with the same "secure_prefs" file. Upgrading to 1.1.0 (stable) would
+# require verifying EncryptedSharedPreferences file-format compatibility and
+# migration testing. The stable 1.1.0 release also deprecates the API in favor
+# of direct Android Keystore usage, but the existing token data is already
+# written with EncryptedSharedPreferences — switching storage format is a
+# future migration concern, not a Phase 5 scope item.
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version = "1.1.0-alpha06" }
 
 # Google Play Services
 google-play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version = "20.7.0" }
@@ -91,4 +108,5 @@ android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.
 android-lint = { id = "com.android.lint", version.ref = "agp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+skie = { id = "co.touchlab.skie", version.ref = "skie" }
 

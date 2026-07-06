@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.lint)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.skie)
 }
 
 kotlin {
@@ -38,18 +39,21 @@ kotlin {
     iosX64 {
         binaries.framework {
             baseName = xcfName
+            export(libs.androidx.lifecycle.viewmodel)
         }
     }
 
     iosArm64 {
         binaries.framework {
             baseName = xcfName
+            export(libs.androidx.lifecycle.viewmodel)
         }
     }
 
     iosSimulatorArm64 {
         binaries.framework {
             baseName = xcfName
+            export(libs.androidx.lifecycle.viewmodel)
         }
     }
 
@@ -87,12 +91,17 @@ kotlin {
                 
                 // Logging
                 implementation(libs.kermit)
+
+                // AndroidX Lifecycle ViewModel (KMP) — api so iOS Swift sees the ViewModel type
+                api(libs.androidx.lifecycle.viewmodel)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.mock)
             }
         }
 
@@ -107,6 +116,7 @@ kotlin {
                 // Authentication
                 implementation(libs.google.play.services.auth)
                 implementation(libs.androidx.datastore.preferences)
+                implementation(libs.androidx.security.crypto)
             }
         }
 

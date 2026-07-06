@@ -8,19 +8,15 @@ object ProductionConfig {
     
     // Environment Settings
     const val IS_PRODUCTION = true // Production API mode
-    const val IS_DEBUG_LOGGING_ENABLED = true // Keep debug logging for PhonePe testing
+    const val IS_DEBUG_LOGGING_ENABLED = false
     
     // PhonePe-specific environment (separate from API environment)
-    const val IS_PHONEPE_PRODUCTION = false // PhonePe in TEST mode while API stays production
+    const val IS_PHONEPE_PRODUCTION = true
     
     // API Configuration - Production Backend
     const val API_BASE_URL = "https://api.talkeys.xyz"
     const val API_TIMEOUT_SECONDS = 30L
     const val API_RETRY_COUNT = 3
-    
-    // PhonePe Configuration
-    const val PHONEPE_ENVIRONMENT = "SANDBOX" // "SANDBOX" or "PRODUCTION" - switched to test
-    const val PHONEPE_CLIENT_ID = "TEST-M22ZDT307F584_25062"
     
     // Payment Configuration
     const val DEFAULT_CURRENCY = "INR"
@@ -46,13 +42,6 @@ object ProductionConfig {
     fun getApiBaseUrl(): String {
         // Always use production API - only PhonePe environment changes for testing
         return API_BASE_URL
-    }
-    
-    /**
-     * Get PhonePe environment string
-     */
-    fun getPhonePeEnvironment(): String {
-        return if (IS_PHONEPE_PRODUCTION) "PRODUCTION" else "SANDBOX"
     }
     
     /**

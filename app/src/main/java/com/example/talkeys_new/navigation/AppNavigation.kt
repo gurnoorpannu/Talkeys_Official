@@ -5,12 +5,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.talkeys_new.screens.authentication.LandingPage
 import com.example.talkeys_new.screens.authentication.loginScreen.LoginScreen
 import com.example.talkeys_new.screens.authentication.signupScreen.SignUpScreen
 import com.example.talkeys_new.screens.common.ScreenNotFound
+import com.example.talkeys_new.screens.common.AccountDeletionScreen
 import com.example.talkeys_new.screens.events.eventDetailScreen.EventDetailScreen
 import com.example.talkeys_new.screens.home.HomeScreen
 import com.example.talkeys_new.screens.events.exploreEvents.ExploreEventsScreen
@@ -27,6 +29,7 @@ import com.example.talkeys_new.screens.events.createEvent.CreateEvent4Screen
 import com.example.talkeys_new.screens.events.createEvent.CreateEvent5Screen
 import com.example.talkeys_new.screens.events.createEvent.CreateEvent6Screen
 import com.example.talkeys_new.screens.events.RegistrationSuccessScreen
+import com.example.talkeys_new.screens.events.sharedEventCreationViewModel
 import com.example.talkeysapk.screensUI.home.AboutUsScreen
 import com.example.talkeysapk.screensUI.home.ContactUsScreen
 import com.example.talkeysapk.screensUI.home.TermsAndConditionsScreen
@@ -35,6 +38,7 @@ import com.example.talkeysapk.screensUI.home.privacyPolicy
 @Composable
 fun AppNavigation(modifier: Modifier) {
     val navController = rememberNavController()
+    val eventCreationViewModel = sharedEventCreationViewModel()
 
     NavHost(navController = navController, startDestination = "landingpage") {
         //composable("splash") { SplashScreen(navController) }
@@ -56,17 +60,18 @@ fun AppNavigation(modifier: Modifier) {
         composable("contact_us") { ContactUsScreen(navController) }
         composable("about_us") { AboutUsScreen(navController) }
         composable("privacy_policy") { privacyPolicy(navController) }
+        composable("delete_account") { AccountDeletionScreen(navController) }
         composable("tas") { TermsAndConditionsScreen(navController) }
         composable("avatar_customizer") { AvatarCustomizerScreen(navController) }
         composable("screen_not_found"){ScreenNotFound(navController)}
 
         // Create Event Flow
-        composable("create_event_1") { CreateEvent1Screen(navController) }
-        composable("create_event_2") { CreateEvent2Screen(navController) }
-        composable("create_event_3") { CreateEvent3Screen(navController) }
-        composable("create_event_4") { CreateEvent4Screen(navController) }
-        composable("create_event_5") { CreateEvent5Screen(navController) }
-        composable("create_event_6") { CreateEvent6Screen(navController) }
+        composable("create_event_1") { CreateEvent1Screen(navController, eventCreationViewModel) }
+        composable("create_event_2") { CreateEvent2Screen(navController, eventCreationViewModel) }
+        composable("create_event_3") { CreateEvent3Screen(navController, eventCreationViewModel) }
+        composable("create_event_4") { CreateEvent4Screen(navController, eventCreationViewModel) }
+        composable("create_event_5") { CreateEvent5Screen(navController, eventCreationViewModel) }
+        composable("create_event_6") { CreateEvent6Screen(navController, eventCreationViewModel) }
         composable("registration_success") { RegistrationSuccessScreen(navController) }
 
         // Event Detail Screen with eventId parameter
@@ -130,25 +135,7 @@ fun AppNavigation(modifier: Modifier) {
             val merchantOrderId = backStackEntry.arguments?.getString("merchantOrderId") ?: ""
             val passId = backStackEntry.arguments?.getString("passId") ?: ""
 
-            // Decode the URL structure but preserve the token encoding
-            // Split at "token=" to handle the token separately
-            val paymentUrl = if (encodedPaymentUrl.contains("token%3D")) {
-                val parts = encodedPaymentUrl.split("token%3D", limit = 2)
-                if (parts.size == 2) {
-                    // Decode the URL part before token
-                    val urlPart = parts[0]
-                        .replace("%3A", ":")
-                        .replace("%2F", "/")
-                        .replace("%3F", "?")
-                    // Keep the token part as-is (already properly encoded)
-                    urlPart + "token=" + parts[1]
-                } else {
-                    encodedPaymentUrl
-                }
-            } else {
-                // Fallback: decode everything
-                android.net.Uri.decode(encodedPaymentUrl)
-            }
+            val paymentUrl = decodePaymentUrlArgument(encodedPaymentUrl)
 
             com.example.talkeys_new.screens.payment.WebViewPaymentScreen(
                 paymentUrl = paymentUrl,
@@ -164,6 +151,11 @@ fun AppNavigation(modifier: Modifier) {
             arguments = listOf(
                 navArgument("merchantOrderId") { type = NavType.StringType },
                 navArgument("passId") { type = NavType.StringType }
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "talkeys://payment-verification/{merchantOrderId}/{passId}"
+                }
             )
         ) { backStackEntry ->
             val merchantOrderId = backStackEntry.arguments?.getString("merchantOrderId") ?: ""
@@ -177,4 +169,12 @@ fun AppNavigation(modifier: Modifier) {
         }
 
     }
+}
+
+private fun decodePaymentUrlArgument(paymentUrlArgument: String): String {
+    if (paymentUrlArgument.startsWith("http://") || paymentUrlArgument.startsWith("https://")) {
+        return paymentUrlArgument
+    }
+
+    return android.net.Uri.decode(paymentUrlArgument)
 }

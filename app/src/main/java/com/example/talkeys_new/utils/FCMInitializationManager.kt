@@ -53,7 +53,7 @@ object FCMInitializationManager {
     fun isAnalyticsEnabled(context: Context): Boolean {
         // Note: There's no direct way to check this, so we'll use a stored preference
         val sharedPref = context.getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
-        return sharedPref.getBoolean("analytics_enabled", true) // Default to true
+        return sharedPref.getBoolean("analytics_enabled", false)
     }
 
     /**

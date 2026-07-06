@@ -12,11 +12,4 @@
         <domain includeSubdomains="true">api.talkeys.xyz</domain>
         <domain includeSubdomains="true">talkeys.xyz</domain>
     </domain-config>
-    
-    <!-- Allow cleartext traffic for development -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">10.0.2.2</domain>
-        <domain includeSubdomains="true">192.168.1.1</domain>
-    </domain-config>
 </network-security-config>

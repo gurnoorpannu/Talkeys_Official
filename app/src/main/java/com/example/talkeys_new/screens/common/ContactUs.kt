@@ -1,5 +1,8 @@
 package com.example.talkeysapk.screensUI.home
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -25,11 +30,15 @@ import androidx.navigation.NavController
 import com.example.talkeys_new.screens.common.HomeTopBar
 import com.example.talkeys_new.R
 import com.example.talkeys_new.screens.common.Footer
-import android.util.Log
 
 @Composable
 fun ContactUsScreen(navController: NavController) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val supportEmail = stringResource(R.string.support_email)
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -146,13 +155,34 @@ fun ContactUsScreen(navController: NavController) {
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Form inputs
-                        ContactFormFields()
+                        ContactFormFields(
+                            name = name,
+                            onNameChange = { name = it },
+                            email = email,
+                            onEmailChange = { email = it },
+                            message = message,
+                            onMessageChange = { message = it }
+                        )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Send Message Button
                         Button(
-                            onClick = { /* TODO: Implement send functionality */ },
+                            onClick = {
+                                val subject = Uri.encode("Talkeys support request")
+                                val body = Uri.encode(
+                                    "Name: $name\nEmail: $email\n\n$message"
+                                )
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("mailto:$supportEmail?subject=$subject&body=$body")
+                                }
+
+                                try {
+                                    context.startActivity(Intent.createChooser(intent, "Contact Talkeys"))
+                                } catch (_: Exception) {
+                                    Toast.makeText(context, "Email app not available", Toast.LENGTH_SHORT).show()
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF7A2EC0)
                             ),
@@ -162,7 +192,7 @@ fun ContactUsScreen(navController: NavController) {
                                 .height(48.dp)
                         ) {
                             Text(
-                                text = "Send Message",
+                                text = "Email Support",
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.urbanist_regular)),
@@ -188,11 +218,14 @@ fun ContactUsScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactFormFields() {
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var message by remember { mutableStateOf("") }
-
+fun ContactFormFields(
+    name: String,
+    onNameChange: (String) -> Unit,
+    email: String,
+    onEmailChange: (String) -> Unit,
+    message: String,
+    onMessageChange: (String) -> Unit
+) {
     // Name Field
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -208,7 +241,7 @@ fun ContactFormFields() {
 
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = onNameChange,
             placeholder = {
                 Text(
                     "Enter your full name",
@@ -244,7 +277,7 @@ fun ContactFormFields() {
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = onEmailChange,
             placeholder = {
                 Text(
                     "Enter your email address",
@@ -279,7 +312,7 @@ fun ContactFormFields() {
         )
         OutlinedTextField(
             value = message,
-            onValueChange = { message = it },
+            onValueChange = onMessageChange,
             placeholder = {
                 Text(
                     "Type your message here",

@@ -15,34 +15,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.talkeys_new.screens.common.ErrorCard
-import com.example.talkeys_new.screens.dashboard.DashboardViewModel
+import com.example.talkeys_new.screens.dashboard.sharedDashboardViewModel
+import com.example.talkeys_new.screens.events.toAndroidEventResponse
 import com.example.talkeys_new.screens.events.exploreEvents.EventCard
 import com.example.talkeys_new.screens.events.exploreEvents.SkeletonEventCard
-import com.example.talkeys_new.utils.ViewModelFactory
+import com.talkeys.shared.data.dashboard.UserEventType
+import com.talkeys.shared.presentation.dashboard.SharedDashboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HostedEventsScreen(
     navController: NavController,
-    viewModel: DashboardViewModel = viewModel(
-        factory = ViewModelFactory(LocalContext.current)
-    )
+    viewModel: SharedDashboardViewModel = sharedDashboardViewModel()
 ) {
     // State collection
-    val events by viewModel.userEvents.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val events = remember(uiState.events) {
+        uiState.events.map { it.toAndroidEventResponse() }
+    }
+    val isLoading = uiState.isLoading
+    val error = uiState.error
 
     // Fetch hosted events when screen is first displayed
     LaunchedEffect(Unit) {
-        viewModel.fetchUserEvents("hosted")
+        viewModel.loadEvents(UserEventType.Hosted)
     }
 
     Column(
@@ -98,48 +98,11 @@ fun HostedEventsScreen(
                 }
 
                 error != null -> {
-                    ErrorCard(
-                        message = error ?: "An unknown error occurred",
-                        onRetry = {
-                            viewModel.fetchUserEvents("hosted")
-                        }
-                    )
+                    EmptyHostedEvents()
                 }
 
                 events.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "No hosted events found",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Create events to see them here",
-                            color = Color.Gray,
-                            fontSize = 14.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = { navController.navigate("create_event") },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF8A44CB)
-                            )
-                        ) {
-                            Text(
-                                text = "Create Event",
-                                color = Color.White
-                            )
-                        }
-                    }
+                    EmptyHostedEvents()
                 }
 
                 else -> {
@@ -162,5 +125,21 @@ fun HostedEventsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EmptyHostedEvents() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "No events hosted",
+            color = Color.White.copy(alpha = 0.82f),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

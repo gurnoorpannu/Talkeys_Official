@@ -1,26 +1,38 @@
 package com.talkeys.shared.di
 
+import com.talkeys.shared.auth.AuthRepository
+import com.talkeys.shared.config.ProductionConfig
+import com.talkeys.shared.data.dashboard.DashboardApi
+import com.talkeys.shared.data.dashboard.DashboardRepository
+import com.talkeys.shared.data.events.EventsApi
+import com.talkeys.shared.data.events.EventsRepository
 import com.talkeys.shared.network.ApiClient
 import com.talkeys.shared.network.PaymentApiService
 import com.talkeys.shared.data.payment.PaymentRepository
-import com.talkeys.shared.auth.AuthRepository
-import com.talkeys.shared.auth.createGoogleSignInProvider
-import com.talkeys.shared.auth.createTokenStorage
 import org.koin.dsl.module
 
 val sharedModule = module {
     single { ApiClient() }
     single { PaymentApiService(get()) }
-    single { PaymentRepository(get()) }
-    single { createGoogleSignInProvider() }
-    single { createTokenStorage() }
-    single { 
+    single { PaymentRepository(get(), get()) }
+
+    // Phase 4 — Events vertical slice (read-only)
+    single { EventsApi(get<ApiClient>()) }
+    single { EventsRepository(get()) }
+
+    // Phase 5 — Auth
+    // SecureStorage and TokenStorage are provided by platformModule.
+    single {
         AuthRepository(
             httpClient = get<ApiClient>().httpClient,
-            googleSignInProvider = get(),
-            tokenStorage = get()
-        ) 
+            tokenStorage = get(),
+            baseUrl = ProductionConfig.API_BASE_URL,
+        )
     }
+
+    // Phase 6 — Profile + dashboard verticals
+    single { DashboardApi(get<ApiClient>()) }
+    single { DashboardRepository(get(), get()) }
 }
 
 // Platform-specific modules should be provided by each platform

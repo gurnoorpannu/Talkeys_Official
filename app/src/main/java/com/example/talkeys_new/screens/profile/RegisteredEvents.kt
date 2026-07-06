@@ -15,41 +15,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.talkeys_new.api.DashboardApiService
-import com.example.talkeys_new.dataModels.EventResponse
-import com.example.talkeys_new.screens.authentication.TokenManager
-import com.example.talkeys_new.screens.common.ErrorCard
-import com.example.talkeys_new.screens.dashboard.DashboardViewModel
+import com.example.talkeys_new.screens.dashboard.sharedDashboardViewModel
+import com.example.talkeys_new.screens.events.toAndroidEventResponse
 import com.example.talkeys_new.screens.events.exploreEvents.EventCard
 import com.example.talkeys_new.screens.events.exploreEvents.SkeletonEventCard
-import com.example.talkeys_new.utils.ViewModelFactory
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import com.talkeys.shared.data.dashboard.UserEventType
+import com.talkeys.shared.presentation.dashboard.SharedDashboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisteredEventsScreen(
     navController: NavController,
-    viewModel: DashboardViewModel = viewModel(
-        factory = ViewModelFactory(LocalContext.current)
-    )
+    viewModel: SharedDashboardViewModel = sharedDashboardViewModel()
 ) {
-    val scope = rememberCoroutineScope()
-    
     // State collection
-    val events by viewModel.userEvents.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val events = remember(uiState.events) {
+        uiState.events.map { it.toAndroidEventResponse() }
+    }
+    val isLoading = uiState.isLoading
+    val error = uiState.error
     
     // Fetch registered events when screen is first displayed
     LaunchedEffect(Unit) {
-        viewModel.fetchUserEvents("registered")
+        viewModel.loadEvents(UserEventType.Registered)
     }
 
     Column(
@@ -105,34 +98,11 @@ fun RegisteredEventsScreen(
                 }
 
                 error != null -> {
-                    ErrorCard(
-                        message = error ?: "An unknown error occurred",
-                        onRetry = {
-                            viewModel.fetchUserEvents("registered")
-                        }
-                    )
+                    EmptyRegisteredEvents()
                 }
 
                 events.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "No registered events found",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "Register for events to see them here",
-                            color = Color.Gray,
-                            fontSize = 14.sp
-                        )
-                    }
+                    EmptyRegisteredEvents()
                 }
 
                 else -> {
@@ -155,5 +125,21 @@ fun RegisteredEventsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EmptyRegisteredEvents() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "No events registered",
+            color = Color.White.copy(alpha = 0.82f),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
