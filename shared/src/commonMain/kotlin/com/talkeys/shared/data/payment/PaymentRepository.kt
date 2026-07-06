@@ -26,6 +26,23 @@ open class PaymentRepository(
         eventId: String,
         passType: String,
         friends: List<Friend>,
+        teamCode: String?,
+        authToken: String?
+    ): Result<PaymentOrderData> {
+        return bookTicket(
+            eventId = eventId,
+            passType = passType,
+            friends = friends,
+            teamCode = teamCode,
+            clientPlatform = null,
+            authToken = authToken
+        )
+    }
+
+    open suspend fun bookTicket(
+        eventId: String,
+        passType: String,
+        friends: List<Friend>,
         teamCode: String? = null,
         clientPlatform: String? = null,
         authToken: String? = null

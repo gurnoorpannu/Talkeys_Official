@@ -356,12 +356,11 @@ private fun PhonePePaymentSection(
             onClick = {
                 isLoading = true
                 paymentViewModel.startCheckout(
-                    eventId = eventId,
-                    passType = determinePassType(amount),
-                    friends = getUserSelectedFriends(),
-                    teamCode = null,
-                    clientPlatform = "android",
-                    authToken = null
+                    eventId,
+                    determinePassType(amount),
+                    getUserSelectedFriends(),
+                    null,
+                    null
                 )
             }
         )

@@ -717,7 +717,9 @@ private fun MenuItemsSection(
     ) {
         // Menu items with icons
         val menuItemsWithIcons = listOf(
-            Triple(R.drawable.dialogbox_profile_icon, "Profile") { /* Navigate to profile edit */ },
+            Triple(R.drawable.dialogbox_profile_icon, "Profile") {
+                safeNavigate(navController, "avatar_customizer")
+            },
             Triple(R.drawable.registered_events, "Registered events") {
                 safeNavigate(navController, "registered_events")
             },

@@ -28,18 +28,34 @@ class PaymentCheckoutViewModel(
         passType: String,
         friends: List<Friend>,
         teamCode: String? = null,
+        authToken: String?
+    ) {
+        startCheckout(
+            eventId = eventId,
+            passType = passType,
+            friends = friends,
+            teamCode = teamCode,
+            clientPlatform = null,
+            authToken = authToken
+        )
+    }
+
+    fun startCheckout(
+        eventId: String,
+        passType: String,
+        friends: List<Friend>,
+        teamCode: String? = null,
         clientPlatform: String? = null,
         authToken: String?
     ) {
         _checkoutState.value = PaymentCheckoutUiState(isLoading = true)
         viewModelScope.launch {
             repository.bookTicket(
-                eventId = eventId,
-                passType = passType,
-                friends = friends,
-                teamCode = teamCode,
-                clientPlatform = clientPlatform,
-                authToken = authToken
+                eventId,
+                passType,
+                friends,
+                teamCode,
+                authToken
             )
                 .onSuccess { paymentOrder ->
                     val checkoutTokenOrUrl = paymentOrder.checkoutTokenOrUrl()
